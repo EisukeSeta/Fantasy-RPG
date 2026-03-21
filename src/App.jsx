@@ -274,39 +274,36 @@ function App() {
       </div>
 
       {/* キャラクターステータスエリア */}
-      <div className="window pane-status" style={{ display: 'flex', flexDirection: 'column', gap: '5px', overflowY: 'auto' }}>
+      <div className="window pane-status" style={{ display: 'flex', flexDirection: 'column', padding: '10px' }}>
         <span className="window-title">隊員之証 (Party Status)</span>
-        {party.map((m, idx) => (
-          <div key={m.id} className="status-grid" style={{ 
-            backgroundColor: (gameState === 'BATTLE' && activeBattler === idx) ? '#222' : 'transparent', 
-            border: (gameState === 'BATTLE' && activeBattler === idx) ? '1px solid #3f3' : '1px solid #333',
-            padding: '2px 4px',
-            fontSize: '1rem',
-            minHeight: '60px',
-            alignItems: 'center'
-          }}>
-            <div style={{ textAlign: 'left' }}>
-              <div className="status-header" style={{ fontSize: '0.7rem' }}>氏名</div>
-              <div style={{ fontSize: '0.85rem', whiteSpace: 'nowrap', fontWeight: 'bold' }}>{m.name}</div>
+        
+        {/* ヘッダー行 */}
+        <div className="status-grid" style={{ borderBottom: '1px solid #555', paddingBottom: '5px', marginBottom: '5px' }}>
+          <div className="status-header">氏名</div>
+          <div className="status-header">体力</div>
+          <div className="status-header">万力</div>
+          <div className="status-header">防御</div>
+          <div className="status-header">状態</div>
+        </div>
+
+        {/* メンバー行 */}
+        <div style={{ flex: 1, overflowY: 'auto' }}>
+          {party.map((m, idx) => (
+            <div key={m.id} className="status-grid" style={{ 
+              backgroundColor: (gameState === 'BATTLE' && activeBattler === idx) ? '#222' : 'transparent', 
+              color: (gameState === 'BATTLE' && activeBattler === idx) ? '#3f3' : '#fff',
+              padding: '4px 0',
+              fontSize: '1rem',
+              alignItems: 'center'
+            }}>
+              <div style={{ textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.name}</div>
+              <div style={{ color: m.hp < 10 ? '#f33' : 'inherit' }}>{m.hp}/{m.maxHp}</div>
+              <div>{m.mp}/{m.maxMp}</div>
+              <div>{m.ac}</div>
+              <div style={{ color: m.status === 'DEAD' ? '#f33' : 'inherit', fontSize: '0.9rem' }}>{m.status}</div>
             </div>
-            <div>
-              <div className="status-header" style={{ fontSize: '0.7rem' }}>体力</div>
-              <div style={{ color: m.hp < 10 ? '#f33' : '#fff', fontSize: '0.9rem' }}>{m.hp}/{m.maxHp}</div>
-            </div>
-            <div>
-              <div className="status-header" style={{ fontSize: '0.7rem' }}>万力</div>
-              <div style={{ fontSize: '0.9rem' }}>{m.mp}/{m.maxMp}</div>
-            </div>
-            <div>
-              <div className="status-header" style={{ fontSize: '0.7rem' }}>防御</div>
-              <div style={{ fontSize: '0.9rem' }}>{m.ac}</div>
-            </div>
-            <div>
-              <div className="status-header" style={{ fontSize: '0.7rem' }}>状態</div>
-              <div style={{ color: m.status === 'DEAD' ? '#f33' : '#fff', fontSize: '0.8rem' }}>{m.status}</div>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       {/* 右側：マップとメッセージ */}
