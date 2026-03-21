@@ -44,13 +44,12 @@ body {
 
 .window-title {
   position: absolute;
-  top: -1.2rem; /* タイトル拡大に合わせて調整 */
+  top: -1.2rem;
   left: 1.5rem;
   background-color: #000;
   padding: 0 0.8rem;
   color: var(--text-color);
-  font-size: 1.5rem; /* タイトルを大きく */
-  font-weight: bold;
+  font-size: 1.5rem;
   z-index: 20;
 }
 

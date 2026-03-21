@@ -299,7 +299,7 @@ function App() {
               borderBottom: '1px solid #222'
             }}>
               <div style={{ fontSize: '1rem', color: '#aaa' }}>{m.icon} {m.job}</div>
-              <div style={{ textAlign: 'left', fontWeight: 'bold' }}>{m.name}</div>
+              <div style={{ textAlign: 'left' }}>{m.name}</div>
               <div style={{ color: m.hp < (m.maxHp * 0.3) ? '#f33' : 'inherit' }}>{m.hp}/{m.maxHp}</div>
               <div>{m.mp}/{m.maxMp}</div>
               <div>{m.ac}</div>
@@ -335,7 +335,7 @@ function App() {
                </div>
                {showSpells && (
                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', backgroundColor: '#111', padding: '8px' }}>
-                    {(party[activeBattler].job === 'ONMYOJI' ? SPELLS.SEIMEI : party[activeBattler].job === 'BHIKKHUNI' ? SPELLS.BIKUNI : []).map(s => (
+                    {(party[activeBattler].job === '陰陽師' ? SPELLS.SEIMEI : party[activeBattler].job === '尼僧' ? SPELLS.BIKUNI : []).map(s => (
                       <button key={s.id} onClick={() => castSpell(s)} className="spell-btn" style={{ fontSize: '1.1rem', padding: '8px' }}>{s.name} ({s.mp})</button>
                     ))}
                  </div>
@@ -343,7 +343,12 @@ function App() {
             </div>
           )}
           <div style={{ flex: 1, padding: '10px', overflowY: 'auto', backgroundColor: '#000', color: '#eee', fontSize: '1.2rem', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {messages.map((m, i) => <div key={i}>{'>'} {m}</div>)}
+            {messages.map((m, i) => {
+               const isDamage = m.includes('ダメージ') || m.includes('痛手') || m.includes('飲まれて');
+               const isHeal = m.includes('癒えた') || m.includes('加護') || m.includes('満たされた') || m.includes('戻った');
+               const color = isDamage ? '#ff4444' : isHeal ? '#44ff44' : '#eee';
+               return <div key={i} style={{ color }}>{'>'} {m}</div>;
+            })}
           </div>
         </div>
       </div>
