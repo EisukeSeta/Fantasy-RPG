@@ -290,17 +290,18 @@ function App() {
         <div style={{ flex: 1, overflowY: 'auto' }}>
           {party.map((m, idx) => (
             <div key={m.id} className="status-grid" style={{ 
-              backgroundColor: (gameState === 'BATTLE' && activeBattler === idx) ? '#222' : 'transparent', 
+              backgroundColor: (gameState === 'BATTLE' && activeBattler === idx) ? '#153315' : 'transparent', 
               color: (gameState === 'BATTLE' && activeBattler === idx) ? '#3f3' : '#fff',
-              padding: '4px 0',
-              fontSize: '1rem',
-              alignItems: 'center'
+              padding: '8px 0', // 行の高さを出すためパディング増
+              fontSize: '1.2rem', // ステータス文字を拡大
+              alignItems: 'center',
+              borderBottom: '1px solid #222'
             }}>
-              <div style={{ textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.name}</div>
-              <div style={{ color: m.hp < 10 ? '#f33' : 'inherit' }}>{m.hp}/{m.maxHp}</div>
+              <div style={{ textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 'bold' }}>{m.name}</div>
+              <div style={{ color: m.hp < (m.maxHp * 0.3) ? '#f33' : 'inherit' }}>{m.hp}/{m.maxHp}</div>
               <div>{m.mp}/{m.maxMp}</div>
               <div>{m.ac}</div>
-              <div style={{ color: m.status === 'DEAD' ? '#f33' : 'inherit', fontSize: '0.9rem' }}>{m.status}</div>
+              <div style={{ color: m.status === 'DEAD' ? '#f33' : 'inherit' }}>{m.status}</div>
             </div>
           ))}
         </div>
@@ -309,37 +310,37 @@ function App() {
       {/* 右側：マップとメッセージ */}
       <div className="window pane-map" style={{ display: 'flex', flexDirection: 'column' }}>
         <span className="window-title">絵図と絵巻 (Map & Log)</span>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', paddingBottom: '10px', gap: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', paddingBottom: '15px', gap: '20px' }}>
           {/* 1枚のセルサイズを 20px -> 35px に拡大 (約2倍) */}
           <div style={{ display: 'grid', gridTemplateColumns: `repeat(${MAP_WIDTH}, 35px)`, gridTemplateRows: `repeat(${MAP_HEIGHT}, 35px)`, border: '2px solid #555' }}>
             {mapData.map((row, y) => row.map((cell, x) => renderMapCell(cell, x, y)))}
           </div>
           {/* マップ凡例 */}
-          <div style={{ fontSize: '1.1rem', color: '#aaa', border: '1px solid #444', padding: '10px', backgroundColor: '#080808', flexShrink: 0 }}>
-            <div style={{ color: '#fff', borderBottom: '1px solid #333', marginBottom: '8px', textAlign: 'center' }}>凡例</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}><span style={{ color: '#66f', fontSize: '1.5rem' }}>⛩</span>御神木</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: '#3f3', fontSize: '1.2rem' }}>▲</span>現在地</div>
+          <div style={{ fontSize: '1.2rem', color: '#aaa', border: '1px solid #444', padding: '12px', backgroundColor: '#080808', flexShrink: 0 }}>
+            <div style={{ color: '#fff', borderBottom: '1px solid #333', marginBottom: '10px', textAlign: 'center' }}>凡例</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}><span style={{ color: '#66f', fontSize: '1.8rem' }}>⛩</span>御神木</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><span style={{ color: '#3f3', fontSize: '1.4rem' }}>▲</span>現在地</div>
           </div>
         </div>
 
         <div style={{ flex: 1, borderTop: '2px solid #666', paddingTop: '10px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {gameState === 'BATTLE' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', paddingBottom: '10px' }}>
-               <div style={{ fontSize: '0.9rem', color: '#3f3' }}>【覚悟せよ、{party[activeBattler].name}！】</div>
-               <div style={{ display: 'flex', gap: '5px' }}>
-                 <button onClick={handleFight} className="battle-btn">打ちかかる</button>
-                 <button onClick={() => setShowSpells(showSpells ? null : party[activeBattler].id)} className="battle-btn">術・祈祷</button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: '10px' }}>
+               <div style={{ fontSize: '1.1rem', color: '#3f3' }}>【覚悟せよ、{party[activeBattler].name}！】</div>
+               <div style={{ display: 'flex', gap: '8px' }}>
+                 <button onClick={handleFight} className="battle-btn" style={{ fontSize: '1.4rem', padding: '12px' }}>打ちかかる</button>
+                 <button onClick={() => setShowSpells(showSpells ? null : party[activeBattler].id)} className="battle-btn" style={{ fontSize: '1.4rem', padding: '12px' }}>術・祈祷</button>
                </div>
                {showSpells && (
-                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', backgroundColor: '#111', padding: '5px' }}>
+                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', backgroundColor: '#111', padding: '8px' }}>
                     {(party[activeBattler].job === 'ONMYOJI' ? SPELLS.SEIMEI : party[activeBattler].job === 'BHIKKHUNI' ? SPELLS.BIKUNI : []).map(s => (
-                      <button key={s.id} onClick={() => castSpell(s)} className="spell-btn">{s.name} ({s.mp})</button>
+                      <button key={s.id} onClick={() => castSpell(s)} className="spell-btn" style={{ fontSize: '1.1rem', padding: '8px' }}>{s.name} ({s.mp})</button>
                     ))}
                  </div>
                )}
             </div>
           )}
-          <div style={{ flex: 1, padding: '5px', overflowY: 'auto', backgroundColor: '#000', color: '#eee', fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <div style={{ flex: 1, padding: '10px', overflowY: 'auto', backgroundColor: '#000', color: '#eee', fontSize: '1.2rem', display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {messages.map((m, i) => <div key={i}>{'>'} {m}</div>)}
           </div>
         </div>

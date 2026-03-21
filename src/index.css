@@ -17,7 +17,7 @@ body {
   background-color: var(--bg-color);
   color: var(--text-color);
   font-family: var(--font-family);
-  font-size: 1.4rem; /* 全体的にフォントを拡大 */
+  font-size: 1.6rem; /* さらにフォントを拡大 */
   height: 100vh;
   width: 100vw;
   overflow: hidden;
