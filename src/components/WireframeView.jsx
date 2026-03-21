@@ -7,13 +7,15 @@ import { DIRECTIONS, DIR_DELTAS, MAP_WIDTH, MAP_HEIGHT } from '../data/mapData';
 // d=1: 1マス先（このマスの手前側が、現在のマスの奥側）
 // d=2: 2マス先
 // d=3: 3マス先
+// 遠近法の座標定義（300 x 100 の viewBox 内）
+// 横幅を 3倍に広げ、アスペクト比を 3:1 にする
 const getDepthBox = (d) => {
   const boxes = [
-    { x1: 0,  y1: 0,  x2: 100, y2: 100 }, // d=0 (画面端)
-    { x1: 15, y1: 15, x2: 85,  y2: 85 },  // d=1
-    { x1: 30, y1: 30, x2: 70,  y2: 70 },  // d=2
-    { x1: 42, y1: 42, x2: 58,  y2: 58 },  // d=3
-    { x1: 48, y1: 48, x2: 52,  y2: 52 }   // d=4 (奥)
+    { x1: 0,   y1: 0,  x2: 300, y2: 100 }, // d=0 (画面端 300px)
+    { x1: 45,  y1: 15, x2: 255, y2: 85 },  // d=1
+    { x1: 90,  y1: 30, x2: 210, y2: 70 },  // d=2
+    { x1: 126, y1: 42, x2: 174, y2: 58 },  // d=3
+    { x1: 144, y1: 48, x2: 156, y2: 52 }   // d=4 (奥)
   ];
   return boxes[Math.min(d, boxes.length - 1)];
 };
@@ -102,12 +104,12 @@ export const WireframeView = ({ mapData, playerPos, playerDir }) => {
 
   return (
     <svg 
-      viewBox="0 0 100 100" 
+      viewBox="0 0 300 100" 
       preserveAspectRatio="none" 
       style={{ width: '100%', height: '100%', backgroundColor: '#000', display: 'block' }}
     >
       {/* 画面枠 */}
-      <rect x="1" y="1" width="98" height="98" fill="none" stroke="#fff" strokeWidth="2" />
+      <rect x="1" y="1" width="298" height="98" fill="none" stroke="#fff" strokeWidth="2" />
       {lines}
     </svg>
   );
