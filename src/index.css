@@ -1,0 +1,117 @@
+:root {
+  --bg-color: #050505;
+  --text-color: #E0E0E0;
+  --border-color: #AAAAAA;
+  --accent-color: #33FF33;
+  --border-width: 3px;
+  --font-family: 'DotGothic16', monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: var(--font-family);
+  font-size: 1.2rem;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  max-width: 1200px;
+  max-height: 900px;
+}
+
+/* ウィンドウ共通スタイル */
+.window {
+  border: var(--border-width) solid var(--border-color);
+  background-color: #000;
+  padding: 1rem;
+  position: relative;
+  /* Wizardry風の二重線フレーム */
+  box-shadow: inset 0 0 0 2px var(--bg-color), inset 0 0 0 3px var(--border-color);
+}
+
+.window-title {
+  position: absolute;
+  top: -0.8rem;
+  left: 1rem;
+  background-color: #000;
+  padding: 0 0.5rem;
+  color: var(--text-color);
+  font-size: 1.1rem;
+}
+
+/* ゲーム全体のコンテナ */
+.game-container {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  grid-template-rows: 2fr 1fr;
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  padding: 10px;
+}
+
+.pane-main {
+  grid-column: 1 / 2;
+  grid-row: 1 / 2;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.pane-enemy {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  z-index: 10;
+  text-align: center;
+}
+
+.pane-status {
+  grid-column: 1 / 2;
+  grid-row: 2 / 3;
+}
+
+.pane-map {
+  grid-column: 2 / 3;
+  grid-row: 1 / 3;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.status-header {
+  color: var(--accent-color);
+  margin-bottom: 5px;
+}
+
+.wireframe-container {
+  width: 100%;
+  height: 100%;
+  border: 1px solid #333;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #000;
+}
