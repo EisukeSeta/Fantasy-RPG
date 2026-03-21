@@ -17,7 +17,7 @@ body {
   background-color: var(--bg-color);
   color: var(--text-color);
   font-family: var(--font-family);
-  font-size: 1.2rem;
+  font-size: 1.4rem; /* 全体的にフォントを拡大 */
   height: 100vh;
   width: 100vw;
   overflow: hidden;
@@ -55,9 +55,9 @@ body {
 /* ゲーム全体のコンテナ */
 .game-container {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  grid-template-rows: 1fr 180px; /* ステータスを180px固定 */
-  gap: 15px;
+  grid-template-columns: 2fr 1.5fr; /* マップ側をさらに広げる */
+  grid-template-rows: 1fr 180px; 
+  gap: 20px; /* 余白を広げてゆとりを出す */
   width: 100%;
   height: 100%;
 }

@@ -235,18 +235,18 @@ function App() {
   const renderMapCell = (cell, x, y) => {
     const isPlayerPos = playerState.x === x && playerState.y === y;
     const isHealSpot = x === 1 && y === 1;
-    if (!cell.visited) return <div key={`${x}-${y}`} style={{ width: 20, height: 20, backgroundColor: '#000' }}></div>;
+    if (!cell.visited) return <div key={`${x}-${y}`} style={{ width: 35, height: 35, backgroundColor: '#000' }}></div>;
     return (
       <div key={`${x}-${y}`} style={{
-        width: 20, height: 20, backgroundColor: isHealSpot ? '#113' : '#111', position: 'relative',
+        width: 35, height: 35, backgroundColor: isHealSpot ? '#113' : '#111', position: 'relative',
         borderTop: cell.n ? '2px solid #aaa' : '1px dashed #333',
         borderRight: cell.e ? '2px solid #aaa' : '1px dashed #333',
         borderBottom: cell.s ? '2px solid #aaa' : '1px dashed #333',
         borderLeft: cell.w ? '2px solid #aaa' : '1px dashed #333', boxSizing: 'border-box'
       }}>
-        {isHealSpot && <div style={{ position: 'absolute', top: 2, left: 6, color: '#66f', fontWeight: 'bold' }}>⛩</div>}
+        {isHealSpot && <div style={{ position: 'absolute', top: 3, left: 8, color: '#66f', fontWeight: 'bold', fontSize: '1.4rem' }}>⛩</div>}
         {isPlayerPos && (
-          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: `translate(-50%, -50%) rotate(${playerState.dir * 90}deg)`, color: '#3f3', fontSize: '14px', lineHeight: 1 }}>▲</div>
+          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: `translate(-50%, -50%) rotate(${playerState.dir * 90}deg)`, color: '#3f3', fontSize: '20px', lineHeight: 1 }}>▲</div>
         )}
       </div>
     );
@@ -309,15 +309,16 @@ function App() {
       {/* 右側：マップとメッセージ */}
       <div className="window pane-map" style={{ display: 'flex', flexDirection: 'column' }}>
         <span className="window-title">絵図と絵巻 (Map & Log)</span>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', paddingBottom: '10px', gap: '15px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${MAP_WIDTH}, 20px)`, gridTemplateRows: `repeat(${MAP_HEIGHT}, 20px)`, border: '2px solid #555' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', paddingBottom: '10px', gap: '20px' }}>
+          {/* 1枚のセルサイズを 20px -> 35px に拡大 (約2倍) */}
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${MAP_WIDTH}, 35px)`, gridTemplateRows: `repeat(${MAP_HEIGHT}, 35px)`, border: '2px solid #555' }}>
             {mapData.map((row, y) => row.map((cell, x) => renderMapCell(cell, x, y)))}
           </div>
           {/* マップ凡例 */}
-          <div style={{ fontSize: '0.8rem', color: '#aaa', border: '1px solid #444', padding: '5px', backgroundColor: '#080808' }}>
-            <div style={{ color: '#fff', borderBottom: '1px solid #333', marginBottom: '4px', textAlign: 'center' }}>凡例</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ color: '#66f' }}>⛩</span>御神木</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ color: '#3f3' }}>▲</span>現在地</div>
+          <div style={{ fontSize: '1.1rem', color: '#aaa', border: '1px solid #444', padding: '10px', backgroundColor: '#080808', flexShrink: 0 }}>
+            <div style={{ color: '#fff', borderBottom: '1px solid #333', marginBottom: '8px', textAlign: 'center' }}>凡例</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}><span style={{ color: '#66f', fontSize: '1.5rem' }}>⛩</span>御神木</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: '#3f3', fontSize: '1.2rem' }}>▲</span>現在地</div>
           </div>
         </div>
 
