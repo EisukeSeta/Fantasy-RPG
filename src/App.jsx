@@ -17,9 +17,9 @@ function App() {
   
   // 3人のパーティメンバー
   const [party, setParty] = useState([
-    { id: 'Tsu', name: '渡辺 綱', job: 'SAMURAI', hp: 30, maxHp: 30, mp: 0, maxMp: 0, ac: 4, minDmg: 6, maxDmg: 15, status: 'NORMAL' },
-    { id: 'Sei', name: '安倍 晴明', job: 'ONMYOJI', hp: 15, maxHp: 15, mp: 10, maxMp: 10, ac: 10, minDmg: 1, maxDmg: 4, status: 'NORMAL' },
-    { id: 'Bik', name: '八百比丘尼', job: 'BHIKKHUNI', hp: 20, maxHp: 20, mp: 8, maxMp: 8, ac: 8, minDmg: 2, maxDmg: 6, status: 'NORMAL' }
+    { id: 'Tsu', name: '渡辺 綱', job: '武将', icon: '⚔️', hp: 30, maxHp: 30, mp: 0, maxMp: 0, ac: 4, minDmg: 6, maxDmg: 15, status: '平安' },
+    { id: 'Sei', name: '安倍 晴明', job: '陰陽師', icon: '☯️', hp: 15, maxHp: 15, mp: 10, maxMp: 10, ac: 10, minDmg: 1, maxDmg: 4, status: '平安' },
+    { id: 'Bik', name: '八百比丘尼', job: '尼僧', icon: '📿', hp: 20, maxHp: 20, mp: 8, maxMp: 8, ac: 8, minDmg: 2, maxDmg: 6, status: '平安' }
   ]);
 
   const [activeBattler, setActiveBattler] = useState(0); // ターン中のパーティメンバー index
@@ -279,6 +279,7 @@ function App() {
         
         {/* ヘッダー行 */}
         <div className="status-grid" style={{ borderBottom: '1px solid #555', paddingBottom: '5px', marginBottom: '5px' }}>
+          <div className="status-header">職種</div>
           <div className="status-header">氏名</div>
           <div className="status-header">体力</div>
           <div className="status-header">万力</div>
@@ -292,12 +293,13 @@ function App() {
             <div key={m.id} className="status-grid" style={{ 
               backgroundColor: (gameState === 'BATTLE' && activeBattler === idx) ? '#153315' : 'transparent', 
               color: (gameState === 'BATTLE' && activeBattler === idx) ? '#3f3' : '#fff',
-              padding: '8px 0', // 行の高さを出すためパディング増
-              fontSize: '1.2rem', // ステータス文字を拡大
+              padding: '8px 0',
+              fontSize: '1.2rem',
               alignItems: 'center',
               borderBottom: '1px solid #222'
             }}>
-              <div style={{ textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 'bold' }}>{m.name}</div>
+              <div style={{ fontSize: '1rem', color: '#aaa' }}>{m.icon} {m.job}</div>
+              <div style={{ textAlign: 'left', fontWeight: 'bold' }}>{m.name}</div>
               <div style={{ color: m.hp < (m.maxHp * 0.3) ? '#f33' : 'inherit' }}>{m.hp}/{m.maxHp}</div>
               <div>{m.mp}/{m.maxMp}</div>
               <div>{m.ac}</div>

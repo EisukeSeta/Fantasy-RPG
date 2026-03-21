@@ -101,7 +101,7 @@ body {
 
 .status-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1.5fr 1fr 1fr 1fr 1fr; /* 職業、氏名、体力、万力、防御、状態 */
   text-align: center;
 }
 
