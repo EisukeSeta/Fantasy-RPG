@@ -309,9 +309,15 @@ function App() {
       {/* 右側：マップとメッセージ */}
       <div className="window pane-map" style={{ display: 'flex', flexDirection: 'column' }}>
         <span className="window-title">絵図と絵巻 (Map & Log)</span>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', paddingBottom: '10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', paddingBottom: '10px', gap: '15px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: `repeat(${MAP_WIDTH}, 20px)`, gridTemplateRows: `repeat(${MAP_HEIGHT}, 20px)`, border: '2px solid #555' }}>
             {mapData.map((row, y) => row.map((cell, x) => renderMapCell(cell, x, y)))}
+          </div>
+          {/* マップ凡例 */}
+          <div style={{ fontSize: '0.8rem', color: '#aaa', border: '1px solid #444', padding: '5px', backgroundColor: '#080808' }}>
+            <div style={{ color: '#fff', borderBottom: '1px solid #333', marginBottom: '4px', textAlign: 'center' }}>凡例</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ color: '#66f' }}>⛩</span>御神木</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ color: '#3f3' }}>▲</span>現在地</div>
           </div>
         </div>
 

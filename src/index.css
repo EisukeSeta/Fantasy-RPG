@@ -57,7 +57,7 @@ body {
 .game-container {
   display: grid;
   grid-template-columns: 2fr 1fr;
-  grid-template-rows: 1fr 250px; /* ステータスを250px固定、残りをメインに */
+  grid-template-rows: 1fr 150px; /* メインをさらに広げ、ステータスは150px確保 */
   gap: 10px;
   width: 100%;
   height: 100%;
@@ -113,4 +113,5 @@ body {
   justify-content: center;
   align-items: center;
   background-color: #000;
+  overflow: hidden;
 }
