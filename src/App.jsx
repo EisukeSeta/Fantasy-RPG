@@ -16,6 +16,7 @@ const getRequiredExp = (lv) => {
 
 function App() {
   const [gameState, setGameState] = useState('EXPLORING'); // EXPLORING, BATTLE, DEAD, CLEAR
+  const [bossDefeated, setBossDefeated] = useState(false); 
   
   // マップと位置データ
   const [mapData, setMapData] = useState(() => {
@@ -53,9 +54,19 @@ function App() {
   // ボス（ぬえ）の場所検知 (仮のボス座標: 8,6)
   const BOSS_POS = { x: 8, y: 6 };
   const checkOminousPresence = (x, y) => {
+    if (bossDefeated) return;
     const dist = Math.abs(x - BOSS_POS.x) + Math.abs(y - BOSS_POS.y);
     if (dist <= 5) {
       addMessage('妖気が強まっている。強力な魔物が近いようだ。');
+    }
+  };
+
+  // 出口の確認
+  const checkExit = (x, y) => {
+    if (bossDefeated && x === BOSS_POS.x && y === BOSS_POS.y) {
+      if (window.confirm('魔物の邪気は消え、先へ進む出口が開いている。この階層を抜けますか？')) {
+        setGameState('CLEAR');
+      }
     }
   };
 
@@ -64,7 +75,12 @@ function App() {
   const checkHealSpot = (x, y) => {
     const isHeal = HEAL_SPOTS.some(s => s.x === x && s.y === y);
     if (isHeal) {
-      setParty(prev => prev.map(m => ({ ...m, hp: m.maxHp, mp: m.maxMp, status: '平安' })));
+      setParty(prev => prev.map(m => {
+        if (m.status === '討死') {
+          addMessage(`【神仏の慈悲】${m.name} が黄泉の淵から呼び戻された！`);
+        }
+        return { ...m, hp: m.maxHp, mp: m.maxMp, status: '平安' };
+      }));
       addMessage('神社の結界にて加護を得、生命の力が満たされた！');
     }
   };
@@ -111,6 +127,7 @@ function App() {
         setPlayerState({ x: newX, y: newY, dir: newDir });
         checkHealSpot(newX, newY);
         checkOminousPresence(newX, newY);
+        checkExit(newX, newY);
         if (!mapDataRef.current[newY][newX].visited) {
           setMapData(prevMap => {
              const newMap = [...prevMap];
@@ -122,7 +139,7 @@ function App() {
 
       if (hasMoved) {
           // ボス位置に到達
-          if (newX === BOSS_POS.x && newY === BOSS_POS.y) {
+          if (!bossDefeated && newX === BOSS_POS.x && newY === BOSS_POS.y) {
               const boss = ENEMY_LIST.find(e => e.id === 4); // ぬえ
               setEnemy({ ...boss, hp: boss.maxHp });
               setGameState('BATTLE');
@@ -188,6 +205,11 @@ function App() {
   const endBattle = (won) => {
     if (won) {
         addMessage(`${enemy.name} を撃破した！`);
+        // ボス勝利フラグ
+        if (enemy.isBoss && enemy.id === 4) {
+          setBossDefeated(true);
+          addMessage('魔物の気配が消え、迷路の奥に出口が現れた！');
+        }
         // 経験値分配
         setParty(prev => prev.map(m => {
             const gain = Math.floor(enemy.exp * (enemy.expShare[m.jobKey.toLowerCase()] || 0.3));
@@ -428,9 +450,11 @@ function App() {
           )}
           <div style={{ flex: 1, padding: '10px', overflowY: 'auto', backgroundColor: '#000', color: '#eee', fontSize: '1.2rem', display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {messages.map((m, i) => {
-               const isDamage = m.includes('ダメージ') || m.includes('痛手') || m.includes('飲まれて');
+               // 味方がダメージを受けた時だけ赤（ピンチ強調）
+               const attackerNames = party.map(p => p.name);
+               const isPlayerDamage = (m.includes('ダメージ') && !attackerNames.some(name => m.startsWith(name))) || m.includes('痛手') || m.includes('飲まれて');
                const isHeal = m.includes('癒えた') || m.includes('加護') || m.includes('満たされた') || m.includes('回復');
-               const color = isDamage ? '#ff4444' : isHeal ? '#44ff44' : '#eee';
+               const color = isPlayerDamage ? '#ff4444' : isHeal ? '#44ff44' : '#eee';
                return <div key={i} style={{ color }}>{'>'} {m}</div>;
             })}
           </div>
