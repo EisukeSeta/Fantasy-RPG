@@ -97,13 +97,14 @@ function App() {
 
   // 巻物のチェック
   const checkScroll = (x, y) => {
-    if (x === SCROLL_POS.x && y === SCROLL_POS.y && !hasReadScroll) {
+    const TARGET_SCROLL_POS = { x: 1, y: 3 }; 
+    if (x === TARGET_SCROLL_POS.x && y === TARGET_SCROLL_POS.y && !hasReadScroll) {
         setHasReadScroll(true); // 即座にフラグを立てて多重発火を完全にガード
         showDialog(
             '古の巻物',
             [
               "「平安の都には毎夜、黒煙と共に不気味な鵺の鳴き声が響き渡り、天皇は病の身となり、民は度重なる不幸に見舞われていた。薬や祈祷をもってしても効果は無かった。」",
-              "源頼政より命を受けし武者、渡辺綱よ。迷宮の奥底に潜む怨念の核『鵺』を調伏せよ。都の安寧は其方の双肩に掛かっておる。迷宮の奥(8,6)へ向かえ……。"
+              "源頼政より命を受けし武者、渡辺綱よ。迷宮の奥底に潜む怨念の核『鵺』を調伏せよ。都の安寧は其方の双肩に掛かっておる。都の北東、妖気の源へ向かえ……。"
             ]
         );
         addMessage('使命：迷宮の主「鵺」を調伏せよ。');
@@ -508,6 +509,9 @@ function App() {
           </div>
           <div style={{ fontSize: '1.2rem', color: '#aaa', border: '1px solid #444', padding: '12px', backgroundColor: '#080808', flexShrink: 0 }}>
             <div style={{ color: '#fff', borderBottom: '1px solid #333', marginBottom: '10px', textAlign: 'center' }}>凡例</div>
+            <div style={{ marginBottom: '15px', color: '#f0e68c', textAlign: 'center', borderBottom: '1px solid #444', paddingBottom: '8px' }}>
+               現在地：[{playerState.x}, {playerState.y}]
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}><span style={{ color: '#66f', fontSize: '1.8rem' }}>⛩</span>結界</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}><span style={{ color: '#aa0', fontSize: '1.8rem' }}>📜</span>巻物</div>
             {bossDefeated && <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}><span style={{ color: '#f33', fontSize: '1.8rem' }}>✨</span>出口</div>}
