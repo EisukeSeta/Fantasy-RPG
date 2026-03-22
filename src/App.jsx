@@ -54,6 +54,10 @@ function App() {
 
   // ボス（ぬえ）の場所検知 (仮のボス座標: 8,6)
   const BOSS_POS = { x: 8, y: 6 };
+  // 古の巻物 (座標 1,2 - 社のすぐ前)
+  const SCROLL_POS = { x: 1, y: 2 };
+  const [hasReadScroll, setHasReadScroll] = useState(false);
+
   const checkOminousPresence = (x, y) => {
     if (bossDefeated) return;
     const dist = Math.abs(x - BOSS_POS.x) + Math.abs(y - BOSS_POS.y);
@@ -68,6 +72,15 @@ function App() {
       if (window.confirm('魔物の邪気は消え、先へ進む出口が開いている。この階層を抜けますか？')) {
         setGameState('CLEAR');
       }
+    }
+  };
+
+  // 巻物のチェック
+  const checkScroll = (x, y) => {
+    if (!hasReadScroll && x === SCROLL_POS.x && y === SCROLL_POS.y) {
+        alert("【古の巻物】\n「平安の都には毎夜、黒煙と共に不気味な鵺の鳴き声が響き渡り、天皇は病の身となり、民は度重なる不幸に見舞われていた。薬や祈祷をもってしても効果は無かった。」\n\n源頼政より命を受けし武者、渡辺綱よ。迷宮の奥底に潜む怨念の核『鵺』を調伏せよ。都の安寧は其方の双肩に掛かっておる。");
+        setHasReadScroll(true);
+        addMessage('使命：迷宮の主「鵺」を調伏せよ。');
     }
   };
 
@@ -129,6 +142,7 @@ function App() {
         checkHealSpot(newX, newY);
         checkOminousPresence(newX, newY);
         checkExit(newX, newY);
+        checkScroll(newX, newY);
         if (!mapDataRef.current[newY][newX].visited) {
           setMapData(prevMap => {
              const newMap = [...prevMap];
@@ -161,7 +175,7 @@ function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState, party, bossDefeated]);
+  }, [gameState, party, bossDefeated, hasReadScroll]);
 
   // レベルアップ処理
   const handleLevelUp = (member) => {
@@ -178,7 +192,10 @@ function App() {
       else if (m.jobKey === 'ONMYOJI' && m.lv % 2 === 0) m.ac -= 1;
       else if (m.jobKey === 'NISOU' && m.lv % 3 === 0) m.ac -= 1;
       
-      addMessage(`${m.name} はLv${m.lv}に上がった！`);
+      addMessage(`${m.name} は階級【Lv${m.lv}】に上がった！`);
+      if (m.jobKey === 'SAMURAI' && m.maxMp > 0 && m.lv === 2) {
+          addMessage(`${m.name} は己のマナに目覚め、奥義の端緒を掴んだ！`);
+      }
     }
     m.hp = m.maxHp;
     m.mp = m.maxMp;
@@ -208,7 +225,7 @@ function App() {
     if (won) {
         addMessage(`${enemy.name} を撃破した！`);
         // ボス勝利フラグ
-        if (enemy.isBoss && enemy.id === 4) {
+        if (enemy.isBoss && enemy.id === 10) {
           setBossDefeated(true);
           addMessage('魔物の気配が消え、迷路の奥に出口が現れた！');
         }
@@ -344,16 +361,21 @@ function App() {
   const renderMapCell = (cell, x, y) => {
     const isPlayerPos = playerState.x === x && playerState.y === y;
     const isHealSpot = HEAL_SPOTS.some(s => s.x === x && s.y === y);
+    const isScrollSpot = x === SCROLL_POS.x && y === SCROLL_POS.y;
+    const isExitSpot = bossDefeated && x === BOSS_POS.x && y === BOSS_POS.y;
+
     if (!cell.visited) return <div key={`${x}-${y}`} style={{ width: 35, height: 35, backgroundColor: '#000' }}></div>;
     return (
       <div key={`${x}-${y}`} style={{
-        width: 35, height: 35, backgroundColor: isHealSpot ? '#113' : '#111', position: 'relative',
+        width: 35, height: 35, backgroundColor: isHealSpot ? '#113' : isScrollSpot ? '#220' : '#111', position: 'relative',
         borderTop: cell.n ? '2px solid #aaa' : '1px dashed #333',
         borderRight: cell.e ? '2px solid #aaa' : '1px dashed #333',
         borderBottom: cell.s ? '2px solid #aaa' : '1px dashed #333',
         borderLeft: cell.w ? '2px solid #aaa' : '1px dashed #333', boxSizing: 'border-box'
       }}>
         {isHealSpot && <div style={{ position: 'absolute', top: 3, left: 8, color: '#66f', fontWeight: 'bold', fontSize: '1.4rem' }}>⛩</div>}
+        {isScrollSpot && <div style={{ position: 'absolute', top: 3, left: 8, color: '#aa0', fontWeight: 'bold', fontSize: '1.4rem' }}>📜</div>}
+        {isExitSpot && <div style={{ position: 'absolute', top: 3, left: 8, color: '#f33', fontWeight: 'bold', fontSize: '1.4rem' }}>✨</div>}
         {isPlayerPos && (
           <div style={{ position: 'absolute', top: '50%', left: '50%', transform: `translate(-50%, -50%) rotate(${playerState.dir * 90}deg)`, color: '#3f3', fontSize: '20px', lineHeight: 1 }}>▲</div>
         )}
@@ -378,6 +400,7 @@ function App() {
         <div className="wireframe-container" style={{ position: 'relative' }}>
           <WireframeView mapData={mapDataRef.current} playerPos={playerState} playerDir={playerState.dir} />
           {gameState === 'DEAD' && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(80,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ color: '#F22', fontSize: '3rem' }}>討死</div></div>}
+          {gameState === 'CLEAR' && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,40,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ color: '#Ff2', fontSize: '3rem', textAlign: 'center' }}>🎉 階層突破 🎉<div style={{ fontSize: '1.5rem', marginTop: '10px' }}>都の安寧へ一歩近づいた...</div></div></div>}
         </div>
       </div>
 
@@ -428,6 +451,8 @@ function App() {
           <div style={{ fontSize: '1.2rem', color: '#aaa', border: '1px solid #444', padding: '12px', backgroundColor: '#080808', flexShrink: 0 }}>
             <div style={{ color: '#fff', borderBottom: '1px solid #333', marginBottom: '10px', textAlign: 'center' }}>凡例</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}><span style={{ color: '#66f', fontSize: '1.8rem' }}>⛩</span>結界</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}><span style={{ color: '#aa0', fontSize: '1.8rem' }}>📜</span>巻物</div>
+            {bossDefeated && <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}><span style={{ color: '#f33', fontSize: '1.8rem' }}>✨</span>出口</div>}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><span style={{ color: '#3f3', fontSize: '1.4rem' }}>▲</span>現在地</div>
           </div>
         </div>
