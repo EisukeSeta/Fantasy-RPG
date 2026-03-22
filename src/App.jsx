@@ -166,6 +166,25 @@ function App() {
     return m;
   };
 
+  // 逃げるアクション
+  const handleRun = () => {
+    if (gameState !== 'BATTLE' || !enemy) return;
+    // ボス（鵺など）からは逃げにくい、または逃げられない設計
+    const baseChance = enemy.isBoss ? 0.2 : 0.5;
+    const avgLv = party.reduce((sum, m) => sum + m.lv, 0) / 3;
+    const runChance = Math.min(0.9, Math.max(0.1, baseChance + (avgLv - enemy.lv) * 0.1));
+    
+    if (Math.random() < runChance) {
+        addMessage('脱兎の如く逃げ出した！');
+        setEnemy(null);
+        setGameState('EXPLORING');
+    } else {
+        addMessage('逃げ道が塞がれている！ 背後を突かれた！');
+        processEnemyTurn(party, enemy); // 失敗すると敵のターンへ
+    }
+  };
+
+  // バトル終了処理
   const endBattle = (won) => {
     if (won) {
         addMessage(`${enemy.name} を撃破した！`);
@@ -190,6 +209,7 @@ function App() {
   };
 
   const processEnemyTurn = (currentParty, currentEnemy) => {
+      if (!currentEnemy) return;
       const aliveMembers = currentParty.map((m, i) => ({ ...m, originalIndex: i })).filter(m => m.hp > 0);
       if (aliveMembers.length === 0) {
           endBattle(false);
@@ -212,16 +232,20 @@ function App() {
           endBattle(false);
       } else {
           setParty(newParty);
-          setActiveBattler(0);
+          // 最初から生きている人を探す
+          const nextAlive = newParty.findIndex(m => m.hp > 0);
+          setActiveBattler(nextAlive !== -1 ? nextAlive : 0);
       }
   };
 
   const handleFight = () => {
     if (gameState !== 'BATTLE') return;
     const attacker = party[activeBattler];
+    
+    // 予期せぬ呼び出し（討死メンバー）へのガード
     if (attacker.hp === 0) {
-        const next = activeBattler + 1;
-        if (next < party.length) setActiveBattler(next);
+        const next = party.findIndex((m, i) => i > activeBattler && m.hp > 0);
+        if (next !== -1) setActiveBattler(next);
         else processEnemyTurn(party, enemy);
         return;
     }
@@ -239,8 +263,9 @@ function App() {
       endBattle(true); return;
     }
 
-    const nextBattler = activeBattler + 1;
-    if (nextBattler < party.length) {
+    // 次の生存者を探す
+    const nextBattler = party.findIndex((m, i) => i > activeBattler && m.hp > 0);
+    if (nextBattler !== -1) {
       setActiveBattler(nextBattler);
       setEnemy({ ...enemy, hp: newEnemyHp });
     } else {
@@ -286,8 +311,8 @@ function App() {
     if (newEnemy.hp <= 0) {
       endBattle(true);
     } else {
-      const nextBattler = activeBattler + 1;
-      if (nextBattler < party.length) setActiveBattler(nextBattler);
+      const nextBattler = newParty.findIndex((m, i) => i > activeBattler && m.hp > 0);
+      if (nextBattler !== -1) setActiveBattler(nextBattler);
       else processEnemyTurn(newParty, newEnemy);
     }
   };
@@ -390,6 +415,7 @@ function App() {
                <div style={{ display: 'flex', gap: '8px' }}>
                  <button onClick={handleFight} className="battle-btn" style={{ fontSize: '1.4rem', padding: '12px' }}>打ちかかる</button>
                  <button onClick={() => setShowSpells(showSpells === party[activeBattler].id ? null : party[activeBattler].id)} className="battle-btn" style={{ fontSize: '1.4rem', padding: '12px' }}>術・祈祷</button>
+                 <button onClick={handleRun} className="battle-btn" style={{ fontSize: '1.4rem', padding: '12px', backgroundColor: '#422' }}>逃げる</button>
                </div>
                {showSpells && (
                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', backgroundColor: '#111', padding: '8px' }}>
