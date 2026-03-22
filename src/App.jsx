@@ -4,14 +4,15 @@ import { WireframeView } from './components/WireframeView';
 import { ENEMY_LIST, getRandomEnemy, calculateHitAndDamage } from './data/enemyData';
 import { SPELLS } from './data/magicData';
 
-// S字カーブの累積必要経験値テーブル（Lv50飽和）
+// S字カーブの累積必要経験値テーブル（Lv2へは100程度で到達するように調整）
 const getRequiredExp = (lv) => {
   if (lv <= 1) return 0;
+  if (lv === 2) return 100; // 最初の数回で上がるように
   if (lv >= 50) return 9999999;
   const x = (lv - 1) / 49;
   // シグモイド関数的なS字カーブ
   const sigmoid = 1 / (1 + Math.exp(-6 * (x - 0.5)));
-  return Math.floor(10000 * sigmoid);
+  return Math.floor(15000 * sigmoid);
 };
 
 function App() {
@@ -28,7 +29,7 @@ function App() {
   
   // 3人のパーティメンバー
   const [party, setParty] = useState([
-    { id: 'Tsu', name: '渡辺 綱', job: '武将', jobKey: 'SAMURAI', expName: '武者の魂', lv: 1, exp: 0, icon: '⚔️', hp: 30, maxHp: 30, mp: 0, maxMp: 0, ac: 4, minDmg: 8, maxDmg: 15, status: '平安' },
+    { id: 'Tsu', name: '渡辺 綱', job: '武者', jobKey: 'SAMURAI', expName: '武者の魂', lv: 1, exp: 0, icon: '⚔️', hp: 30, maxHp: 30, mp: 0, maxMp: 0, ac: 4, minDmg: 8, maxDmg: 15, status: '平安' },
     { id: 'Sei', name: '安倍 晴明', job: '陰陽師', jobKey: 'ONMYOJI', expName: '式神の守', lv: 1, exp: 0, icon: '☯️', hp: 15, maxHp: 15, mp: 10, maxMp: 10, ac: 10, minDmg: 1, maxDmg: 4, status: '平安' },
     { id: 'Bik', name: '八百比丘尼', job: '尼僧', jobKey: 'NISOU', expName: '法力', lv: 1, exp: 0, icon: '📿', hp: 20, maxHp: 20, mp: 8, maxMp: 8, ac: 8, minDmg: 2, maxDmg: 6, status: '平安' }
   ]);
@@ -140,7 +141,7 @@ function App() {
       if (hasMoved) {
           // ボス位置に到達
           if (!bossDefeated && newX === BOSS_POS.x && newY === BOSS_POS.y) {
-              const boss = ENEMY_LIST.find(e => e.id === 4); // ぬえ
+              const boss = ENEMY_LIST.find(e => e.id === 10); // 鵺
               setEnemy({ ...boss, hp: boss.maxHp });
               setGameState('BATTLE');
               addMessage(`【宿敵】${boss.name} が咆哮を上げる！決戦だ！`);
@@ -160,7 +161,7 @@ function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState, party]);
+  }, [gameState, party, bossDefeated]);
 
   // レベルアップ処理
   const handleLevelUp = (member) => {
@@ -168,7 +169,8 @@ function App() {
     while (m.exp >= getRequiredExp(m.lv + 1) && m.lv < 50) {
       m.lv += 1;
       const hpGain = (m.jobKey === 'SAMURAI' ? 8 : m.jobKey === 'NISOU' ? 5 : 3) + Math.floor(Math.random() * 5 - 2);
-      const mpGain = (m.jobKey === 'ONMYOJI' ? 6 : m.jobKey === 'NISOU' ? 4 : 0) + Math.floor(Math.random() * 3 - 1);
+      // 武者(SAMURAI)もレベルアップでマナが覚醒する設計
+      const mpGain = (m.jobKey === 'ONMYOJI' ? 6 : m.jobKey === 'NISOU' ? 4 : 2) + Math.floor(Math.random() * 3 - 1);
       m.maxHp += Math.max(1, hpGain);
       m.maxMp += Math.max(0, mpGain);
       // AC成長
@@ -389,7 +391,7 @@ function App() {
           <div className="status-header">階級</div>
           <div className="status-header">経験（功徳）</div>
           <div className="status-header">体力</div>
-          <div className="status-header">万力</div>
+          <div className="status-header">マナ</div>
           <div className="status-header">防御</div>
           <div className="status-header">状態</div>
         </div>
