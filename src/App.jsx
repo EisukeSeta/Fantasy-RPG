@@ -95,22 +95,41 @@ function App() {
 
   // 立て札（しるべ）のチェック
   const checkSignboard = (newX, newY, oldX, oldY) => {
-    const TARGET_POS = { x: 1, y: 3 }; 
-    // そのマスに「新しく入った」瞬間のみ発動（同じ場所での向き変えでは発動させない）
-    const isEntering = (newX === TARGET_POS.x && newY === TARGET_POS.y) && (oldX !== TARGET_POS.x || oldY !== TARGET_POS.y);
-    
-    if (isEntering) {
-        showDialog(
-            '朽ちかけた立て札',
-            [
-              "「……ここを通りし勇猛なる者に告ぐ。平安の都は今、未曾有の闇に覆われ、帝の命も風前の灯火。薬や祈祷をもってしても、怨念の核は調伏できぬ。」",
-              "「頼政公の命を受けし者よ。迷宮の深部、都の北東に座す『鵺』を調伏せよ。都の安寧は此方の双肩に掛かっておる。迷わず進め……。」"
-            ]
-        );
-        if (!hasReadScroll) {
-          setHasReadScroll(true);
-          addMessage('使命：迷宮の主「鵺」を調伏せよ。');
-        }
+    const DEBUG_ENTRANCE_POS = { x: 1, y: 0 }; // 朱雀門（開始地点の隣）
+    const ENTRANCE_POS = { x: 1, y: 2 };       // 御神木の隣
+    const MISSION_POS = { x: 1, y: 3 };        // 鵺の使命
+
+    const isEntering = (newX !== oldX || newY !== oldY);
+    if (!isEntering) return;
+
+    if (newX === DEBUG_ENTRANCE_POS.x && newY === DEBUG_ENTRANCE_POS.y) {
+      showDialog(
+        '朱雀門の立て札',
+        [
+          "「ここより北、都の深部へと至る道なり。鵺の咆哮が響く夜は、朱雀門を固く閉ざし、人々の往来を禁ず……。」",
+          "「……もし迷いしならば、南（1,1）の御神木のもとへ戻り、身を清めるがよい。神格の加護が武運を助けん……。」"
+        ]
+      );
+    } else if (newX === ENTRANCE_POS.x && newY === ENTRANCE_POS.y) {
+      showDialog(
+        '御神木の立て札',
+        [
+          "「これより先は魔道。都の安寧を願うならば、一歩も引くことなかれ。迷宮に蔓延る妖気を払い、光を呼び戻すのだ……。」",
+          "「……社の加護が必要ならば、いつでもここ（1,1）へ戻るがよい。神仏の慈悲は常に其方らと共にある。」"
+        ]
+      );
+    } else if (newX === MISSION_POS.x && newY === MISSION_POS.y) {
+      showDialog(
+        '朽ちかけた立て札',
+        [
+          "「……ここを通りし勇猛なる者に告ぐ。平安の都は今、未曾有の闇に覆われ、帝の命も風前の灯火。薬や祈祷をもってしても、怨念の核は調伏できぬ。」",
+          "「頼政公の命を受けし者よ。迷宮の深部、都の北東に座す『鵺』を調伏せよ。都の安寧は此方の双肩に掛かっておる。迷わず進め……。」"
+        ]
+      );
+      if (!hasReadScroll) {
+        setHasReadScroll(true);
+        addMessage('使命：迷宮の主「鵺」を調伏せよ。');
+      }
     }
   };
 
@@ -396,7 +415,7 @@ function App() {
   const renderMapCell = (cell, x, y) => {
     const isPlayerPos = playerState.x === x && playerState.y === y;
     const isHealSpot = HEAL_SPOTS.some(s => s.x === x && s.y === y);
-    const isSignboardSpot = x === 1 && y === 3; // 立て札の座標
+    const isSignboardSpot = (x === 1 && y === 0) || (x === 1 && y === 2) || (x === 1 && y === 3); 
     const isExitSpot = bossDefeated && x === BOSS_POS.x && y === BOSS_POS.y;
 
     if (!cell.visited) return <div key={`${x}-${y}`} style={{ width: 35, height: 35, backgroundColor: '#000' }}></div>;
