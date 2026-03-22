@@ -71,8 +71,6 @@ function App() {
 
   // ボス（ぬえ）の場所検知 (仮のボス座標: 8,6)
   const BOSS_POS = { x: 8, y: 6 };
-  // 古の巻物 (座標 1,2 - 社のすぐ前、移動を容易に)
-  const SCROLL_POS = { x: 1, y: 2 };
   const [hasReadScroll, setHasReadScroll] = useState(false);
 
   const checkOminousPresence = (x, y) => {
@@ -95,19 +93,24 @@ function App() {
     }
   };
 
-  // 巻物のチェック
-  const checkScroll = (x, y) => {
-    const TARGET_POS = { x: 1, y: 3 }; // 開始地点から2歩
-    if (x === TARGET_POS.x && y === TARGET_POS.y && !hasReadScroll) {
-        setHasReadScroll(true); // 即座にフラグを立てて多重発火を完全にガード
+  // 立て札（しるべ）のチェック
+  const checkSignboard = (newX, newY, oldX, oldY) => {
+    const TARGET_POS = { x: 1, y: 3 }; 
+    // そのマスに「新しく入った」瞬間のみ発動（同じ場所での向き変えでは発動させない）
+    const isEntering = (newX === TARGET_POS.x && newY === TARGET_POS.y) && (oldX !== TARGET_POS.x || oldY !== TARGET_POS.y);
+    
+    if (isEntering) {
         showDialog(
-            '古の巻物',
+            '朽ちかけた立て札',
             [
-              "「平安の都には毎夜、黒煙と共に不気味な鵺の鳴き声が響き渡り、天皇は病の身となり、民は度重なる不幸に見舞われていた。薬や祈祷をもってしても効果は無かった。」",
-              "源頼政より命を受けし武者、渡辺綱よ。迷宮の奥底に潜む怨念の核『鵺』を調伏せよ。都の安寧は其方の双肩に掛かっておる。都の北東、妖気の源へ向かえ……。"
+              "「……ここを通りし勇猛なる者に告ぐ。平安の都は今、未曾有の闇に覆われ、帝の命も風前の灯火。薬や祈祷をもってしても、怨念の核は調伏できぬ。」",
+              "「頼政公の命を受けし者よ。迷宮の深部、都の北東に座す『鵺』を調伏せよ。都の安寧は此方の双肩に掛かっておる。迷わず進め……。」"
             ]
         );
-        addMessage('使命：迷宮の主「鵺」を調伏せよ。');
+        if (!hasReadScroll) {
+          setHasReadScroll(true);
+          addMessage('使命：迷宮の主「鵺」を調伏せよ。');
+        }
     }
   };
 
@@ -170,7 +173,7 @@ function App() {
         checkHealSpot(newX, newY);
         checkOminousPresence(newX, newY);
         checkExit(newX, newY);
-        checkScroll(newX, newY);
+        checkSignboard(newX, newY, current.x, current.y);
         if (!mapDataRef.current[newY][newX].visited) {
           setMapData(prevMap => {
              const newMap = [...prevMap];
@@ -393,20 +396,20 @@ function App() {
   const renderMapCell = (cell, x, y) => {
     const isPlayerPos = playerState.x === x && playerState.y === y;
     const isHealSpot = HEAL_SPOTS.some(s => s.x === x && s.y === y);
-    const isScrollSpot = x === SCROLL_POS.x && y === SCROLL_POS.y;
+    const isSignboardSpot = x === 1 && y === 3; // 立て札の座標
     const isExitSpot = bossDefeated && x === BOSS_POS.x && y === BOSS_POS.y;
 
     if (!cell.visited) return <div key={`${x}-${y}`} style={{ width: 35, height: 35, backgroundColor: '#000' }}></div>;
     return (
       <div key={`${x}-${y}`} style={{
-        width: 35, height: 35, backgroundColor: isHealSpot ? '#113' : isScrollSpot ? '#220' : '#111', position: 'relative',
+        width: 35, height: 35, backgroundColor: isHealSpot ? '#113' : isSignboardSpot ? '#220' : '#111', position: 'relative',
         borderTop: cell.n ? '2px solid #aaa' : '1px dashed #333',
         borderRight: cell.e ? '2px solid #aaa' : '1px dashed #333',
         borderBottom: cell.s ? '2px solid #aaa' : '1px dashed #333',
         borderLeft: cell.w ? '2px solid #aaa' : '1px dashed #333', boxSizing: 'border-box'
       }}>
         {isHealSpot && <div style={{ position: 'absolute', top: 3, left: 8, color: '#66f', fontWeight: 'bold', fontSize: '1.4rem' }}>⛩</div>}
-        {isScrollSpot && <div style={{ position: 'absolute', top: 3, left: 8, color: '#aa0', fontWeight: 'bold', fontSize: '1.4rem' }}>📜</div>}
+        {isSignboardSpot && <div style={{ position: 'absolute', top: 3, left: 8, color: '#aa0', fontWeight: 'bold', fontSize: '1.4rem' }}>🪵</div>}
         {isExitSpot && <div style={{ position: 'absolute', top: 3, left: 8, color: '#f33', fontWeight: 'bold', fontSize: '1.4rem' }}>✨</div>}
         {isPlayerPos && (
           <div style={{ position: 'absolute', top: '50%', left: '50%', transform: `translate(-50%, -50%) rotate(${playerState.dir * 90}deg)`, color: '#3f3', fontSize: '20px', lineHeight: 1 }}>▲</div>
@@ -514,7 +517,7 @@ function App() {
                現在地：[{playerState.x}, {playerState.y}]
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}><span style={{ color: '#66f', fontSize: '1.8rem' }}>⛩</span>結界</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}><span style={{ color: '#aa0', fontSize: '1.8rem' }}>📜</span>巻物</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}><span style={{ color: '#aa0', fontSize: '1.8rem' }}>🪵</span>立て札</div>
             {bossDefeated && <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}><span style={{ color: '#f33', fontSize: '1.8rem' }}>✨</span>出口</div>}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><span style={{ color: '#3f3', fontSize: '1.4rem' }}>▲</span>現在地</div>
           </div>
