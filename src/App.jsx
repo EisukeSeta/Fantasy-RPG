@@ -365,9 +365,9 @@ function App() {
         <span className="window-title">【壱人称視点】平安の闇</span>
         {gameState === 'BATTLE' && enemy && (
           <div className="window pane-enemy">
-            <span className="window-title">魔物 (Lv{enemy.lv})</span>
-            <div className="status-grid">
-              <div><div className="status-header">妖名</div><div>{enemy.name}</div></div>
+            <span className="window-title">魔物</span>
+            <div className="status-grid" style={{ gridTemplateColumns: '1.2fr 1fr 1fr', padding: '10px' }}>
+              <div><div className="status-header">妖名</div><div style={{ fontSize: '1.4rem' }}>{enemy.name} <span style={{ fontSize: '1rem', color: '#aaa' }}>Lv.{enemy.lv}</span></div></div>
               <div><div className="status-header">体力</div><div>{enemy.hp} / {enemy.maxHp}</div></div>
               <div><div className="status-header">状態</div><div>平安</div></div>
             </div>
