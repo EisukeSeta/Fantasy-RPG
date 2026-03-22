@@ -18,6 +18,19 @@ const getRequiredExp = (lv) => {
 function App() {
   const [gameState, setGameState] = useState('EXPLORING'); // EXPLORING, BATTLE, DEAD, CLEAR
   const [bossDefeated, setBossDefeated] = useState(false); 
+  const [activeDialog, setActiveDialog] = useState(null); // { title: string, content: string, onConfirm?: func, showChoices?: boolean }
+
+  // 冒頭のモノローグを初回表示
+  useEffect(() => {
+    setActiveDialog({
+      title: '平安魔道伝 ― 序章',
+      content: `平安の都… 爛漫の桜の下、人々の間には見えざる闇が濃く染み渡っていた。\n\n四方の宮門には夜な夜な魔が蠢き、帝を病に臥せさせるは怨念の巨魁、黒煙を纏いし『鵺（ぬえ）』なり。薬や祈祷をもってしても、その呪縛を解くことは叶わなかった。\n\n源頼政より命を受けし渡辺綱よ、安倍晴明よ、八百比丘尼よ。今ここに、都の安寧を懸けた決死の登城が始まる……。`
+    });
+  }, []);
+
+  const showDialog = (title, content, onConfirm = null, showChoices = false) => {
+    setActiveDialog({ title, content, onConfirm, showChoices });
+  };
   
   // マップと位置データ
   const [mapData, setMapData] = useState(() => {
@@ -69,16 +82,22 @@ function App() {
   // 出口の確認
   const checkExit = (x, y) => {
     if (bossDefeated && x === BOSS_POS.x && y === BOSS_POS.y) {
-      if (window.confirm('魔物の邪気は消え、先へ進む出口が開いている。この階層を抜けますか？')) {
-        setGameState('CLEAR');
-      }
+      showDialog(
+          '迷宮の出口', 
+          '魔物の邪気は消え、先へ進む出口が開いている。この階層を抜けますか？',
+          () => setGameState('CLEAR'),
+          true
+      );
     }
   };
 
   // 巻物のチェック
   const checkScroll = (x, y) => {
     if (!hasReadScroll && x === SCROLL_POS.x && y === SCROLL_POS.y) {
-        alert("【古の巻物】\n「平安の都には毎夜、黒煙と共に不気味な鵺の鳴き声が響き渡り、天皇は病の身となり、民は度重なる不幸に見舞われていた。薬や祈祷をもってしても効果は無かった。」\n\n源頼政より命を受けし武者、渡辺綱よ。迷宮の奥底に潜む怨念の核『鵺』を調伏せよ。都の安寧は其方の双肩に掛かっておる。");
+        showDialog(
+            '古の巻物',
+            "「平安の都には毎夜、黒煙と共に不気味な鵺の鳴き声が響き渡り、天皇は病の身となり、民は度重なる不幸に見舞われていた。薬や祈祷をもってしても効果は無かった。」\n\n源頼政より命を受けし武者、渡辺綱よ。迷宮の奥底に潜む怨念の核『鵺』を調伏せよ。都の安寧は其方の双肩に掛かっておる。"
+        );
         setHasReadScroll(true);
         addMessage('使命：迷宮の主「鵺」を調伏せよ。');
     }
@@ -101,7 +120,7 @@ function App() {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (gameState !== 'EXPLORING') return;
+      if (gameState !== 'EXPLORING' || activeDialog) return; // ダイアログ中は移動不可
 
       let moveType = null;
       switch (e.key) {
@@ -401,6 +420,24 @@ function App() {
           <WireframeView mapData={mapDataRef.current} playerPos={playerState} playerDir={playerState.dir} />
           {gameState === 'DEAD' && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(80,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ color: '#F22', fontSize: '3rem' }}>討死</div></div>}
           {gameState === 'CLEAR' && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,40,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ color: '#Ff2', fontSize: '3rem', textAlign: 'center' }}>🎉 階層突破 🎉<div style={{ fontSize: '1.5rem', marginTop: '10px' }}>都の安寧へ一歩近づいた...</div></div></div>}
+          
+          {/* 和風ダイアログオーバーレイ */}
+          {activeDialog && (
+            <div className="dialog-overlay">
+              <div className="dialog-title">{activeDialog.title}</div>
+              <div className="dialog-content">{activeDialog.content}</div>
+              <div className="dialog-footer">
+                {activeDialog.showChoices ? (
+                  <div className="dialog-choice-container">
+                    <button className="dialog-btn" onClick={() => { activeDialog.onConfirm(); setActiveDialog(null); }}>【 はい 】</button>
+                    <button className="dialog-btn" onClick={() => setActiveDialog(null)}>【 否 】</button>
+                  </div>
+                ) : (
+                  <button className="dialog-btn" onClick={() => { if(activeDialog.onConfirm) activeDialog.onConfirm(); setActiveDialog(null); }}>読み終える ▼</button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
