@@ -94,11 +94,11 @@ function App() {
   // 巻物のチェック
   const checkScroll = (x, y) => {
     if (!hasReadScroll && x === SCROLL_POS.x && y === SCROLL_POS.y) {
+        setHasReadScroll(true); // 先にフラグを立てて多重発火を完全にガード
         showDialog(
             '古の巻物',
             "「平安の都には毎夜、黒煙と共に不気味な鵺の鳴き声が響き渡り、天皇は病の身となり、民は度重なる不幸に見舞われていた。薬や祈祷をもってしても効果は無かった。」\n\n源頼政より命を受けし武者、渡辺綱よ。迷宮の奥底に潜む怨念の核『鵺』を調伏せよ。都の安寧は其方の双肩に掛かっておる。"
         );
-        setHasReadScroll(true);
         addMessage('使命：迷宮の主「鵺」を調伏せよ。');
     }
   };
@@ -120,7 +120,7 @@ function App() {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (gameState !== 'EXPLORING' || activeDialog) return; // ダイアログ中は移動不可
+      if (gameState !== 'EXPLORING' || activeDialog) return; // ダイアログ中や戦闘中は移動不可
 
       let moveType = null;
       switch (e.key) {
@@ -262,6 +262,10 @@ function App() {
         setGameState('EXPLORING');
     } else {
         addMessage('魔物討伐隊は、闇に飲まれてしまった...');
+        showDialog(
+            '終焉',
+            "都の希望、渡辺綱たちは力尽き、闇の深淵へと消えた。黒煙は都を覆い尽くし、帝の命の灯火も露と消えん……。平安の世は永遠の黄泉へと堕ちたのである。"
+        );
         setGameState('DEAD');
     }
     setActiveBattler(0);
