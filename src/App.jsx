@@ -7,10 +7,9 @@ import { SPELLS } from './data/magicData';
 // S字カーブの累積必要経験値テーブル（Lv2へは100程度で到達するように調整）
 const getRequiredExp = (lv) => {
   if (lv <= 1) return 0;
-  if (lv === 2) return 100; // 最初の数回で上がるように
+  if (lv === 2) return 100;
   if (lv >= 50) return 9999999;
   const x = (lv - 1) / 49;
-  // シグモイド関数的なS字カーブ
   const sigmoid = 1 / (1 + Math.exp(-6 * (x - 0.5)));
   return Math.floor(15000 * sigmoid);
 };
@@ -18,18 +17,23 @@ const getRequiredExp = (lv) => {
 function App() {
   const [gameState, setGameState] = useState('EXPLORING'); // EXPLORING, BATTLE, DEAD, CLEAR
   const [bossDefeated, setBossDefeated] = useState(false); 
-  const [activeDialog, setActiveDialog] = useState(null); // { title: string, content: string, onConfirm?: func, showChoices?: boolean }
+  const [activeDialog, setActiveDialog] = useState(null); // { title: string, pages: string[], currentPage: 0, onConfirm?: func, showChoices?: boolean }
 
   // 冒頭のモノローグを初回表示
   useEffect(() => {
     setActiveDialog({
       title: '平安魔道伝 ― 序章',
-      content: `平安の都… 爛漫の桜の下、人々の間には見えざる闇が濃く染み渡っていた。\n\n四方の宮門には夜な夜な魔が蠢き、帝を病に臥せさせるは怨念の巨魁、黒煙を纏いし『鵺（ぬえ）』なり。薬や祈祷をもってしても、その呪縛を解くことは叶わなかった。\n\n源頼政より命を受けし渡辺綱よ、安倍晴明よ、八百比丘尼よ。今ここに、都の安寧を懸けた決死の登城が始まる……。`
+      pages: [
+        `平安の都… 爛漫の桜の下、人々の間には見えざる闇が濃く染み渡っていた。\n\n四方の宮門には夜な夜な魔が蠢き、帝を病に臥せさせるは怨念の巨魁、黒煙を纏いし『鵺（ぬえ）』なり。`,
+        `薬や祈祷をもってしても、その呪縛を解くことは叶わなかった。都の民は度重なる不幸に見舞われ、都の安寧は風前の灯火であった。\n\n源頼政より命を受けし渡辺綱よ、安倍晴明よ、八百比丘尼よ。今ここに、都の安寧を懸けた決死の登城が始まる……。`
+      ],
+      currentPage: 0
     });
   }, []);
 
-  const showDialog = (title, content, onConfirm = null, showChoices = false) => {
-    setActiveDialog({ title, content, onConfirm, showChoices });
+  const showDialog = (title, contents, onConfirm = null, showChoices = false) => {
+    const pages = Array.isArray(contents) ? contents : [contents];
+    setActiveDialog({ title, pages, currentPage: 0, onConfirm, showChoices });
   };
   
   // マップと位置データ
@@ -67,7 +71,7 @@ function App() {
 
   // ボス（ぬえ）の場所検知 (仮のボス座標: 8,6)
   const BOSS_POS = { x: 8, y: 6 };
-  // 古の巻物 (座標 1,2 - 社のすぐ前)
+  // 古の巻物 (座標 1,2 - 社のすぐ前、移動を容易に)
   const SCROLL_POS = { x: 1, y: 2 };
   const [hasReadScroll, setHasReadScroll] = useState(false);
 
@@ -93,11 +97,14 @@ function App() {
 
   // 巻物のチェック
   const checkScroll = (x, y) => {
-    if (!hasReadScroll && x === SCROLL_POS.x && y === SCROLL_POS.y) {
-        setHasReadScroll(true); // 先にフラグを立てて多重発火を完全にガード
+    if (x === SCROLL_POS.x && y === SCROLL_POS.y && !hasReadScroll) {
+        setHasReadScroll(true); // 即座にフラグを立てて多重発火を完全にガード
         showDialog(
             '古の巻物',
-            "「平安の都には毎夜、黒煙と共に不気味な鵺の鳴き声が響き渡り、天皇は病の身となり、民は度重なる不幸に見舞われていた。薬や祈祷をもってしても効果は無かった。」\n\n源頼政より命を受けし武者、渡辺綱よ。迷宮の奥底に潜む怨念の核『鵺』を調伏せよ。都の安寧は其方の双肩に掛かっておる。"
+            [
+              "「平安の都には毎夜、黒煙と共に不気味な鵺の鳴き声が響き渡り、天皇は病の身となり、民は度重なる不幸に見舞われていた。薬や祈祷をもってしても効果は無かった。」",
+              "源頼政より命を受けし武者、渡辺綱よ。迷宮の奥底に潜む怨念の核『鵺』を調伏せよ。都の安寧は其方の双肩に掛かっておる。迷宮の奥(8,6)へ向かえ……。"
+            ]
         );
         addMessage('使命：迷宮の主「鵺」を調伏せよ。');
     }
@@ -429,15 +436,25 @@ function App() {
           {activeDialog && (
             <div className="dialog-overlay">
               <div className="dialog-title">{activeDialog.title}</div>
-              <div className="dialog-content">{activeDialog.content}</div>
+              <div className="dialog-content">
+                {activeDialog.pages[activeDialog.currentPage]}
+              </div>
               <div className="dialog-footer">
-                {activeDialog.showChoices ? (
-                  <div className="dialog-choice-container">
-                    <button className="dialog-btn" onClick={() => { activeDialog.onConfirm(); setActiveDialog(null); }}>【 はい 】</button>
-                    <button className="dialog-btn" onClick={() => setActiveDialog(null)}>【 否 】</button>
-                  </div>
+                {activeDialog.currentPage < activeDialog.pages.length - 1 ? (
+                  <button className="dialog-btn" onClick={() => setActiveDialog(prev => ({ ...prev, currentPage: prev.currentPage + 1 }))}>
+                    ▼ 続きを読む
+                  </button>
                 ) : (
-                  <button className="dialog-btn" onClick={() => { if(activeDialog.onConfirm) activeDialog.onConfirm(); setActiveDialog(null); }}>読み終える ▼</button>
+                  activeDialog.showChoices ? (
+                    <div className="dialog-choice-container">
+                      <button className="dialog-btn" onClick={() => { activeDialog.onConfirm(); setActiveDialog(null); }}>【 はい 】</button>
+                      <button className="dialog-btn" onClick={() => setActiveDialog(null)}>【 否 】</button>
+                    </div>
+                  ) : (
+                    <button className="dialog-btn" onClick={() => { if(activeDialog.onConfirm) activeDialog.onConfirm(); setActiveDialog(null); }}>
+                      （ 読み終える ）
+                    </button>
+                  )
                 )}
               </div>
             </div>
