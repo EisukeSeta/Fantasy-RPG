@@ -97,8 +97,8 @@ function App() {
 
   // 巻物のチェック
   const checkScroll = (x, y) => {
-    const TARGET_SCROLL_POS = { x: 1, y: 3 }; 
-    if (x === TARGET_SCROLL_POS.x && y === TARGET_SCROLL_POS.y && !hasReadScroll) {
+    const TARGET_POS = { x: 1, y: 3 }; // 開始地点から2歩
+    if (x === TARGET_POS.x && y === TARGET_POS.y && !hasReadScroll) {
         setHasReadScroll(true); // 即座にフラグを立てて多重発火を完全にガード
         showDialog(
             '古の巻物',
@@ -128,7 +128,8 @@ function App() {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (gameState !== 'EXPLORING' || activeDialog) return; // ダイアログ中や戦闘中は移動不可
+      // ダイアログ表示中や戦闘中、死亡時は移動入力を完全に拒否
+      if (activeDialog || gameState !== 'EXPLORING') return; 
 
       let moveType = null;
       switch (e.key) {
@@ -202,7 +203,7 @@ function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState, party, bossDefeated, hasReadScroll]);
+  }, [gameState, party, bossDefeated, hasReadScroll, activeDialog]);
 
   // レベルアップ処理
   const handleLevelUp = (member) => {
