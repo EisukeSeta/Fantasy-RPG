@@ -332,9 +332,11 @@ function App() {
         </div>
       </div>
 
-      <div className="window pane-status" style={{ display: 'flex', flexDirection: 'column', padding: '10px' }}>
+      <div className="window pane-status" style={{ display: 'flex', flexDirection: 'column', padding: '15px' }}>
         <span className="window-title">隊員之証 (Party Status)</span>
-        <div className="status-grid" style={{ borderBottom: '1px solid #555', paddingBottom: '5px', marginBottom: '5px', gridTemplateColumns: '80px 100px 50px 100px 80px 80px 50px 80px' }}>
+        
+        {/* ヘッダー行 */}
+        <div className="status-grid" style={{ borderBottom: '1px solid #555', paddingBottom: '8px', marginBottom: '8px', fontWeight: 'bold' }}>
           <div className="status-header">職種</div>
           <div className="status-header">氏名</div>
           <div className="status-header">階級</div>
@@ -345,18 +347,20 @@ function App() {
           <div className="status-header">状態</div>
         </div>
 
+        {/* メンバー行 */}
         <div style={{ flex: 1, overflowY: 'auto' }}>
           {party.map((m, idx) => (
             <div key={m.id} className="status-grid" style={{ 
               backgroundColor: (gameState === 'BATTLE' && activeBattler === idx) ? '#153315' : 'transparent', 
               color: (gameState === 'BATTLE' && activeBattler === idx) ? '#3f3' : '#fff',
-              padding: '8px 0', fontSize: '1.1rem', alignItems: 'center', borderBottom: '1px solid #222',
-              gridTemplateColumns: '80px 100px 50px 100px 80px 80px 50px 80px'
+              padding: '10px 0',
+              fontSize: '1.2rem', // 文字サイズを再調整
+              borderBottom: '1px solid #222'
             }}>
-              <div style={{ fontSize: '0.9rem', color: '#aaa' }}>{m.icon} {m.job}</div>
-              <div style={{ textAlign: 'left' }}>{m.name}</div>
+              <div style={{ fontSize: '1rem', color: '#aaa' }}>{m.icon} {m.job}</div>
+              <div style={{ textAlign: 'left', paddingLeft: '5px' }}>{m.name}</div>
               <div>Lv{m.lv}</div>
-              <div style={{ fontSize: '0.8rem' }}>{m.exp} / {getRequiredExp(m.lv+1)}</div>
+              <div style={{ fontSize: '0.9rem', color: '#ccc' }}>{m.exp}/{getRequiredExp(m.lv+1)}</div>
               <div style={{ color: m.hp < (m.maxHp * 0.3) ? '#f33' : 'inherit' }}>{m.hp}/{m.maxHp}</div>
               <div>{m.mp}/{m.maxMp}</div>
               <div>{m.ac}</div>

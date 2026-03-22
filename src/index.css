@@ -100,8 +100,12 @@ body {
 
 .status-grid {
   display: grid;
-  grid-template-columns: 1fr 1.5fr 1fr 1fr 1fr 1fr; /* 職業、氏名、体力、万力、防御、状態 */
+  /* 8つのカラム: 職種、氏名、階級、経験、体力、万力、防御、状態 */
+  /* frだと内容によって可変になるため、最小幅を確保しつつ1行に収めるための案 */
+  grid-template-columns: minmax(80px, 0.8fr) minmax(130px, 1.2fr) minmax(60px, 0.5fr) minmax(140px, 1.2fr) minmax(110px, 0.9fr) minmax(80px, 0.8fr) minmax(65px, 0.5fr) minmax(80px, 0.8fr);
   text-align: center;
+  align-items: center;
+  gap: 5px;
 }
 
 .status-header {
