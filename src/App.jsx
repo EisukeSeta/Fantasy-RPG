@@ -587,6 +587,26 @@ function App() {
             </div>
           )}
 
+          {/* ミニステータス・ダッシュボード (探索中のみ表示) */}
+          {gameState === 'EXPLORING' && (
+            <div className="mini-status-panel">
+               {party.map(m => (
+                 <div key={m.id} className="mini-status-unit">
+                   <div style={{ paddingRight: '4px' }}>{m.icon}</div>
+                   <div className="mini-status-name" style={{ color: m.hp <= 0 ? '#666' : '#fff' }}>{m.name}</div>
+                   <div>
+                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.6rem', gap: '4px' }}>
+                       <span>{m.hp}/{m.maxHp}</span>
+                       <span>{m.mp}/{m.maxMp}</span>
+                     </div>
+                     <div className="bar-container"><div className="bar-hp" style={{ width: `${(m.hp / m.maxHp) * 100}%` }} /></div>
+                     <div className="bar-container"><div className="bar-mp" style={{ width: `${(m.mp / m.maxMp) * 100}%` }} /></div>
+                   </div>
+                 </div>
+               ))}
+            </div>
+          )}
+
           {/* 和風ダイアログオーバーレイ */}
           {activeDialog && (
             <div className="dialog-overlay">

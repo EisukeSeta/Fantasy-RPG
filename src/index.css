@@ -245,14 +245,55 @@ body {
   }
 
   .mobile-log-line {
-    height: 24px;
-    line-height: 24px;
+    line-height: 1.6;
+    height: auto;
+    padding: 4px 0;
     margin-bottom: 2px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    white-space: nowrap;
+    white-space: pre-wrap; /* 重なり防止のため折り返しを許可 */
+    overflow: visible;
+  }
+
+  /* ミニステータス・ダッシュボード */
+  .mini-status-panel {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid #b89a42; /* くすんだ金 */
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.75rem;
+    z-index: 45;
+    pointer-events: none;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  }
+
+  .mini-status-unit {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 2px;
+  }
+
+  .mini-status-name {
+    width: 65px;
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
+  .bar-container {
+    width: 60px;
+    height: 4px;
+    background: #333;
+    margin-top: 2px;
+  }
+
+  .bar-hp { background: #d44; height: 100%; }
+  .bar-mp { background: #44d; height: 100%; }
 
   /* ダンジョン画面タップエリア */
   .dungeon-tap-overlay {
@@ -338,17 +379,18 @@ body {
     font-size: 1.5rem;
   }
 
-  /* ダイアログの最適化 */
+  /* ダイアログの最適化 (下部ボタンと重ならないよう高さを調整) */
   .dialog-overlay {
     padding: 15px;
     width: 95%;
-    height: 90%;
+    height: 70%; /* 少し低くする */
+    top: 40%;    /* 少し上に寄せる */
   }
 }
 
 /* PCではモバイル専用要素を隠す */
 @media (min-width: 769px) {
-  .mobile-log-display {
+  .mobile-log-display, .mini-status-panel, .dungeon-tap-overlay, .mobile-controls {
     display: none !important;
   }
 }
