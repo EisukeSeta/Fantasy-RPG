@@ -24,6 +24,7 @@ function App() {
   const [gameState, setGameState] = useState('EXPLORING'); // EXPLORING, BATTLE, DEAD, CLEAR
   const [bossDefeated, setBossDefeated] = useState(false); 
   const [activeDialog, setActiveDialog] = useState(null); // { title: string, pages: string[], currentPage: 0, onConfirm?: func, showChoices?: boolean }
+  const [isAutoBattle, setIsAutoBattle] = useState(false);
 
   // 冒頭のモノローグを初回表示
   useEffect(() => {
@@ -245,10 +246,17 @@ function App() {
       const mpGain = (m.jobKey === 'ONMYOJI' ? 6 : m.jobKey === 'NISOU' ? 4 : 2) + Math.floor(Math.random() * 3 - 1);
       m.maxHp += Math.max(1, hpGain);
       m.maxMp += Math.max(0, mpGain);
-      // AC成長
-      if (m.jobKey === 'SAMURAI') m.ac -= 1;
-      else if (m.jobKey === 'ONMYOJI' && m.lv % 2 === 0) m.ac -= 1;
-      else if (m.jobKey === 'NISOU' && m.lv % 3 === 0) m.ac -= 1;
+      // 火力の成長
+      if (m.jobKey === 'SAMURAI') {
+          m.minDmg += 2; m.maxDmg += 4;
+          m.ac -= 1;
+      } else if (m.jobKey === 'ONMYOJI') {
+          m.minDmg += 1; m.maxDmg += 2;
+          if (m.lv % 2 === 0) m.ac -= 1;
+      } else if (m.jobKey === 'NISOU') {
+          m.minDmg += 1; m.maxDmg += 1;
+          if (m.lv % 3 === 0) m.ac -= 1;
+      }
       
       addMessage(`${m.name} は階級【Lv${m.lv}】に上がった！`);
       if (m.jobKey === 'SAMURAI' && m.maxMp > 0 && m.lv === 2) {
@@ -429,6 +437,63 @@ function App() {
       else processEnemyTurn(newParty, newEnemy);
     }
   };
+  
+  // --- AI 戦闘ロジック ---
+  useEffect(() => {
+    if (isAutoBattle && gameState === 'BATTLE' && enemy) {
+      const timer = setTimeout(() => {
+        const attacker = party[activeBattler];
+        if (!attacker || attacker.hp <= 0) return;
+
+        // 尼僧：回復優先
+        if (attacker.jobKey === 'NISOU') {
+          const injured = party.find(m => m.hp > 0 && m.hp < m.maxHp * 0.7);
+          const healSpells = (SPELLS.NISOU || []).filter(s => s.lv <= attacker.lv && s.type === 'HEAL');
+          if (injured && healSpells.length > 0) {
+            // 最も強い回復（人魚の肉 > 甘露の雨）を優先
+            const bestHeal = healSpells.sort((a, b) => b.lv - a.lv).find(s => attacker.mp >= s.mp);
+            if (bestHeal) {
+              castSpell(bestHeal);
+              return;
+            }
+          }
+        }
+        
+        // 陰陽師：回復補助または強力な術
+        if (attacker.jobKey === 'ONMYOJI') {
+          const veryInjured = party.find(m => m.hp > 0 && m.hp < m.maxHp * 0.4);
+          if (veryInjured && attacker.mp >= 2) {
+             castSpell(SPELLS.ONMYOJI[0]); // 泰山府君
+             return;
+          }
+          const attackSpells = (SPELLS.ONMYOJI || []).filter(s => s.lv <= attacker.lv && s.type === 'ATTACK');
+          if (attackSpells.length > 0) {
+             const bestSpell = attackSpells.sort((a, b) => b.lv - a.lv).find(s => attacker.mp >= s.mp);
+             if (bestSpell) {
+               castSpell(bestSpell);
+               return;
+             }
+          }
+        }
+
+        // 武者：ボス戦なら奥義、雑魚なら通常攻撃
+        if (attacker.jobKey === 'SAMURAI') {
+           const attackSpells = (SPELLS.SAMURAI || []).filter(s => s.lv <= attacker.lv && s.type === 'ATTACK');
+           if (enemy.isBoss && attackSpells.length > 0) {
+              const bestSpell = attackSpells.sort((a,b) => b.lv - a.lv).find(s => attacker.mp >= s.mp);
+              if (bestSpell) {
+                castSpell(bestSpell);
+                return;
+              }
+           }
+        }
+
+        // デフォルト：通常攻撃
+        handleFight();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isAutoBattle, gameState, activeBattler, enemy]);
 
   const renderMapCell = (cell, x, y) => {
     const isPlayerPos = playerState.x === x && playerState.y === y;
@@ -563,8 +628,22 @@ function App() {
         <div style={{ flex: 1, borderTop: '2px solid #666', paddingTop: '10px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {gameState === 'BATTLE' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: '10px' }}>
-               <div style={{ fontSize: '1.1rem', color: '#3f3' }}>【覚悟せよ、{party[activeBattler].name}！】</div>
-               <div style={{ display: 'flex', gap: '8px' }}>
+               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                 <div style={{ fontSize: '1.1rem', color: '#3f3' }}>【覚悟せよ、{party[activeBattler].name}！】</div>
+                 <button 
+                  onClick={() => setIsAutoBattle(!isAutoBattle)} 
+                  style={{ 
+                    backgroundColor: isAutoBattle ? '#050' : '#444', 
+                    color: isAutoBattle ? '#3f3' : '#eee',
+                    border: '1px solid #777',
+                    padding: '2px 8px',
+                    fontFamily: 'DotGothic16',
+                    cursor: 'pointer'
+                  }}>
+                   AI戦闘: {isAutoBattle ? '自動' : '手動'}
+                 </button>
+               </div>
+               <div style={{ display: 'flex', gap: '8px', opacity: isAutoBattle ? 0.5 : 1, pointerEvents: isAutoBattle ? 'none' : 'auto' }}>
                  <button onClick={handleFight} className="battle-btn" style={{ fontSize: '1.4rem', padding: '12px' }}>打ちかかる</button>
                  <button onClick={() => setShowSpells(showSpells === party[activeBattler].id ? null : party[activeBattler].id)} className="battle-btn" style={{ fontSize: '1.4rem', padding: '12px' }}>術・祈祷</button>
                  <button onClick={handleRun} className="battle-btn" style={{ fontSize: '1.4rem', padding: '12px', backgroundColor: '#422' }}>逃げる</button>
