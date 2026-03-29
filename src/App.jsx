@@ -25,6 +25,7 @@ function App() {
   const [bossDefeated, setBossDefeated] = useState(false); 
   const [activeDialog, setActiveDialog] = useState(null); // { title: string, pages: string[], currentPage: 0, onConfirm?: func, showChoices?: boolean }
   const [isAutoBattle, setIsAutoBattle] = useState(false);
+  const [showMap, setShowMap] = useState(false);
 
   // 初回起動時、モバイル環境ならAI戦闘をデフォルトでONにする
   useEffect(() => {
@@ -560,16 +561,9 @@ function App() {
               </div>
 
               {!activeDialog && (
-                <div className="mobile-controls" style={{ position: 'absolute', bottom: '10px', left: '50%', transform: 'translateX(-50%)', background: 'transparent', border: 'none' }}>
-                  <div className="move-pad">
-                    <div className="pad-btn" onClick={() => processMove('TURN_LEFT')}>↺</div>
-                    <div className="pad-btn" onClick={() => processMove('FORWARD')}>前</div>
-                    <div className="pad-btn" onClick={() => processMove('TURN_RIGHT')}>↻</div>
-                    <div></div>
-                    <div className="pad-btn" onClick={() => processMove('BACKWARD')}>後</div>
-                    <div></div>
-                  </div>
-                </div>
+                <button className="map-toggle-btn" onClick={() => setShowMap(!showMap)}>
+                   📜 {showMap ? '閉じる' : '絵図'}
+                </button>
               )}
             </>
           )}
@@ -675,7 +669,7 @@ function App() {
         </div>
       </div>
 
-      <div className="window pane-map" style={{ display: 'flex', flexDirection: 'column' }}>
+      <div className={`window pane-map ${showMap ? 'mobile-map-overlay' : ''}`}>
         <span className="window-title">絵図と絵巻 (Map & Log)</span>
         <div className="map-view-wrapper">
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', paddingBottom: '15px', gap: '20px' }}>

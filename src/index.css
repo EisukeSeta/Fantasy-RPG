@@ -198,19 +198,21 @@ body {
 /* --- モバイル対応 (Responsive) --- */
 @media (max-width: 768px) {
   body {
-    overflow-y: auto;
-    height: auto;
-    font-size: 1.2rem;
+    overflow: hidden; /* スクロールを完全に禁止 */
+    height: 100vh;
+    font-size: 1.1rem;
   }
 
   #root {
     padding: 0;
+    height: 100vh;
   }
 
   .game-container {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    height: 100vh;
+    gap: 0;
   }
 
   /* メイン画面：ログをオーバーレイするためにrelativeへ */
@@ -295,7 +297,7 @@ body {
   .bar-hp { background: #d44; height: 100%; }
   .bar-mp { background: #44d; height: 100%; }
 
-  /* ダンジョン画面タップエリア */
+  /* ダンジョン画面タップエリア (中心前進、左右旋回、下部後進) */
   .dungeon-tap-overlay {
     position: absolute;
     top: 0;
@@ -303,21 +305,54 @@ body {
     width: 100%;
     height: 100%;
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1.5fr 1fr;
     grid-template-rows: 1fr 1fr 1fr;
     z-index: 40;
     pointer-events: auto;
   }
 
   .tap-area {
-    /* debug: border: 1px solid red; */
+    /* debug: border: 1px solid rgba(255,0,0,0.2); */
     cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  .tap-forward { grid-column: 1 / 4; grid-row: 1 / 2; }
+  /* 中央(1,2と2,2)を前進エリアに */
+  .tap-forward { grid-column: 2 / 3; grid-row: 1 / 3; }
+  .tap-left { grid-column: 1 / 2; grid-row: 1 / 4; }
+  .tap-right { grid-column: 3 / 4; grid-row: 1 / 4; }
   .tap-backward { grid-column: 2 / 3; grid-row: 3 / 4; }
-  .tap-left { grid-column: 1 / 2; grid-row: 2 / 4; }
-  .tap-right { grid-column: 3 / 4; grid-row: 2 / 4; }
+
+  /* マップ切替ボタン */
+  .map-toggle-btn {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid #b89a42;
+    color: #f0e68c;
+    padding: 8px 12px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    z-index: 60;
+    font-family: 'DotGothic16';
+  }
+
+  /* マップ・ポップアップオーバーレイ (最初は隠す) */
+  .mobile-map-overlay {
+    display: block !important;
+    position: fixed;
+    top: 55px; /* ボタンの下 */
+    left: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.95);
+    border: 2px solid #b89a42;
+    padding: 10px;
+    z-index: 100;
+    box-shadow: 0 0 30px #000;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
 
   /* ステータス画面の最適化 */
   .pane-status {
@@ -333,8 +368,9 @@ body {
     gap: 3px;
   }
 
-  /* マップ画面の最適化 */
+  /* マップ画面の最適化 (モバイルではデフォルト非表示) */
   .pane-map {
+    display: none;
     width: 100%;
     order: 3;
     padding: 5px;
@@ -388,9 +424,12 @@ body {
   }
 }
 
-/* PCではモバイル専用要素を隠す */
+/* PCではモバイル専用要素を隠し、マップを表示する */
 @media (min-width: 769px) {
-  .mobile-log-display, .mini-status-panel, .dungeon-tap-overlay, .mobile-controls {
+  .mobile-log-display, .mini-status-panel, .dungeon-tap-overlay, .mobile-controls, .map-toggle-btn {
     display: none !important;
+  }
+  .pane-map {
+    display: flex !important;
   }
 }
