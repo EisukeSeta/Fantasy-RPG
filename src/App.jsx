@@ -26,6 +26,7 @@ function App() {
   const [activeDialog, setActiveDialog] = useState(null); // { title: string, pages: string[], currentPage: 0, onConfirm?: func, showChoices?: boolean }
   const [isAutoBattle, setIsAutoBattle] = useState(false);
   const [showMap, setShowMap] = useState(false);
+  const touchStartPos = useRef({ x: 0, y: 0 });
 
   // 初回起動時、モバイル環境ならAI戦闘をデフォルトでONにする
   useEffect(() => {
@@ -550,22 +551,35 @@ function App() {
           {gameState === 'DEAD' && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(80,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ color: '#F22', fontSize: '3rem' }}>討死</div></div>}
           {gameState === 'CLEAR' && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,40,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ color: '#Ff2', fontSize: '3rem', textAlign: 'center' }}>🎉 階層突破 🎉<div style={{ fontSize: '1.5rem', marginTop: '10px' }}>都の安寧へ一歩近づいた...</div></div></div>}
           
-          {gameState === 'EXPLORING' && (
-            <>
-              {/* ダンジョン画面タップ移動用オーバーレイ (モバイルのみ有効) */}
-              <div className="dungeon-tap-overlay">
+          {/* ダンジョン画面タップ移動 & フリック旋回用オーバーレイ (モバイルのみ有効) */}
+          <div className="dungeon-tap-overlay"
+            onTouchStart={(e) => {
+              touchStartPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }}
+            onTouchEnd={(e) => {
+              const deltaX = e.changedTouches[0].clientX - touchStartPos.current.x;
+              const deltaY = e.changedTouches[0].clientY - touchStartPos.current.y;
+              // 横移動が50px以上かつ縦移動より多い場合にフリックとみなす
+              if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
+                if (deltaX > 0) processMove('TURN_RIGHT');
+                else processMove('TURN_LEFT');
+              }
+            }}
+          >
+            {gameState === 'EXPLORING' && (
+              <>
                 <div className="tap-area tap-forward" onClick={() => processMove('FORWARD')}></div>
                 <div className="tap-area tap-left" onClick={() => processMove('TURN_LEFT')}></div>
                 <div className="tap-area tap-right" onClick={() => processMove('TURN_RIGHT')}></div>
                 <div className="tap-area tap-backward" onClick={() => processMove('BACKWARD')}></div>
-              </div>
+              </>
+            )}
+          </div>
 
-              {!activeDialog && (
-                <button className="map-toggle-btn" onClick={() => setShowMap(!showMap)}>
-                   📜 {showMap ? '閉じる' : '絵図'}
-                </button>
-              )}
-            </>
+          {(gameState === 'EXPLORING' || gameState === 'BATTLE') && !activeDialog && (
+            <button className="map-toggle-btn" onClick={() => setShowMap(!showMap)}>
+               📜 {showMap ? '閉じる' : '絵図'}
+            </button>
           )}
 
           {/* モバイル用フローティングログ (ダイアログ表示中は邪魔にならないよう非表示) */}
@@ -581,8 +595,8 @@ function App() {
             </div>
           )}
 
-          {/* ミニステータス・ダッシュボード (探索中のみ表示) */}
-          {gameState === 'EXPLORING' && (
+          {/* ミニステータス・ダッシュボード (探索中および戦闘中に表示) */}
+          {(gameState === 'EXPLORING' || gameState === 'BATTLE') && (
             <div className="mini-status-panel">
                {party.map(m => (
                  <div key={m.id} className="mini-status-unit">
