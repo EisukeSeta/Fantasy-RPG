@@ -236,34 +236,26 @@ body {
     height: 420px; /* 少し高さを出す */
   }
 
-  /* モバイル用メッセージオーバーレイ */
+  /* モバイル用メッセージログ (スクロール可能に拡張) */
   .mobile-log-display {
-    position: absolute;
-    bottom: 80px; /* コントローラーの上に配置 */
-    left: 10px;
-    right: 10px;
-    height: 100px;
-    background: rgba(0, 0, 0, 0.7);
-    border: 1px solid #444;
-    padding: 8px;
-    font-size: 1rem;
-    overflow: hidden;
-    pointer-events: none; /* 下の操作を邪魔しない */
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    gap: 4px;
+    position: relative;
+    background: rgba(0, 0, 0, 0.85);
+    border-top: 1px solid #444;
+    padding: 10px;
+    height: 140px; /* 固定高さを確保 */
+    overflow-y: scroll;
     z-index: 50;
+    flex-grow: 1; /* 空きスペースを埋める */
   }
 
   .mobile-log-line {
     line-height: 1.6;
     height: auto;
-    padding: 4px 0;
+    padding: 2px 0;
     margin-bottom: 2px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    white-space: pre-wrap; /* 重なり防止のため折り返しを許可 */
-    overflow: visible;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    white-space: pre-wrap;
+    font-size: 0.95rem;
   }
 
   /* ミニステータス・ダッシュボード */
@@ -333,19 +325,25 @@ body {
   .tap-right { grid-column: 3 / 4; grid-row: 1 / 4; }
   .tap-backward { grid-column: 2 / 3; grid-row: 3 / 4; }
 
-  /* マップ切替ボタン */
-  .map-toggle-btn {
+  /* マップ・ステータス切替ボタン群 */
+  .mobile-btn-container {
     position: absolute;
     top: 10px;
     left: 10px;
-    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    gap: 10px;
+    z-index: 2100;
+  }
+
+  .map-toggle-btn {
+    background: rgba(0, 0, 0, 0.85);
     border: 1px solid #b89a42;
     color: #f0e68c;
-    padding: 8px 12px;
-    font-size: 1.2rem;
+    padding: 6px 12px;
+    font-size: 1rem;
     cursor: pointer;
-    z-index: 2100; /* マップオーバーレイ(2000)よりも常に上に配置 */
     font-family: 'DotGothic16';
+    box-shadow: 0 0 10px #000;
   }
 
   /* マップ・ポップアップオーバーレイ (完全に中央配置し、はみ出しを防ぐ) */
@@ -366,11 +364,9 @@ body {
     overflow-y: auto;
   }
 
-  /* ステータス画面の最適化 */
+  /* ステータス画面の最適化 (モバイルではボタンで出し入れ、フローからは消す) */
   .pane-status {
-    margin-top: 0;
-    padding: 5px;
-    order: 2;
+    display: none;
   }
 
   .status-grid {

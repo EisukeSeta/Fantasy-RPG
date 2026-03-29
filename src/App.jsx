@@ -26,7 +26,14 @@ function App() {
   const [activeDialog, setActiveDialog] = useState(null); // { title: string, pages: string[], currentPage: 0, onConfirm?: func, showChoices?: boolean }
   const [isAutoBattle, setIsAutoBattle] = useState(false);
   const [showMap, setShowMap] = useState(false);
+  const [showStatus, setShowStatus] = useState(false);
   const touchStartPos = useRef({ x: 0, y: 0 });
+
+  // ログが更新されたら自動的に最下部までスクロール
+  useEffect(() => {
+    const logEl = document.getElementById('mobile-log-display');
+    if (logEl) logEl.scrollTop = logEl.scrollHeight;
+  }, [messages, showMap, showStatus]);
 
   // 初回起動時、モバイル環境ならAI戦闘をデフォルトでONにする
   useEffect(() => {
@@ -559,7 +566,6 @@ function App() {
             onTouchEnd={(e) => {
               const deltaX = e.changedTouches[0].clientX - touchStartPos.current.x;
               const deltaY = e.changedTouches[0].clientY - touchStartPos.current.y;
-              // 横移動が50px以上かつ縦移動より多い場合にフリックとみなす
               if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
                 if (deltaX > 0) processMove('TURN_RIGHT');
                 else processMove('TURN_LEFT');
@@ -577,15 +583,20 @@ function App() {
           </div>
 
           {(gameState === 'EXPLORING' || gameState === 'BATTLE') && !activeDialog && (
-            <button className="map-toggle-btn" onClick={() => setShowMap(!showMap)}>
-               📜 {showMap ? '閉じる' : '絵図'}
-            </button>
+            <div className="mobile-btn-container">
+              <button className="map-toggle-btn" onClick={() => setShowMap(!showMap)}>
+                 📜 {showMap ? '閉じる' : '絵図'}
+              </button>
+              <button className="map-toggle-btn" onClick={() => setShowStatus(!showStatus)}>
+                 📜 {showStatus ? '閉じる' : '隊員証'}
+              </button>
+            </div>
           )}
 
-          {/* モバイル用フローティングログ (ダイアログ表示中は邪魔にならないよう非表示) */}
-          {!activeDialog && (
-            <div className="mobile-log-display">
-              {messages.slice(-4).map((m, i) => {
+          {/* モバイル用フローティングログ (ダイアログ表示中は非表示。通常時はPC専用ログの代わりの役割) */}
+          {!activeDialog && !showMap && !showStatus && (
+            <div className="mobile-log-display" id="mobile-log-display">
+              {messages.map((m, i) => {
                  const attackerNames = party.map(p => p.name);
                  const isPlayerDamage = (m.includes('ダメージ') && !attackerNames.some(name => m.startsWith(name))) || m.includes('痛手') || m.includes('飲まれて');
                  const isHeal = m.includes('癒えた') || m.includes('加護') || m.includes('満たされた') || m.includes('回復');
@@ -645,41 +656,46 @@ function App() {
         </div>
       </div>
 
-      <div className="window pane-status" style={{ display: 'flex', flexDirection: 'column', padding: '15px' }}>
+      <div className={`window pane-status ${showStatus ? 'mobile-map-overlay' : ''}`}>
         <span className="window-title">隊員之証 (Party Status)</span>
         
-        {/* ヘッダー行 */}
-        <div className="status-grid" style={{ borderBottom: '1px solid #555', paddingBottom: '8px', marginBottom: '8px', fontWeight: 'bold' }}>
-          <div className="status-header">職種</div>
-          <div className="status-header">氏名</div>
-          <div className="status-header">階級</div>
-          <div className="status-header">経験（功徳）</div>
-          <div className="status-header">体力</div>
-          <div className="status-header">マナ</div>
-          <div className="status-header">防御</div>
-          <div className="status-header">状態</div>
-        </div>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '10px' }}>
+          {/* ヘッダー行 (モバイル時は少し簡略化) */}
+          <div className="status-grid" style={{ borderBottom: '1px solid #555', paddingBottom: '8px', marginBottom: '8px', fontWeight: 'bold', gridTemplateColumns: showStatus ? '1fr 2fr 1fr 2fr 1fr 1fr' : 'repeat(8, 1fr)' }}>
+            <div className="status-header">職種</div>
+            <div className="status-header">氏名</div>
+            <div className="status-header">階級</div>
+            <div className="status-header">体力</div>
+            <div className="status-header">霊力</div>
+            <div className="status-header">状態</div>
+          </div>
 
-        {/* メンバー行 */}
-        <div style={{ flex: 1, overflowY: 'auto' }}>
-          {party.map((m, idx) => (
-            <div key={m.id} className="status-grid" style={{ 
-              backgroundColor: (gameState === 'BATTLE' && activeBattler === idx) ? '#153315' : 'transparent', 
-              color: (gameState === 'BATTLE' && activeBattler === idx) ? '#3f3' : '#fff',
-              padding: '10px 0',
-              fontSize: '1.2rem', // 文字サイズを再調整
-              borderBottom: '1px solid #222'
-            }}>
-              <div style={{ fontSize: '1rem', color: '#aaa' }}>{m.icon} {m.job}</div>
-              <div style={{ textAlign: 'left', paddingLeft: '5px' }}>{m.name}</div>
-              <div>Lv{m.lv}</div>
-              <div style={{ fontSize: '0.9rem', color: '#ccc' }}>{m.exp}/{getRequiredExp(m.lv+1)}</div>
-              <div style={{ color: m.hp < (m.maxHp * 0.3) ? '#f33' : 'inherit' }}>{m.hp}/{m.maxHp}</div>
-              <div>{m.mp}/{m.maxMp}</div>
-              <div>{m.ac}</div>
-              <div style={{ color: m.status === '討死' ? '#f33' : 'inherit' }}>{m.status}</div>
-            </div>
-          ))}
+          {/* メンバー行 */}
+          <div style={{ flex: 1, overflowY: 'auto' }}>
+            {party.map((m, idx) => (
+              <div key={m.id} className="status-grid" style={{ 
+                backgroundColor: (gameState === 'BATTLE' && activeBattler === idx) ? '#153315' : 'transparent', 
+                color: (gameState === 'BATTLE' && activeBattler === idx) ? '#3f3' : '#fff',
+                padding: '10px 0',
+                fontSize: showStatus ? '1.2rem' : '1.1rem',
+                borderBottom: '1px solid #222',
+                gridTemplateColumns: showStatus ? '1fr 2fr 1fr 2fr 1fr 1fr' : 'repeat(8, 1fr)'
+              }}>
+                <div style={{ fontSize: '0.9rem', color: '#aaa' }}>{m.job}</div>
+                <div style={{ textAlign: 'left', paddingLeft: '5px' }}>{m.name}</div>
+                <div>Lv{m.lv}</div>
+                <div style={{ color: m.hp < (m.maxHp * 0.3) ? '#f33' : 'inherit' }}>{m.hp}/{m.maxHp}</div>
+                <div>{m.mp}/{m.maxMp}</div>
+                <div style={{ color: m.status === '討死' ? '#f33' : 'inherit' }}>{m.status}</div>
+              </div>
+            ))}
+          </div>
+
+          {showStatus && (
+            <button className="dialog-btn" style={{ marginTop: '20px', width: '200px', alignSelf: 'center' }} onClick={() => setShowStatus(false)}>
+               閉じる
+            </button>
+          )}
         </div>
       </div>
 
