@@ -5,13 +5,19 @@ import { ENEMY_LIST, getRandomEnemy, calculateHitAndDamage } from './data/enemyD
 import { SPELLS } from './data/magicData';
 
 // S字カーブの累積必要経験値テーブル（Lv2へは100程度で到達するように調整）
+// 成長曲線：15分程度のプレイでLv.5前後に到達できるよう調整
 const getRequiredExp = (lv) => {
   if (lv <= 1) return 0;
   if (lv === 2) return 100;
+  if (lv === 3) return 250;
+  if (lv === 4) return 500;
+  if (lv === 5) return 900;
   if (lv >= 50) return 9999999;
+  
+  // 以降はS字カーブで緩やかに上昇
   const x = (lv - 1) / 49;
   const sigmoid = 1 / (1 + Math.exp(-6 * (x - 0.5)));
-  return Math.floor(15000 * sigmoid);
+  return Math.floor(20000 * sigmoid);
 };
 
 function App() {
