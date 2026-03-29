@@ -213,6 +213,16 @@ body {
     flex-direction: column;
     height: 100vh;
     gap: 0;
+    padding-top: 45px; /* iOSセーフエリア/時計対応 */
+  }
+
+  /* モバイル時、魔物窓の位置を移動してHPバー等との重なりを避ける */
+  .pane-enemy {
+    top: 135px !important;
+    left: 10px !important;
+    right: 10px !important;
+    width: auto !important;
+    margin: 0 !important;
   }
 
   /* メイン画面：ログをオーバーレイするためにrelativeへ */
@@ -334,7 +344,7 @@ body {
     padding: 8px 12px;
     font-size: 1.2rem;
     cursor: pointer;
-    z-index: 60;
+    z-index: 2100; /* マップオーバーレイ(2000)よりも常に上に配置 */
     font-family: 'DotGothic16';
   }
 
@@ -350,7 +360,7 @@ body {
     height: 100vh;
     background: rgba(0, 0, 0, 0.98);
     border: none;
-    padding: 40px 20px;
+    padding: 85px 25px 40px 25px; /* 上部により広いパディングを確保してボタンと(0,0)を見せる */
     z-index: 2000;
     box-sizing: border-box;
     overflow-y: auto;
