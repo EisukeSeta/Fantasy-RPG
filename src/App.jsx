@@ -27,6 +27,7 @@ function App() {
   const [isAutoBattle, setIsAutoBattle] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [showStatus, setShowStatus] = useState(false);
+  const [messages, setMessages] = useState(['【御神木の社】から冒険が始まった...']);
   const touchStartPos = useRef({ x: 0, y: 0 });
 
   // ログが更新されたら自動的に最下部までスクロール
@@ -77,7 +78,6 @@ function App() {
 
   const [activeBattler, setActiveBattler] = useState(0); 
   const [enemy, setEnemy] = useState(null);
-  const [messages, setMessages] = useState(['【御神木の社】から冒険が始まった...']);
   const [showSpells, setShowSpells] = useState(null); 
 
   const addMessage = (msg) => {
