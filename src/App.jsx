@@ -26,6 +26,12 @@ function App() {
   const [activeDialog, setActiveDialog] = useState(null); // { title: string, pages: string[], currentPage: 0, onConfirm?: func, showChoices?: boolean }
   const [isAutoBattle, setIsAutoBattle] = useState(false);
 
+  // 初回起動時、モバイル環境ならAI戦闘をデフォルトでONにする
+  useEffect(() => {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth <= 768;
+    if (isMobile) setIsAutoBattle(true);
+  }, []);
+
   // 冒頭のモノローグを初回表示
   useEffect(() => {
     setActiveDialog({
@@ -544,28 +550,42 @@ function App() {
           {gameState === 'CLEAR' && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,40,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ color: '#Ff2', fontSize: '3rem', textAlign: 'center' }}>🎉 階層突破 🎉<div style={{ fontSize: '1.5rem', marginTop: '10px' }}>都の安寧へ一歩近づいた...</div></div></div>}
           
           {gameState === 'EXPLORING' && (
-            <div className="mobile-controls" style={{ position: 'absolute', bottom: '10px', left: '50%', transform: 'translateX(-50%)', background: 'transparent', border: 'none' }}>
-              <div className="move-pad">
-                <div className="pad-btn" onClick={() => processMove('TURN_LEFT')}>↺</div>
-                <div className="pad-btn" onClick={() => processMove('FORWARD')}>前</div>
-                <div className="pad-btn" onClick={() => processMove('TURN_RIGHT')}>↻</div>
-                <div></div>
-                <div className="pad-btn" onClick={() => processMove('BACKWARD')}>後</div>
-                <div></div>
+            <>
+              {/* ダンジョン画面タップ移動用オーバーレイ (モバイルのみ有効) */}
+              <div className="dungeon-tap-overlay">
+                <div className="tap-area tap-forward" onClick={() => processMove('FORWARD')}></div>
+                <div className="tap-area tap-left" onClick={() => processMove('TURN_LEFT')}></div>
+                <div className="tap-area tap-right" onClick={() => processMove('TURN_RIGHT')}></div>
+                <div className="tap-area tap-backward" onClick={() => processMove('BACKWARD')}></div>
               </div>
-            </div>
+
+              {!activeDialog && (
+                <div className="mobile-controls" style={{ position: 'absolute', bottom: '10px', left: '50%', transform: 'translateX(-50%)', background: 'transparent', border: 'none' }}>
+                  <div className="move-pad">
+                    <div className="pad-btn" onClick={() => processMove('TURN_LEFT')}>↺</div>
+                    <div className="pad-btn" onClick={() => processMove('FORWARD')}>前</div>
+                    <div className="pad-btn" onClick={() => processMove('TURN_RIGHT')}>↻</div>
+                    <div></div>
+                    <div className="pad-btn" onClick={() => processMove('BACKWARD')}>後</div>
+                    <div></div>
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
-          {/* モバイル用フローティングログ */}
-          <div className="mobile-log-display">
-            {messages.slice(-4).map((m, i) => {
-               const attackerNames = party.map(p => p.name);
-               const isPlayerDamage = (m.includes('ダメージ') && !attackerNames.some(name => m.startsWith(name))) || m.includes('痛手') || m.includes('飲まれて');
-               const isHeal = m.includes('癒えた') || m.includes('加護') || m.includes('満たされた') || m.includes('回復');
-               const color = isPlayerDamage ? '#ffbbbb' : isHeal ? '#bbffbb' : '#eee';
-               return <div key={i} className="mobile-log-line" style={{ color }}>{'>'} {m}</div>;
-            })}
-          </div>
+          {/* モバイル用フローティングログ (ダイアログ表示中は邪魔にならないよう非表示) */}
+          {!activeDialog && (
+            <div className="mobile-log-display">
+              {messages.slice(-4).map((m, i) => {
+                 const attackerNames = party.map(p => p.name);
+                 const isPlayerDamage = (m.includes('ダメージ') && !attackerNames.some(name => m.startsWith(name))) || m.includes('痛手') || m.includes('飲まれて');
+                 const isHeal = m.includes('癒えた') || m.includes('加護') || m.includes('満たされた') || m.includes('回復');
+                 const color = isPlayerDamage ? '#ffbbbb' : isHeal ? '#bbffbb' : '#eee';
+                 return <div key={i} className="mobile-log-line" style={{ color }}>{'>'} {m}</div>;
+              })}
+            </div>
+          )}
 
           {/* 和風ダイアログオーバーレイ */}
           {activeDialog && (

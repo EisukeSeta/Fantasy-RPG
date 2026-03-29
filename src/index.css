@@ -245,11 +245,38 @@ body {
   }
 
   .mobile-log-line {
+    height: 24px;
+    line-height: 24px;
+    margin-bottom: 2px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
+  /* ダンジョン画面タップエリア */
+  .dungeon-tap-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+    z-index: 40;
+    pointer-events: auto;
+  }
+
+  .tap-area {
+    /* debug: border: 1px solid red; */
+    cursor: pointer;
+  }
+
+  .tap-forward { grid-column: 1 / 4; grid-row: 1 / 2; }
+  .tap-backward { grid-column: 2 / 3; grid-row: 3 / 4; }
+  .tap-left { grid-column: 1 / 2; grid-row: 2 / 4; }
+  .tap-right { grid-column: 3 / 4; grid-row: 2 / 4; }
 
   /* ステータス画面の最適化 */
   .pane-status {
