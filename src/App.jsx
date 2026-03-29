@@ -556,6 +556,17 @@ function App() {
             </div>
           )}
 
+          {/* モバイル用フローティングログ */}
+          <div className="mobile-log-display">
+            {messages.slice(-4).map((m, i) => {
+               const attackerNames = party.map(p => p.name);
+               const isPlayerDamage = (m.includes('ダメージ') && !attackerNames.some(name => m.startsWith(name))) || m.includes('痛手') || m.includes('飲まれて');
+               const isHeal = m.includes('癒えた') || m.includes('加護') || m.includes('満たされた') || m.includes('回復');
+               const color = isPlayerDamage ? '#ffbbbb' : isHeal ? '#bbffbb' : '#eee';
+               return <div key={i} className="mobile-log-line" style={{ color }}>{'>'} {m}</div>;
+            })}
+          </div>
+
           {/* 和風ダイアログオーバーレイ */}
           {activeDialog && (
             <div className="dialog-overlay">
@@ -626,19 +637,21 @@ function App() {
 
       <div className="window pane-map" style={{ display: 'flex', flexDirection: 'column' }}>
         <span className="window-title">絵図と絵巻 (Map & Log)</span>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', paddingBottom: '15px', gap: '20px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${MAP_WIDTH}, 35px)`, gridTemplateRows: `repeat(${MAP_HEIGHT}, 35px)`, border: '2px solid #555' }}>
-            {mapData.map((row, y) => row.map((cell, x) => renderMapCell(cell, x, y)))}
-          </div>
-          <div style={{ fontSize: '1.2rem', color: '#aaa', border: '1px solid #444', padding: '12px', backgroundColor: '#080808', flexShrink: 0 }}>
-            <div style={{ color: '#fff', borderBottom: '1px solid #333', marginBottom: '10px', textAlign: 'center' }}>凡例</div>
-            <div style={{ marginBottom: '15px', color: '#f0e68c', textAlign: 'center', borderBottom: '1px solid #444', paddingBottom: '8px' }}>
-               現在地：[{playerState.x}, {playerState.y}]
+        <div className="map-view-wrapper">
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', paddingBottom: '15px', gap: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${MAP_WIDTH}, 35px)`, gridTemplateRows: `repeat(${MAP_HEIGHT}, 35px)`, border: '2px solid #555' }}>
+              {mapData.map((row, y) => row.map((cell, x) => renderMapCell(cell, x, y)))}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}><span style={{ color: '#66f', fontSize: '1.8rem' }}>⛩</span>結界</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}><span style={{ color: '#aa0', fontSize: '1.8rem' }}>🪵</span>立て札</div>
-            {bossDefeated && <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}><span style={{ color: '#f33', fontSize: '1.8rem' }}>✨</span>出口</div>}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><span style={{ color: '#3f3', fontSize: '1.4rem' }}>▲</span>現在地</div>
+            <div style={{ fontSize: '1.2rem', color: '#aaa', border: '1px solid #444', padding: '12px', backgroundColor: '#080808', flexShrink: 0 }}>
+              <div style={{ color: '#fff', borderBottom: '1px solid #333', marginBottom: '10px', textAlign: 'center' }}>凡例</div>
+              <div style={{ marginBottom: '15px', color: '#f0e68c', textAlign: 'center', borderBottom: '1px solid #444', paddingBottom: '8px' }}>
+                 現在地：[{playerState.x}, {playerState.y}]
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}><span style={{ color: '#66f', fontSize: '1.8rem' }}>⛩</span>結界</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}><span style={{ color: '#aa0', fontSize: '1.8rem' }}>🪵</span>立て札</div>
+              {bossDefeated && <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}><span style={{ color: '#f33', fontSize: '1.8rem' }}>✨</span>出口</div>}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><span style={{ color: '#3f3', fontSize: '1.4rem' }}>▲</span>現在地</div>
+            </div>
           </div>
         </div>
 
