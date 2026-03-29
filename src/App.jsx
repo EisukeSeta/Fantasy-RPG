@@ -157,11 +157,75 @@ function App() {
     }
   };
 
+  // 移動処理の共通化 (キー入力とモバイルボタンの両方で使用)
+  const processMove = (moveType) => {
+    // ダイアログ表示中や戦闘中、死亡時は移動入力を完全に拒否
+    if (activeDialog || gameState !== 'EXPLORING') return;
+
+    const current = playerStateRef.current;
+    let newDir = current.dir;
+    let newX = current.x;
+    let newY = current.y;
+    let hasMoved = false;
+
+    if (moveType === 'TURN_LEFT') {
+      newDir = (current.dir + 3) % 4;
+    } else if (moveType === 'TURN_RIGHT') {
+      newDir = (current.dir + 1) % 4;
+    } else if (moveType === 'FORWARD' || moveType === 'BACKWARD') {
+      const cell = mapDataRef.current[current.y][current.x];
+      const moveDir = moveType === 'FORWARD' ? current.dir : (current.dir + 2) % 4;
+      const canMove = 
+        (moveDir === DIRECTIONS.N && !cell.n) ||
+        (moveDir === DIRECTIONS.E && !cell.e) ||
+        (moveDir === DIRECTIONS.S && !cell.s) ||
+        (moveDir === DIRECTIONS.W && !cell.w);
+      if (canMove) {
+        newX += DIR_DELTAS[moveDir].dx;
+        newY += DIR_DELTAS[moveDir].dy;
+        hasMoved = true;
+      }
+    }
+
+    if (newX !== current.x || newY !== current.y || newDir !== current.dir) {
+      setPlayerState({ x: newX, y: newY, dir: newDir });
+      checkHealSpot(newX, newY);
+      checkOminousPresence(newX, newY);
+      checkExit(newX, newY);
+      checkSignboard(newX, newY, current.x, current.y);
+      if (!mapDataRef.current[newY][newX].visited) {
+        setMapData(prevMap => {
+           const newMap = [...prevMap];
+           newMap[newY] = [...newMap[newY]]; newMap[newY][newX] = { ...newMap[newY][newX], visited: true };
+           return newMap;
+        });
+      }
+    }
+
+    if (hasMoved) {
+      // ボス位置に到達
+      if (!bossDefeated && newX === BOSS_POS.x && newY === BOSS_POS.y) {
+          const boss = ENEMY_LIST.find(e => e.id === 10); // 鵺
+          setEnemy({ ...boss, hp: boss.maxHp });
+          setGameState('BATTLE');
+          addMessage(`【宿敵】${boss.name} が咆哮を上げる！決戦だ！`);
+          return;
+      }
+
+      const encounterChance = Math.random();
+      if (encounterChance < 0.15) {
+        const totalLv = party.reduce((sum, m) => sum + m.lv, 0);
+        const newEnemy = getRandomEnemy(totalLv);
+        setEnemy(newEnemy);
+        setGameState('BATTLE');
+        setActiveBattler(0);
+        addMessage(`闇から ${newEnemy.name} (Lv${newEnemy.lv}) があらわれた！`);
+      }
+    }
+  };
+
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // ダイアログ表示中や戦闘中、死亡時は移動入力を完全に拒否
-      if (activeDialog || gameState !== 'EXPLORING') return; 
-
       let moveType = null;
       switch (e.key) {
         case 'w': case 'W': case 'ArrowUp':    moveType = 'FORWARD'; break;
@@ -170,67 +234,7 @@ function App() {
         case 'd': case 'D': case 'ArrowRight': moveType = 'TURN_RIGHT'; break;
         default: return;
       }
-
-      const current = playerStateRef.current;
-      let newDir = current.dir;
-      let newX = current.x;
-      let newY = current.y;
-      let hasMoved = false;
-
-      if (moveType === 'TURN_LEFT') {
-        newDir = (current.dir + 3) % 4;
-      } else if (moveType === 'TURN_RIGHT') {
-        newDir = (current.dir + 1) % 4;
-      } else {
-        const cell = mapDataRef.current[current.y][current.x];
-        const moveDir = moveType === 'FORWARD' ? current.dir : (current.dir + 2) % 4;
-        const canMove = 
-          (moveDir === DIRECTIONS.N && !cell.n) ||
-          (moveDir === DIRECTIONS.E && !cell.e) ||
-          (moveDir === DIRECTIONS.S && !cell.s) ||
-          (moveDir === DIRECTIONS.W && !cell.w);
-        if (canMove) {
-          newX += DIR_DELTAS[moveDir].dx;
-          newY += DIR_DELTAS[moveDir].dy;
-          hasMoved = true;
-        }
-      }
-
-      if (newX !== current.x || newY !== current.y || newDir !== current.dir) {
-        setPlayerState({ x: newX, y: newY, dir: newDir });
-        checkHealSpot(newX, newY);
-        checkOminousPresence(newX, newY);
-        checkExit(newX, newY);
-        checkSignboard(newX, newY, current.x, current.y);
-        if (!mapDataRef.current[newY][newX].visited) {
-          setMapData(prevMap => {
-             const newMap = [...prevMap];
-             newMap[newY] = [...newMap[newY]]; newMap[newY][newX] = { ...newMap[newY][newX], visited: true };
-             return newMap;
-          });
-        }
-      }
-
-      if (hasMoved) {
-          // ボス位置に到達
-          if (!bossDefeated && newX === BOSS_POS.x && newY === BOSS_POS.y) {
-              const boss = ENEMY_LIST.find(e => e.id === 10); // 鵺
-              setEnemy({ ...boss, hp: boss.maxHp });
-              setGameState('BATTLE');
-              addMessage(`【宿敵】${boss.name} が咆哮を上げる！決戦だ！`);
-              return;
-          }
-
-        const encounterChance = Math.random();
-        if (encounterChance < 0.15) {
-          const totalLv = party.reduce((sum, m) => sum + m.lv, 0);
-          const newEnemy = getRandomEnemy(totalLv);
-          setEnemy(newEnemy);
-          setGameState('BATTLE');
-          setActiveBattler(0);
-          addMessage(`闇から ${newEnemy.name} (Lv${newEnemy.lv}) があらわれた！`);
-        }
-      }
+      processMove(moveType);
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -539,6 +543,19 @@ function App() {
           {gameState === 'DEAD' && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(80,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ color: '#F22', fontSize: '3rem' }}>討死</div></div>}
           {gameState === 'CLEAR' && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,40,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ color: '#Ff2', fontSize: '3rem', textAlign: 'center' }}>🎉 階層突破 🎉<div style={{ fontSize: '1.5rem', marginTop: '10px' }}>都の安寧へ一歩近づいた...</div></div></div>}
           
+          {gameState === 'EXPLORING' && (
+            <div className="mobile-controls" style={{ position: 'absolute', bottom: '10px', left: '50%', transform: 'translateX(-50%)', background: 'transparent', border: 'none' }}>
+              <div className="move-pad">
+                <div className="pad-btn" onClick={() => processMove('TURN_LEFT')}>↺</div>
+                <div className="pad-btn" onClick={() => processMove('FORWARD')}>前</div>
+                <div className="pad-btn" onClick={() => processMove('TURN_RIGHT')}>↻</div>
+                <div></div>
+                <div className="pad-btn" onClick={() => processMove('BACKWARD')}>後</div>
+                <div></div>
+              </div>
+            </div>
+          )}
+
           {/* 和風ダイアログオーバーレイ */}
           {activeDialog && (
             <div className="dialog-overlay">
