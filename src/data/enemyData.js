@@ -10,7 +10,7 @@ export const ENEMY_LIST = [
   { id: 7, name: '青坊主', minHp: 30, maxHp: 50, ac: 4, minDmg: 10, maxDmg: 20, exp: 450, expShare: { samurai: 0.33, onmyoji: 0.34, nisou: 0.33 } },
   { id: 8, name: '土蜘蛛', minHp: 50, maxHp: 80, ac: 4, minDmg: 15, maxDmg: 25, exp: 800, expShare: { samurai: 0.33, onmyoji: 0.34, nisou: 0.33 } },
   { id: 9, name: '牛鬼', minHp: 100, maxHp: 180, ac: 2, minDmg: 25, maxDmg: 50, exp: 1500, expShare: { samurai: 0.33, onmyoji: 0.34, nisou: 0.33 } },
-  { id: 10, name: '鵺', minHp: 250, maxHp: 380, ac: 1, minDmg: 25, maxDmg: 50, exp: 5000, expShare: { samurai: 0.33, onmyoji: 0.34, nisou: 0.33 }, isBoss: true }
+  { id: 10, name: '鵺', minHp: 100, maxHp: 160, ac: 5, minDmg: 20, maxDmg: 40, exp: 5000, expShare: { samurai: 0.33, onmyoji: 0.34, nisou: 0.33 }, isBoss: true }
 ];
 
 export const getRandomEnemy = (playerLvSum) => {

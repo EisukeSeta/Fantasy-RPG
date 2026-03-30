@@ -22,8 +22,6 @@ const getDepthBox = (d) => {
 
 export const WireframeView = ({ mapData, playerPos, playerDir }) => {
   const lines = [];
-  let blocked = false; // 前方が壁で塞がれたらそれ以上奥は描画しない
-
   // 遠い方(d=3)から近い方(d=0)へ重なるように（SVGは後から描画したものが上になるが、基本は線画なので順不同でもOK。ただし奥の壁の後ろは描画しない等の制御が必要）
   // 実際には手前から走査してblocked判定をする
   const depthsToDraw = [];

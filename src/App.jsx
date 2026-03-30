@@ -751,7 +751,7 @@ function App() {
                )}
             </div>
           )}
-          <div style={{ flex: 1, padding: '10px', overflowY: 'auto', backgroundColor: '#000', color: '#eee', fontSize: '1.2rem', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div className="pc-log-display" style={{ flex: 1, padding: '10px', overflowY: 'auto', backgroundColor: '#000', color: '#eee', fontSize: '1.2rem', display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {messages.map((m, i) => {
                // 味方がダメージを受けた時だけ赤（ピンチ強調）
                const attackerNames = party.map(p => p.name);

@@ -55,58 +55,46 @@ body {
 
 /* ゲーム全体のコンテナ */
 .game-container {
-  display: grid;
-  grid-template-columns: 2fr 1.5fr;
-  grid-template-rows: 1fr 300px; /* ステータスを300pxへ大幅拡張 */
-  gap: 25px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 15px;
   width: 100%;
   height: 100%;
+  padding: 10px;
+  box-sizing: border-box;
 }
 
-.pane-main {
-  grid-column: 1 / 2;
-  grid-row: 1 / 2;
-  position: relative;
+.pane-main, .pane-status, .pane-map {
+  width: 32.5%;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  min-height: 200px;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .pane-enemy {
   position: absolute;
-  top: 55px; /* タイトルと重ならないよう下にずらす */
+  top: 55px;
   left: 20px;
   width: fit-content;
   min-width: 250px;
-  background-color: rgba(0, 0, 0, 0.85); /* 透過させて背後を見せつつ視認性確保 */
-  z-index: 20;
+  background-color: rgba(0, 0, 0, 0.85);
+  z-index: 100; /* 重なり順を最前面へ */
   text-align: center;
-}
-
-.pane-status {
-  grid-column: 1 / 2;
-  grid-row: 2 / 3;
-  margin-top: -40px; /* メインウィンドウに少し重ねる */
-  z-index: 15;
-}
-
-.pane-map {
-  grid-column: 2 / 3;
-  grid-row: 1 / 3;
 }
 
 .status-grid {
   display: grid;
-  /* 8つのカラム: 職種、氏名、階級、経験、体力、万力、防御、状態 */
-  /* frだと内容によって可変になるため、最小幅を確保しつつ1行に収めるための案 */
-  grid-template-columns: minmax(80px, 0.8fr) minmax(130px, 1.2fr) minmax(60px, 0.5fr) minmax(140px, 1.2fr) minmax(110px, 0.9fr) minmax(80px, 0.8fr) minmax(65px, 0.5fr) minmax(80px, 0.8fr);
+  /* PC用: 職種、氏名、階級、体力、霊力、防御、状態 (一部簡略化) */
+  grid-template-columns: 0.8fr 1.2fr 0.6fr 1fr 1fr 0.6fr 0.8fr;
   text-align: center;
   align-items: center;
   gap: 5px;
+  width: 100%;
 }
 
 .status-header {
@@ -195,256 +183,202 @@ body {
 }
 
 
+/* --- PC表示時のクリーンアップ --- */
+@media (min-width: 769px) {
+  .mobile-log-display, .mini-status-panel, .dungeon-tap-overlay, .mobile-controls, .map-toggle-btn {
+    display: none !important;
+  }
+  .pane-main, .pane-status, .pane-map {
+    display: flex !important;
+  }
+  .pc-log-display {
+    display: flex !important;
+  }
+}
+
 /* --- モバイル対応 (Responsive) --- */
 @media (max-width: 768px) {
   body {
-    overflow: hidden; /* スクロールを完全に禁止 */
-    height: 100vh;
-    font-size: 1.1rem;
+    overflow: hidden !important;
+    height: 100vh !important;
+    font-size: 1.1rem !important;
   }
 
   #root {
-    padding: 0;
-    height: 100vh;
+    padding: 0 !important;
+    height: 100vh !important;
   }
 
   .game-container {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    gap: 0;
-    padding-top: 45px; /* iOSセーフエリア/時計対応 */
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100vh !important;
+    gap: 0 !important;
+    padding: 45px 0 0 0 !important; /* iOSセーフエリア対応 */
+    overflow: hidden !important;
   }
 
-  /* モバイル時、魔物窓の位置を移動してHPバー等との重なりを避ける */
+  .pane-main, .pane-status, .pane-map {
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+  }
+
+  /* メイン画面：モバイルでの高さ確保 */
+  .pane-main {
+    height: 380px !important;
+    min-height: 380px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .wireframe-container {
+    height: 100% !important;
+  }
+
+  /* モバイル時、魔物窓の位置を調整 */
   .pane-enemy {
     top: 135px !important;
     left: 10px !important;
     right: 10px !important;
     width: auto !important;
     margin: 0 !important;
+    z-index: 150 !important;
   }
 
-  /* メイン画面：ログをオーバーレイするためにrelativeへ */
-  .pane-main {
-    min-height: 420px;
-    margin-bottom: 5px;
-    padding: 0;
+  /* PC向けログは非表示に */
+  .pc-log-display {
+    display: none !important;
   }
 
-  .wireframe-container {
-    height: 420px; /* 少し高さを出す */
-  }
-
-  /* モバイル用メッセージログ (スクロール可能に拡張) */
+  /* モバイル用メッセージログ */
   .mobile-log-display {
-    position: relative;
-    background: rgba(0, 0, 0, 0.85);
-    border-top: 1px solid #444;
-    padding: 10px;
-    height: 140px; /* 固定高さを確保 */
-    overflow-y: scroll;
-    z-index: 50;
-    flex-grow: 1; /* 空きスペースを埋める */
+    display: flex !important;
+    flex-direction: column !important;
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: rgba(0, 0, 0, 0.85) !important;
+    border-top: 1px solid #444 !important;
+    padding: 8px !important;
+    height: 120px !important;
+    overflow-y: auto !important;
+    z-index: 60 !important;
   }
 
   .mobile-log-line {
-    line-height: 1.6;
-    height: auto;
-    padding: 2px 0;
-    margin-bottom: 2px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    white-space: pre-wrap;
-    font-size: 0.95rem;
+    line-height: 1.4 !important;
+    font-size: 0.9rem !important;
+    margin-bottom: 2px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
   }
 
   /* ミニステータス・ダッシュボード */
   .mini-status-panel {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: rgba(0, 0, 0, 0.8);
-    border: 1px solid #b89a42; /* くすんだ金 */
-    padding: 6px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    font-size: 0.75rem;
-    z-index: 45;
-    pointer-events: none;
-    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    position: absolute !important;
+    top: 10px !important;
+    right: 10px !important;
+    background: rgba(0, 0, 0, 0.8) !important;
+    border: 1px solid #b89a42 !important;
+    padding: 6px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    font-size: 0.75rem !important;
+    z-index: 50 !important;
+    pointer-events: none !important;
   }
 
   .mini-status-unit {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-bottom: 1px solid #333;
-    padding-bottom: 2px;
-  }
-
-  .mini-status-name {
-    width: 65px;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
   }
 
   .bar-container {
-    width: 60px;
-    height: 4px;
-    background: #333;
-    margin-top: 2px;
+    width: 60px !important;
+    height: 4px !important;
+    background: #333 !important;
   }
 
   .bar-hp { background: #d44; height: 100%; }
   .bar-mp { background: #44d; height: 100%; }
 
-  /* ダンジョン画面タップエリア (中心前進、左右旋回、下部後進) */
+  /* ダンジョン画面タップエリア */
   .dungeon-tap-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: grid;
-    grid-template-columns: 1fr 1.5fr 1fr;
-    grid-template-rows: 1fr 1fr 1fr;
-    z-index: 40;
-    pointer-events: auto;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1.5fr 1fr !important;
+    grid-template-rows: 1fr 1fr 1fr !important;
+    z-index: 40 !important;
   }
 
-  .tap-area {
-    /* debug: border: 1px solid rgba(255,0,0,0.2); */
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
+  .tap-forward { grid-column: 2 / 3 !important; grid-row: 1 / 3 !important; }
+  .tap-left { grid-column: 1 / 2 !important; grid-row: 1 / 4 !important; }
+  .tap-right { grid-column: 3 / 4 !important; grid-row: 1 / 4 !important; }
+  .tap-backward { grid-column: 2 / 3 !important; grid-row: 3 / 4 !important; }
 
-  /* 中央(1,2と2,2)を前進エリアに */
-  .tap-forward { grid-column: 2 / 3; grid-row: 1 / 3; }
-  .tap-left { grid-column: 1 / 2; grid-row: 1 / 4; }
-  .tap-right { grid-column: 3 / 4; grid-row: 1 / 4; }
-  .tap-backward { grid-column: 2 / 3; grid-row: 3 / 4; }
-
-  /* マップ・ステータス切替ボタン群 */
+  /* マップ・ステータス切替ボタン */
   .mobile-btn-container {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    display: flex;
-    gap: 10px;
-    z-index: 2100;
+    position: absolute !important;
+    top: 10px !important;
+    left: 10px !important;
+    display: flex !important;
+    gap: 8px !important;
+    z-index: 2100 !important;
   }
 
   .map-toggle-btn {
-    background: rgba(0, 0, 0, 0.85);
-    border: 1px solid #b89a42;
-    color: #f0e68c;
-    padding: 6px 12px;
-    font-size: 1rem;
-    cursor: pointer;
-    font-family: 'DotGothic16';
-    box-shadow: 0 0 10px #000;
+    background: rgba(0, 0, 0, 0.85) !important;
+    border: 1px solid #b89a42 !important;
+    color: #f0e68c !important;
+    padding: 5px 10px !important;
+    font-size: 0.9rem !important;
+    font-family: 'DotGothic16' !important;
   }
 
-  /* マップ・ポップアップオーバーレイ (完全に中央配置し、はみ出しを防ぐ) */
+  /* マップ・ステータスのポップアップ */
   .mobile-map-overlay {
-    display: block !important;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.98);
-    border: none;
-    padding: 85px 25px 40px 25px; /* 上部により広いパディングを確保してボタンと(0,0)を見せる */
-    z-index: 2000;
-    box-sizing: border-box;
-    overflow-y: auto;
+    display: flex !important;
+    flex-direction: column !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(0, 0, 0, 0.98) !important;
+    padding: 80px 15px 20px 15px !important;
+    z-index: 2000 !important;
+    overflow-y: auto !important;
   }
 
-  /* ステータス画面の最適化 (モバイルではボタンで出し入れ、フローからは消す) */
-  .pane-status {
-    display: none;
+  .pane-status, .pane-map {
+    display: none !important; /* 通常時は非表示 */
   }
 
   .status-grid {
-    display: grid;
-    grid-template-columns: 0.8fr 1.2fr 0.5fr 1fr 0.9fr 0.6fr 1fr;
-    font-size: 0.85rem;
-    gap: 3px;
-  }
-
-  /* マップ画面の最適化 (モバイルではデフォルト非表示) */
-  .pane-map {
-    display: none;
-    width: 100%;
-    order: 3;
-    padding: 5px;
+    grid-template-columns: 1fr 2fr 0.8fr 1.5fr 1.2fr 1fr !important;
+    font-size: 0.85rem !important;
   }
 
   .map-view-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    transform: scale(0.85); /* 画面に収めるために縮小 */
-    transform-origin: top center;
+    transform: scale(0.9) !important;
+    transform-origin: top center !important;
   }
 
-  .pane-map > div:first-child {
-    flex-direction: column !important;
-    gap: 10px;
-  }
-
-  /* モバイル用コントローラー */
-  .mobile-controls {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 15px;
-    margin-top: 0;
-    padding: 10px;
-    background: transparent;
-    border: none;
-  }
-
-  .move-pad {
-    display: grid;
-    grid-template-columns: repeat(3, 65px);
-    grid-template-rows: repeat(2, 60px);
-    gap: 8px;
-  }
-
-  .pad-btn {
-    width: 65px;
-    height: 60px;
-    background: rgba(40, 40, 40, 0.8);
-    font-size: 1.5rem;
-  }
-
-  /* ダイアログの最適化 (物語を読みやすくするためサイズを拡大) */
+  /* ダイアログ調整 */
   .dialog-overlay {
-    padding: 25px 20px;
-    width: 95%;
-    height: 85%; /* 十分な高さを確保 */
-    top: 50%;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 0 50px #000, 0 0 5px #b89a42;
+    width: 95% !important;
+    height: 80% !important;
+    padding: 20px !important;
   }
 
-  .dialog-content {
-    line-height: 1.8;
-    font-size: 1.2rem;
-  }
-}
-
-/* PCではモバイル専用要素を隠し、マップを表示する */
-@media (min-width: 769px) {
-  .mobile-log-display, .mini-status-panel, .dungeon-tap-overlay, .mobile-controls, .map-toggle-btn {
-    display: none !important;
-  }
-  .pane-map {
-    display: flex !important;
-  }
+  .dialog-title { font-size: 1.5rem !important; }
+  .dialog-content { font-size: 1rem !important; line-height: 1.6 !important; }
 }
