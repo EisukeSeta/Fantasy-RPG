@@ -626,34 +626,35 @@ function App() {
             </div>
           )}
 
-          {/* 和風ダイアログオーバーレイ */}
-          {activeDialog && (
-            <div className="dialog-overlay">
-              <div className="dialog-title">{activeDialog.title}</div>
-              <div className="dialog-content">
-                {activeDialog.pages[activeDialog.currentPage]}
-              </div>
-              <div className="dialog-footer">
-                {activeDialog.currentPage < activeDialog.pages.length - 1 ? (
-                  <button className="dialog-btn" onClick={() => setActiveDialog(prev => ({ ...prev, currentPage: prev.currentPage + 1 }))}>
-                    ▼ 続きを読む
-                  </button>
-                ) : (
-                  activeDialog.showChoices ? (
-                    <div className="dialog-choice-container">
-                      <button className="dialog-btn" onClick={() => { activeDialog.onConfirm(); setActiveDialog(null); }}>【 はい 】</button>
-                      <button className="dialog-btn" onClick={() => setActiveDialog(null)}>【 否 】</button>
-                    </div>
-                  ) : (
-                    <button className="dialog-btn" onClick={() => { if(activeDialog.onConfirm) activeDialog.onConfirm(); setActiveDialog(null); }}>
-                      （ 読み終える ）
-                    </button>
-                  )
-                )}
-              </div>
-            </div>
-          )}
         </div>
+
+        {/* 和風ダイアログオーバーレイ (メインパネル全体を使用) */}
+        {activeDialog && (
+          <div className="dialog-overlay">
+            <div className="dialog-title">{activeDialog.title}</div>
+            <div className="dialog-content">
+              {activeDialog.pages[activeDialog.currentPage]}
+            </div>
+            <div className="dialog-footer">
+              {activeDialog.currentPage < activeDialog.pages.length - 1 ? (
+                <button className="dialog-btn" onClick={() => setActiveDialog(prev => ({ ...prev, currentPage: prev.currentPage + 1 }))}>
+                  ▼ 続きを読む
+                </button>
+              ) : (
+                activeDialog.showChoices ? (
+                  <div className="dialog-choice-container">
+                    <button className="dialog-btn" onClick={() => { activeDialog.onConfirm(); setActiveDialog(null); }}>【 はい 】</button>
+                    <button className="dialog-btn" onClick={() => setActiveDialog(null)}>【 否 】</button>
+                  </div>
+                ) : (
+                  <button className="dialog-btn" onClick={() => { if(activeDialog.onConfirm) activeDialog.onConfirm(); setActiveDialog(null); }}>
+                    （ 読み終える ）
+                  </button>
+                )
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className={`window pane-status ${showStatus ? 'mobile-map-overlay' : ''}`}>
