@@ -60,12 +60,12 @@ body {
 /* ゲーム全体のコンテナ (PC) */
 .game-container {
   display: grid;
-  grid-template-columns: 73% 26%;
-  grid-template-rows: 1fr 240px; /* 下部にステータス領域を確保 */
-  gap: 12px;
+  grid-template-columns: 63% 35%; /* 右パネルをさらに拡張 */
+  grid-template-rows: 1fr 240px;
+  gap: 15px;
   width: 100%;
   height: 100%;
-  padding: 12px;
+  padding: 15px;
   box-sizing: border-box;
 }
 
@@ -74,6 +74,19 @@ body {
   grid-row: 1 / 2;
   width: 100% !important;
   height: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+/* ダンジョン画面を正方形にし、左右に空間を残す */
+.pane-main > .wireframe-container {
+  aspect-ratio: 1 / 1 !important;
+  height: 100% !important;
+  width: auto !important;
+  max-width: 100% !important;
+  border: 4px double #555 !important;
+  box-shadow: 0 0 20px rgba(0,0,0,0.8);
 }
 
 .pane-status {
