@@ -66,9 +66,22 @@ body {
   box-sizing: border-box;
 }
 
-.pane-main, .pane-status, .pane-map {
-  width: 32.5%;
+.pane-main {
+  width: 60%;
   height: 100%;
+}
+
+.pane-status {
+  width: 18%;
+  height: 100%;
+}
+
+.pane-map {
+  width: 22%;
+  height: 100%;
+}
+
+.pane-main, .pane-status, .pane-map {
   display: flex;
   flex-direction: column;
   position: relative;
@@ -83,18 +96,19 @@ body {
   width: fit-content;
   min-width: 250px;
   background-color: rgba(0, 0, 0, 0.85);
-  z-index: 100; /* 重なり順を最前面へ */
+  z-index: 100;
   text-align: center;
 }
 
 .status-grid {
   display: grid;
-  /* PC用: 職種、氏名、階級、体力、霊力、防御、状態 (一部簡略化) */
-  grid-template-columns: 0.8fr 1.2fr 0.6fr 1fr 1fr 0.6fr 0.8fr;
+  /* 非常に狭い幅でも収まるよう比率を調整: 職(0.6) 名(1.2) 階(0.5) 体(1.0) 霊(1.0) 状(0.7) */
+  grid-template-columns: 0.6fr 1.2fr 0.5fr 1fr 1fr 0.7fr;
   text-align: center;
   align-items: center;
-  gap: 5px;
+  gap: 3px;
   width: 100%;
+  font-size: 0.9rem; /* PCでもステータスは少し小さめに */
 }
 
 .status-header {

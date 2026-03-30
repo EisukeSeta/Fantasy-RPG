@@ -661,7 +661,7 @@ function App() {
         
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '10px' }}>
           {/* ヘッダー行 (モバイル時は少し簡略化) */}
-          <div className="status-grid" style={{ borderBottom: '1px solid #555', paddingBottom: '8px', marginBottom: '8px', fontWeight: 'bold', gridTemplateColumns: showStatus ? '1fr 2fr 1fr 2fr 1fr 1fr' : 'repeat(8, 1fr)' }}>
+          <div className="status-grid" style={{ borderBottom: '1px solid #555', paddingBottom: '8px', marginBottom: '8px', fontWeight: 'bold' }}>
             <div className="status-header">職種</div>
             <div className="status-header">氏名</div>
             <div className="status-header">階級</div>
@@ -678,8 +678,7 @@ function App() {
                 color: (gameState === 'BATTLE' && activeBattler === idx) ? '#3f3' : '#fff',
                 padding: '10px 0',
                 fontSize: showStatus ? '1.2rem' : '1.1rem',
-                borderBottom: '1px solid #222',
-                gridTemplateColumns: showStatus ? '1fr 2fr 1fr 2fr 1fr 1fr' : 'repeat(8, 1fr)'
+                borderBottom: '1px solid #222'
               }}>
                 <div style={{ fontSize: '0.9rem', color: '#aaa' }}>{m.job}</div>
                 <div style={{ textAlign: 'left', paddingLeft: '5px' }}>{m.name}</div>
