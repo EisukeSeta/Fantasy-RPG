@@ -123,7 +123,15 @@ function App() {
     const isEntering = (newX !== oldX || newY !== oldY);
     if (!isEntering) return;
 
-    if (newX === DEBUG_ENTRANCE_POS.x && newY === DEBUG_ENTRANCE_POS.y) {
+    if (newX === 0 && newY === 0) {
+       showDialog(
+         '黄泉の井戸',
+         [
+           "「……冷たく澱んだ水が、無機質な音を立てて湧き出している。ここが、あの世とこの世の境目か……。」",
+           "「……御身の時は、まだ尽きてはおらぬ。井戸の底から聞こえる無数の囁きを振り切り、光の差す方（1,1）へ急げ……。」"
+         ]
+       );
+    } else if (newX === DEBUG_ENTRANCE_POS.x && newY === DEBUG_ENTRANCE_POS.y) {
       showDialog(
         '朱雀門の立て札',
         [
@@ -283,6 +291,32 @@ function App() {
     return m;
   }, [addMessage]);
 
+  // --- 復活（黄泉還り）処理 ---
+  const handleResurrect = useCallback(() => {
+    // 1. 座標を「黄泉の井戸 (0,0)」へリセット
+    setPlayerState({ x: 0, y: 0, dir: DIRECTIONS.E });
+    
+    // 2. 忘却：全てのマップのVisitedフラグをリセット
+    setMapData(prev => prev.map(row => row.map(cell => ({ ...cell, visited: false }))));
+    
+    // 3. 衰弱：HP/MPを1桁、経験値をリセット
+    setParty(prev => prev.map(m => {
+        const baseExp = getRequiredExp(m.lv);
+        return {
+            ...m,
+            hp: 3 + Math.floor(Math.random() * 6), // 3-8
+            mp: Math.min(m.maxMp, 1 + Math.floor(Math.random() * 3)), // 1-3
+            exp: baseExp,
+            status: '平安'
+        };
+    }));
+
+    setGameState('EXPLORING');
+    setEnemy(null);
+    setMessages(['黄泉の井戸の淵から、泥にまみれて這い上がった...。']);
+    addMessage('【忘却】地図の記憶は失われ、生命の灯火も風前の灯だ。');
+  }, [addMessage]);
+
   // バトル終了処理
   const endBattle = useCallback((won) => {
     if (won) {
@@ -312,19 +346,21 @@ function App() {
         setEnemy(null);
         setGameState('EXPLORING');
     } else {
+        setGameState('DEAD');
         addMessage('魔物討伐隊は、闇に飲まれてしまった...');
         showDialog(
-            '終焉の独白',
+            '黄泉の番人との契り',
             [
-              `「……遅せえな。まあ、生きて帰ってくる奴なんて元よりいねえが」\n下人は鼻で笑い、落ちていた薪の破片を火の海へと放り投げた。`,
-              `都を覆う瘴気はさらに濃くなり、残された民の悲鳴すら、降り続く雨音の中にかき消されていった……。`
-            ]
+              `「……クカカ、また来たか。地上の未練が断ち切れぬか。」\n暗闇の中で、骨を噛み砕くような声が響く。`,
+              `「だが、無償では戻さぬ。これまでの記憶と、その瑞々しい生命の精髄……半分、置いてゆけ。」\n現世へ戻り、再び迷宮に挑みますか？（※地図と経験の一部が失われます）`
+            ],
+            () => handleResurrect(),
+            true // 選択肢（はい・いいえ）を表示
         );
-        setGameState('DEAD');
     }
     setActiveBattler(0);
     setShowSpells(null);
-  }, [enemy, addMessage, showDialog, handleLevelUp]);
+  }, [enemy, addMessage, showDialog, handleLevelUp, handleResurrect]);
 
   const processEnemyTurn = useCallback((currentParty, currentEnemy) => {
       if (!currentEnemy) return;
