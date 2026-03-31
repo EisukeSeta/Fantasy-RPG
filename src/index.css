@@ -277,8 +277,9 @@ body {
     flex-direction: column !important;
     height: 100vh !important;
     gap: 0 !important;
-    padding: 45px 0 0 0 !important; /* iOSセーフエリア対応 */
+    padding: 0 !important;
     overflow: hidden !important;
+    background: #000;
   }
 
   .pane-main, .pane-status, .pane-map {
@@ -291,9 +292,14 @@ body {
 
   /* メイン画面：モバイルでの高さ確保 */
   .pane-main {
-    height: 380px !important;
-    min-height: 380px !important;
+    width: 100% !important;
+    height: 100vw !important; /* 1:1の正方形を維持 */
+    max-height: 50vh !important;
+    margin: 0 !important;
     flex-shrink: 0 !important;
+    position: relative;
+    border-bottom: 2px solid #b89a42 !important;
+    z-index: 100;
   }
 
   .wireframe-container {
@@ -387,52 +393,56 @@ body {
   .tap-right { grid-column: 3 / 4 !important; grid-row: 1 / 4 !important; }
   .tap-backward { grid-column: 2 / 3 !important; grid-row: 3 / 4 !important; }
 
-  /* マップ・ステータス切替ボタン */
+  /* ボタンをダンジョン下に移動 */
   .mobile-btn-container {
-    position: absolute !important;
-    top: 10px !important;
-    left: 10px !important;
+    position: relative !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100%;
     display: flex !important;
-    gap: 8px !important;
+    justify-content: space-around;
+    background: #111;
+    border-bottom: 1px solid #444;
+    padding: 8px 0 !important;
     z-index: 2100 !important;
   }
 
   .map-toggle-btn {
-    background: rgba(0, 0, 0, 0.85) !important;
+    background: #222 !important;
     border: 1px solid #b89a42 !important;
     color: #f0e68c !important;
-    padding: 5px 10px !important;
-    font-size: 0.9rem !important;
-    font-family: 'DotGothic16' !important;
+    padding: 6px 12px !important;
+    font-size: 0.8rem !important;
+    min-width: 80px;
   }
 
-  /* マップ・ステータスのポップアップ */
-  .mobile-map-overlay {
+  /* 下部情報パネル：これらを「ダンジョン下の領域」にする */
+  .pane-status, .pane-map {
+    display: none !important;
+    flex: 1 !important;
+    background: #000 !important;
+    padding: 10px !important;
+    overflow-y: auto !important;
+    border: none !important;
+  }
+
+  /* スマホでの表示強制（App.jsxでクラス付与される前提） */
+  .mobile-active-pane {
     display: flex !important;
     flex-direction: column !important;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    background: rgba(0, 0, 0, 0.98) !important;
-    padding: 80px 15px 20px 15px !important;
-    z-index: 2000 !important;
+  }
+
+  .pc-log-display { display: none !important; }
+
+  .mobile-log-display {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 !important;
+    position: relative !important; /* absoluteをやめる */
+    background: #000 !important;
+    padding: 10px !important;
     overflow-y: auto !important;
-  }
-
-  .pane-status, .pane-map {
-    display: none !important; /* 通常時は非表示 */
-  }
-
-  .status-grid {
-    grid-template-columns: 1fr 2fr 0.8fr 1.5fr 1.2fr 1fr !important;
-    font-size: 0.85rem !important;
-  }
-
-  .map-view-wrapper {
-    transform: scale(0.9) !important;
-    transform-origin: top center !important;
+    z-index: 50 !important;
   }
 
   /* ダイアログ調整 */

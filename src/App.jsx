@@ -667,29 +667,6 @@ function App() {
             )}
           </div>
 
-          {(gameState === 'EXPLORING' || gameState === 'BATTLE') && !activeDialog && (
-            <div className="mobile-btn-container">
-              <button className="map-toggle-btn" onClick={() => setShowMap(!showMap)}>
-                 📜 {showMap ? '閉じる' : '絵図'}
-              </button>
-              <button className="map-toggle-btn" onClick={() => setShowStatus(!showStatus)}>
-                 📜 {showStatus ? '閉じる' : '隊員証'}
-              </button>
-            </div>
-          )}
-
-          {/* モバイル用フローティングログ (ダイアログ表示中は非表示。通常時はPC専用ログの代わりの役割) */}
-          {!activeDialog && !showMap && !showStatus && (
-            <div className="mobile-log-display" id="mobile-log-display">
-              {messages.map((m, i) => {
-                 const attackerNames = party.map(p => p.name);
-                 const isPlayerDamage = (m.includes('ダメージ') && !attackerNames.some(name => m.startsWith(name))) || m.includes('痛手') || m.includes('飲まれて');
-                 const isHeal = m.includes('癒えた') || m.includes('加護') || m.includes('満たされた') || m.includes('回復');
-                 const color = isPlayerDamage ? '#ffbbbb' : isHeal ? '#bbffbb' : '#eee';
-                 return <div key={i} className="mobile-log-line" style={{ color }}>{'>'} {m}</div>;
-              })}
-            </div>
-          )}
 
           {/* ミニステータス・ダッシュボード (探索中および戦闘中に表示) */}
           {(gameState === 'EXPLORING' || gameState === 'BATTLE') && (
@@ -745,6 +722,38 @@ function App() {
         )}
       </div>
 
+      {/* --- スマホ専用：ダンジョン下の操作・情報パネル --- */}
+      {(gameState === 'EXPLORING' || gameState === 'BATTLE') && !activeDialog && (
+        <div className="mobile-btn-container">
+          <button className="map-toggle-btn" 
+                  style={{ background: showMap ? '#b89a42' : '#222', color: showMap ? '#000' : '#f0e68c' }}
+                  onClick={() => { setShowMap(!showMap); setShowStatus(false); }}>
+             📜 {showMap ? '閉じる' : '絵図'}
+          </button>
+          <button className="map-toggle-btn" 
+                  style={{ background: showStatus ? '#b89a42' : '#222', color: showStatus ? '#000' : '#f0e68c' }}
+                  onClick={() => { setShowStatus(!showStatus); setShowMap(false); }}>
+             📜 {showStatus ? '閉じる' : '隊員証'}
+          </button>
+          <button className="map-toggle-btn" onClick={() => { setShowMap(false); setShowStatus(false); }}>
+             📜 記録
+          </button>
+        </div>
+      )}
+
+      {/* スマホ用ログ：マップもステータスも開いていない時に表示 */}
+      {!activeDialog && !showMap && !showStatus && (
+        <div className="mobile-log-display" id="mobile-log-display">
+          {messages.map((m, i) => {
+             const attackerNames = party.map(p => p.name);
+             const isPlayerDamage = (m.includes('ダメージ') && !attackerNames.some(name => m.startsWith(name))) || m.includes('痛手') || m.includes('飲まれて');
+             const isHeal = m.includes('癒えた') || m.includes('加護') || m.includes('満たされた') || m.includes('回復');
+             const color = isPlayerDamage ? '#ffbbbb' : isHeal ? '#bbffbb' : '#eee';
+             return <div key={i} className="mobile-log-line" style={{ color }}>{'>'} {m}</div>;
+          })}
+        </div>
+      )}
+
       {/* デバッグパネル (isDebug = true の時のみ) */}
       {isDebug && (
         <div style={{
@@ -793,7 +802,7 @@ function App() {
                style={{ cursor: 'pointer', width: '80px', accentColor: '#c93' }} />
       </div>
 
-      <div className={`window pane-status ${showStatus ? 'mobile-map-overlay' : ''}`}>
+      <div className={`window pane-status ${showStatus ? 'mobile-active-pane' : ''}`}>
         <span className="window-title">隊員之証 (Party Status)</span>
         
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '10px' }}>
@@ -852,7 +861,7 @@ function App() {
         </div>
       </div>
 
-      <div className={`window pane-map ${showMap ? 'mobile-map-overlay' : ''}`}>
+      <div className={`window pane-map ${showMap ? 'mobile-active-pane' : ''}`}>
         <span className="window-title">絵図と絵巻 (Map & Log)</span>
         <div className="map-view-wrapper">
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', paddingBottom: '15px', gap: '20px' }}>
