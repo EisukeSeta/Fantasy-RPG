@@ -118,6 +118,7 @@ function App() {
 
   const [hasReadScroll, setHasReadScroll] = useState(false);
   const [volume, setVolume] = useState(0.3);
+  const [isMuted, setIsMuted] = useState(false);
 
   // 音響エンジンの状態連動
   useEffect(() => {
@@ -125,8 +126,8 @@ function App() {
   }, [gameState]);
 
   useEffect(() => {
-    SoundEngine.setVolume(volume);
-  }, [volume]);
+    SoundEngine.setVolume(isMuted ? 0 : volume);
+  }, [volume, isMuted]);
 
   // ダイアログの「読み終える」または遷移時に音声を初期化（ブラウザポリシー対応）
   const initAudio = useCallback(() => {
@@ -362,6 +363,8 @@ function App() {
   // バトル終了処理
   const endBattle = useCallback((won) => {
     if (won) {
+        // 魔物の断末魔を再生
+        SoundEngine.playMonsterDeath();
         addMessage(`${enemy.name} を撃破した！`);
         // ボス勝利フラグ
         if (enemy.isBoss && enemy.id === 10) {
@@ -772,9 +775,13 @@ function App() {
         borderRadius: '5px', display: 'flex', alignItems: 'center', gap: '8px',
         boxShadow: '0 0 10px rgba(0,0,0,0.5)'
       }}>
-        <span>🔔 奏（音量）</span>
+        <button onClick={() => setIsMuted(!isMuted)} 
+                style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', outline: 'none' }}>
+          {isMuted ? '🔕' : '🔔'}
+        </button>
+        <span style={{ fontSize: '0.7rem' }}>奏（音量）</span>
         <input type="range" min="0" max="1" step="0.05" value={volume} 
-               onChange={(e) => setVolume(parseFloat(e.target.value))} 
+               onChange={(e) => { setVolume(parseFloat(e.target.value)); if(isMuted) setIsMuted(false); }} 
                style={{ cursor: 'pointer', width: '80px', accentColor: '#c93' }} />
       </div>
 

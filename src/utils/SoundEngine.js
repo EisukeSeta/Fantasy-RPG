@@ -173,6 +173,54 @@ class HeianSoundEngine {
     setTimeout(() => this.playBattleNotes(), 300 + Math.random() * 500);
   }
 
+  /**
+   * 魔物の断末魔 (Danmatsuma): 敵撃破時の効果音
+   */
+  playMonsterDeath() {
+    if (!this.isStarted || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    
+    // 1. 叫び声 (Square wave sweep)
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(800 + Math.random() * 400, now);
+    osc.frequency.exponentialRampToValueAtTime(40, now + 0.8);
+    
+    g.gain.setValueAtTime(0.3, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+    
+    osc.connect(g);
+    g.connect(this.masterGain);
+    osc.start();
+    osc.stop(now + 0.8);
+
+    // 2. 崩壊音 (Noise)
+    const bufferSize = this.ctx.sampleRate * 0.5;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    
+    const noiseSource = this.ctx.createBufferSource();
+    noiseSource.buffer = buffer;
+    const noiseGain = this.ctx.createGain();
+    const noiseFilter = this.ctx.createBiquadFilter();
+    
+    noiseFilter.type = 'lowpass';
+    noiseFilter.frequency.setValueAtTime(1000, now);
+    noiseFilter.frequency.exponentialRampToValueAtTime(10, now + 0.6);
+    
+    noiseGain.gain.setValueAtTime(0.2, now);
+    noiseGain.gain.linearRampToValueAtTime(0, now + 0.6);
+    
+    noiseSource.connect(noiseFilter);
+    noiseFilter.connect(noiseGain);
+    noiseGain.connect(this.masterGain);
+    noiseSource.start();
+  }
+
   setVolume(val) {
     if (!this.masterGain) return;
     this.masterGain.gain.setTargetAtTime(val, this.ctx.currentTime, 0.1);
