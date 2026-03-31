@@ -43,6 +43,13 @@ function App() {
     setParty(prev => prev.map(m => ({ ...m, hp: 0, status: '討死' })));
     addMessage('【DEBUG】全員を討死状態にしました。');
   };
+
+  const debugEnemyKill = () => {
+    if (enemy) {
+      setEnemy(prev => ({ ...prev, hp: 1 }));
+      addMessage('【DEBUG】敵の生命を極限まで削りました。');
+    }
+  };
   
   const debugWarp = (tx, ty) => {
     const target = { x: parseInt(tx), y: parseInt(ty), dir: DIRECTIONS.N };
@@ -759,6 +766,7 @@ function App() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
             <button onClick={debugHeal} style={{ backgroundColor: '#030', color: '#3f3', cursor: 'pointer' }}>神格全快</button>
             <button onClick={debugKill} style={{ backgroundColor: '#030', color: '#3f3', cursor: 'pointer' }}>強制全滅テスト</button>
+            <button onClick={debugEnemyKill} style={{ backgroundColor: '#030', color: '#3f3', cursor: 'pointer' }}>敵・一撃死（テスト用）</button>
             <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
                <input type="checkbox" checked={debugEncounter} onChange={(e) => setDebugEncounter(e.target.checked)} />
                魔物遭遇
