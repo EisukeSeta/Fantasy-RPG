@@ -178,7 +178,6 @@ class HeianSoundEngine {
    */
   playMonsterDeath() {
     if (!this.isStarted || !this.ctx) return;
-    console.log('💀 魔物の断末魔が響き渡った...');
     const now = this.ctx.currentTime;
     
     // 1. 叫び声 (Square wave sweep)
