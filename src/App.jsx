@@ -3,6 +3,7 @@ import { generateMap, MAP_WIDTH, MAP_HEIGHT, DIRECTIONS, DIR_DELTAS } from './da
 import { WireframeView } from './components/WireframeView';
 import { ENEMY_LIST, getRandomEnemy, calculateHitAndDamage } from './data/enemyData';
 import { SPELLS } from './data/magicData';
+import SoundEngine from './utils/SoundEngine';
 
 // S字カーブの累積必要経験値テーブル（Lv2へは100程度で到達するように調整）
 // 成長曲線：15分程度のプレイでLv.5前後に到達できるよう調整
@@ -27,6 +28,29 @@ const HEAL_SPOTS = [{x:1, y:1}, {x:8, y:1}, {x:1, y:6}];
 function App() {
   const [gameState, setGameState] = useState('EXPLORING'); // EXPLORING, BATTLE, DEAD, CLEAR
   const [bossDefeated, setBossDefeated] = useState(false); 
+  
+  // デバッグモードの判定 (?debug=1)
+  const isDebug = new URLSearchParams(window.location.search).get('debug') === '1';
+  const [debugEncounter, setDebugEncounter] = useState(true);
+
+  // ステータス操作（デバッグ用）
+  const debugHeal = () => {
+    setParty(prev => prev.map(m => ({ ...m, hp: m.maxHp, mp: m.maxMp, status: '平安' })));
+    addMessage('【DEBUG】全員を全快させました。');
+  };
+  
+  const debugKill = () => {
+    setParty(prev => prev.map(m => ({ ...m, hp: 0, status: '討死' })));
+    addMessage('【DEBUG】全員を討死状態にしました。');
+  };
+  
+  const debugWarp = (tx, ty) => {
+    const target = { x: parseInt(tx), y: parseInt(ty), dir: DIRECTIONS.N };
+    if (isNaN(target.x) || isNaN(target.y)) return;
+    setPlayerState(target);
+    addMessage(`【DEBUG】(${target.x}, ${target.y}) へ跳躍しました。`);
+  };
+
   const [activeDialog, setActiveDialog] = useState({
     title: '平安魔道伝 羅生門編 ― 序章',
     pages: [
@@ -93,6 +117,23 @@ function App() {
   useEffect(() => { mapDataRef.current = mapData; }, [mapData]);
 
   const [hasReadScroll, setHasReadScroll] = useState(false);
+  const [volume, setVolume] = useState(0.3);
+
+  // 音響エンジンの状態連動
+  useEffect(() => {
+    SoundEngine.transitionTo(gameState);
+  }, [gameState]);
+
+  useEffect(() => {
+    SoundEngine.setVolume(volume);
+  }, [volume]);
+
+  // ダイアログの「読み終える」または遷移時に音声を初期化（ブラウザポリシー対応）
+  const initAudio = useCallback(() => {
+    SoundEngine.init();
+    SoundEngine.setVolume(volume);
+    SoundEngine.transitionTo(gameState);
+  }, [gameState, volume]);
 
   const checkOminousPresence = useCallback((x, y) => {
     if (bossDefeated) return;
@@ -231,8 +272,9 @@ function App() {
           return;
       }
 
+      // エンカウント判定 (デバッグモードで無効化可能)
       const encounterChance = Math.random();
-      if (encounterChance < 0.15) {
+      if (debugEncounter && encounterChance < 0.15) {
         const totalLv = party.reduce((sum, m) => sum + m.lv, 0);
         const newEnemy = getRandomEnemy(totalLv);
         setEnemy(newEnemy);
@@ -241,7 +283,7 @@ function App() {
         addMessage(`闇から ${newEnemy.name} (Lv${newEnemy.lv}) があらわれた！`);
       }
     }
-  }, [activeDialog, gameState, bossDefeated, party, addMessage, checkHealSpot, checkOminousPresence, checkExit, checkSignboard]);
+  }, [activeDialog, gameState, bossDefeated, party, addMessage, checkHealSpot, checkOminousPresence, checkExit, checkSignboard, debugEncounter]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -670,17 +712,20 @@ function App() {
             </div>
             <div className="dialog-footer">
               {activeDialog.currentPage < activeDialog.pages.length - 1 ? (
-                <button className="dialog-btn" onClick={() => setActiveDialog(prev => ({ ...prev, currentPage: prev.currentPage + 1 }))}>
+                <button className="dialog-btn" onClick={() => { 
+                  initAudio(); // 最初のページ送りで音声を初期化
+                  setActiveDialog(prev => ({ ...prev, currentPage: prev.currentPage + 1 }));
+                }}>
                   ▼ 続きを読む
                 </button>
               ) : (
                 activeDialog.showChoices ? (
                   <div className="dialog-choice-container">
-                    <button className="dialog-btn" onClick={() => { activeDialog.onConfirm(); setActiveDialog(null); }}>【 はい 】</button>
-                    <button className="dialog-btn" onClick={() => setActiveDialog(null)}>【 否 】</button>
+                    <button className="dialog-btn" onClick={() => { initAudio(); activeDialog.onConfirm(); setActiveDialog(null); }}>【 はい 】</button>
+                    <button className="dialog-btn" onClick={() => { initAudio(); setActiveDialog(null); }}>【 否 】</button>
                   </div>
                 ) : (
-                  <button className="dialog-btn" onClick={() => { if(activeDialog.onConfirm) activeDialog.onConfirm(); setActiveDialog(null); }}>
+                  <button className="dialog-btn" onClick={() => { initAudio(); if(activeDialog.onConfirm) activeDialog.onConfirm(); setActiveDialog(null); }}>
                     （ 読み終える ）
                   </button>
                 )
@@ -688,6 +733,49 @@ function App() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* デバッグパネル (isDebug = true の時のみ) */}
+      {isDebug && (
+        <div style={{
+          position: 'fixed', bottom: '10px', right: '10px', 
+          backgroundColor: 'rgba(0,50,0,0.85)', border: '2px solid #3f3', 
+          color: '#3f3', padding: '15px', zIndex: 9999, fontSize: '0.9rem',
+          borderRadius: '8px', minWidth: '200px'
+        }}>
+          <div style={{ fontWeight: 'bold', borderBottom: '1px solid #3f3', marginBottom: '8px' }}>⛩️ 開発者・神託之窓</div>
+          <div style={{ marginBottom: '8px' }}>
+            座標: ({playerState.x}, {playerState.y}) 向き: {playerState.dir}
+          </div>
+          <div style={{ display: 'flex', gap: '5px', marginBottom: '8px' }}>
+            <input type="number" id="debugX" placeholder="x" style={{ width: '40px', backgroundColor: '#000', color: '#3f3', border: '1px solid #3f3' }} />
+            <input type="number" id="debugY" placeholder="y" style={{ width: '40px', backgroundColor: '#000', color: '#3f3', border: '1px solid #3f3' }} />
+            <button onClick={() => debugWarp(document.getElementById('debugX').value, document.getElementById('debugY').value)} 
+                    style={{ backgroundColor: '#030', color: '#3f3', cursor: 'pointer' }}>跳躍</button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+            <button onClick={debugHeal} style={{ backgroundColor: '#030', color: '#3f3', cursor: 'pointer' }}>神格全快</button>
+            <button onClick={debugKill} style={{ backgroundColor: '#030', color: '#3f3', cursor: 'pointer' }}>強制全滅テスト</button>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+               <input type="checkbox" checked={debugEncounter} onChange={(e) => setDebugEncounter(e.target.checked)} />
+               魔物遭遇
+            </label>
+          </div>
+        </div>
+      )}
+
+      {/* 音量コントロールパネル */}
+      <div style={{
+        position: 'fixed', bottom: '10px', left: '10px', 
+        backgroundColor: 'rgba(50,20,0,0.85)', border: '1px solid #c93', 
+        color: '#c93', padding: '10px', zIndex: 9999, fontSize: '0.8rem',
+        borderRadius: '5px', display: 'flex', alignItems: 'center', gap: '8px',
+        boxShadow: '0 0 10px rgba(0,0,0,0.5)'
+      }}>
+        <span>🔔 奏（音量）</span>
+        <input type="range" min="0" max="1" step="0.05" value={volume} 
+               onChange={(e) => setVolume(parseFloat(e.target.value))} 
+               style={{ cursor: 'pointer', width: '80px', accentColor: '#c93' }} />
       </div>
 
       <div className={`window pane-status ${showStatus ? 'mobile-map-overlay' : ''}`}>
