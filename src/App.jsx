@@ -31,6 +31,7 @@ function App() {
   
   // デバッグモードの判定 (?debug=1)
   const isDebug = new URLSearchParams(window.location.search).get('debug') === '1';
+  const isForceMobile = new URLSearchParams(window.location.search).get('mobile') === '1';
   const [debugEncounter, setDebugEncounter] = useState(true);
 
   // ステータス操作（デバッグ用）
@@ -43,6 +44,16 @@ function App() {
     setParty(prev => prev.map(m => ({ ...m, hp: 0, status: '討死' })));
     addMessage('【DEBUG】全員を討死状態にしました。');
   };
+
+  // PCでの強制スマホモード用のクラス管理
+  useEffect(() => {
+    if (isForceMobile) {
+      document.body.classList.add('is-mobile-body');
+    } else {
+      document.body.classList.remove('is-mobile-body');
+    }
+    return () => document.body.classList.remove('is-mobile-body');
+  }, [isForceMobile]);
 
   const debugEnemyKill = () => {
     if (enemy) {
@@ -625,7 +636,7 @@ function App() {
   };
 
   return (
-    <div className="game-container">
+    <div className={`game-container ${isForceMobile ? 'layout-mobile' : ''}`}>
       <div className="window pane-main">
         <span className="window-title">【壱人称視点】平安の闇</span>
         {gameState === 'BATTLE' && enemy && (
@@ -780,6 +791,11 @@ function App() {
                <input type="checkbox" checked={debugEncounter} onChange={(e) => setDebugEncounter(e.target.checked)} />
                魔物遭遇
             </label>
+          </div>
+          <div style={{ borderTop: '1px solid #3f3', marginTop: '8px', paddingTop: '8px', fontSize: '0.8rem' }}>
+             レイアウト切替：<br/>
+             <a href="?debug=1" style={{ color: '#3f3', marginRight: '10px' }}>【PC版】</a>
+             <a href="?debug=1&mobile=1" style={{ color: '#3f3' }}>【スマホ版】</a>
           </div>
         </div>
       )}

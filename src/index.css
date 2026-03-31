@@ -455,3 +455,99 @@ body {
   .dialog-title { font-size: 1.5rem !important; }
   .dialog-content { font-size: 1rem !important; line-height: 1.6 !important; }
 }
+
+/* --- PCでの強制モバイルシミュレータ (?mobile=1) --- */
+.is-mobile-body #root {
+  background-color: #050505 !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  height: 100vh !important;
+  padding: 0 !important;
+}
+
+/* スマホ筐体（ベゼル）のシミュレーション */
+.is-mobile-body .game-container.layout-mobile {
+  width: 390px !important;
+  height: 844px !important;
+  max-width: 95vw !important;
+  max-height: 95vh !important;
+  border: 12px solid #222 !important;
+  border-radius: 45px !important;
+  box-shadow: 0 0 100px rgba(0,0,0,0.9), 0 0 0 2px #444;
+  overflow: hidden !important;
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 0 !important;
+  margin: 0 auto !important;
+  z-index: 10000;
+  background: #000;
+}
+
+/* モバイル用レイアウトの強制適用 (PC上のシミュレータ内) */
+.is-mobile-body .pane-main, 
+.is-mobile-body .pane-status, 
+.is-mobile-body .pane-map {
+  width: 100% !important;
+  height: auto !important;
+  margin: 0 !important;
+  border: none !important;
+}
+
+.is-mobile-body .pane-main {
+  height: 390px !important;
+  max-height: 390px !important;
+  flex-shrink: 0 !important;
+  border-bottom: 2px solid #b89a42 !important;
+}
+
+.is-mobile-body .pc-log-display { display: none !important; }
+
+.is-mobile-body .mobile-log-display {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  background: #000 !important;
+  padding: 10px !important;
+  overflow-y: auto !important;
+}
+
+.is-mobile-body .mobile-btn-container {
+  display: flex !important;
+  justify-content: space-around;
+  background: #111;
+  border-bottom: 2px solid #444;
+  padding: 8px 0 !important;
+}
+
+.is-mobile-body .mobile-active-pane {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  background: #000 !important;
+}
+
+.is-mobile-body .mini-status-panel {
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+  background: rgba(0,0,0,0.8) !important;
+}
+
+.is-mobile-body .dungeon-tap-overlay {
+  position: absolute !important;
+  top: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: grid !important;
+  grid-template-columns: 1fr 1.5fr 1fr !important;
+  grid-template-rows: 1fr 1fr 1fr !important;
+}
+
+.is-mobile-body .dialog-overlay {
+  width: 90% !important;
+  height: 70% !important;
+  padding: 15px !important;
+  border-radius: 10px;
+}
