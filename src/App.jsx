@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { generateMap, MAP_WIDTH, MAP_HEIGHT, DIRECTIONS, DIR_DELTAS } from './data/mapData';
 import { WireframeView } from './components/WireframeView';
 import { ENEMY_LIST, getRandomEnemy, calculateHitAndDamage } from './data/enemyData';
@@ -20,11 +20,29 @@ const getRequiredExp = (lv) => {
   return Math.floor(20000 * sigmoid);
 };
 
+// マップ内の定数座標
+const BOSS_POS = { x: 8, y: 6 };
+const HEAL_SPOTS = [{x:1, y:1}, {x:8, y:1}, {x:1, y:6}];
+
 function App() {
   const [gameState, setGameState] = useState('EXPLORING'); // EXPLORING, BATTLE, DEAD, CLEAR
   const [bossDefeated, setBossDefeated] = useState(false); 
-  const [activeDialog, setActiveDialog] = useState(null); // { title: string, pages: string[], currentPage: 0, onConfirm?: func, showChoices?: boolean }
-  const [isAutoBattle, setIsAutoBattle] = useState(false);
+  const [activeDialog, setActiveDialog] = useState({
+    title: '平安魔道伝 羅生門編 ― 序章',
+    pages: [
+      `雨が降っていた。\n京の南端にそびえる羅生門は、かつての威容を喪失し、崩れ落ちた瓦と柱が、まるで巨大な獣の死骸のように横たわっている。`,
+      `その雨だれの下、一人の下人が身を丸め、暗闇の中から現れた三つの人影を見て嘲笑を浮かべた。\n「……また、阿呆が来よったわ」`,
+      `一人は, 茨木童子の腕を背負いし武者、渡辺綱。\n一人は、狐の影を纏いし陰陽師、安倍晴明。\n一人は、空虚な微笑を浮かべる比丘尼。`,
+      `羅生門の奥には、空間そのものがひび割れたような『穴』が開いていた。そこは死人すら寄り付かぬ冥府の底。\n三人は振り返ることなく、黒煙の渦巻く奈落へと足を踏み入れた……。`
+    ],
+    currentPage: 0
+  }); // { title: string, pages: string[], currentPage: 0, onConfirm?: func, showChoices?: boolean }
+  const [isAutoBattle, setIsAutoBattle] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth <= 768;
+    }
+    return false;
+  });
   const [showMap, setShowMap] = useState(false);
   const [showStatus, setShowStatus] = useState(false);
   const [messages, setMessages] = useState(['【御神木の社】から冒険が始まった...']);
@@ -36,30 +54,11 @@ function App() {
     if (logEl) logEl.scrollTop = logEl.scrollHeight;
   }, [messages, showMap, showStatus]);
 
-  // 初回起動時、モバイル環境ならAI戦闘をデフォルトでONにする
-  useEffect(() => {
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth <= 768;
-    if (isMobile) setIsAutoBattle(true);
-  }, []);
 
-  // 冒頭のモノローグを初回表示
-  useEffect(() => {
-    setActiveDialog({
-      title: '平安魔道伝 羅生門編 ― 序章',
-      pages: [
-        `雨が降っていた。\n京の南端にそびえる羅生門は、かつての威容を喪失し、崩れ落ちた瓦と柱が、まるで巨大な獣の死骸のように横たわっている。`,
-        `その雨だれの下、一人の下人が身を丸め、暗闇の中から現れた三つの人影を見て嘲笑を浮かべた。\n「……また、阿呆が来よったわ」`,
-        `一人は, 茨木童子の腕を背負いし武者、渡辺綱。\n一人は、狐の影を纏いし陰陽師、安倍晴明。\n一人は、空虚な微笑を浮かべる比丘尼。`,
-        `羅生門の奥には、空間そのものがひび割れたような『穴』が開いていた。そこは死人すら寄り付かぬ冥府の底。\n三人は振り返ることなく、黒煙の渦巻く奈落へと足を踏み入れた……。`
-      ],
-      currentPage: 0
-    });
-  }, []);
-
-  const showDialog = (title, contents, onConfirm = null, showChoices = false) => {
+  const showDialog = useCallback((title, contents, onConfirm = null, showChoices = false) => {
     const pages = Array.isArray(contents) ? contents : [contents];
     setActiveDialog({ title, pages, currentPage: 0, onConfirm, showChoices });
-  };
+  }, []);
   
   // マップと位置データ
   const [mapData, setMapData] = useState(() => {
@@ -80,12 +79,12 @@ function App() {
   const [enemy, setEnemy] = useState(null);
   const [showSpells, setShowSpells] = useState(null); 
 
-  const addMessage = (msg) => {
+  const addMessage = useCallback((msg) => {
     setMessages(prev => {
       const newMsgs = [...prev, msg];
       return newMsgs.slice(Math.max(newMsgs.length - 30, 0));
     });
-  };
+  }, []);
 
   const playerStateRef = useRef(playerState);
   useEffect(() => { playerStateRef.current = playerState; }, [playerState]);
@@ -93,20 +92,18 @@ function App() {
   const mapDataRef = useRef(mapData);
   useEffect(() => { mapDataRef.current = mapData; }, [mapData]);
 
-  // ボス（ぬえ）の場所検知 (仮のボス座標: 8,6)
-  const BOSS_POS = { x: 8, y: 6 };
   const [hasReadScroll, setHasReadScroll] = useState(false);
 
-  const checkOminousPresence = (x, y) => {
+  const checkOminousPresence = useCallback((x, y) => {
     if (bossDefeated) return;
     const dist = Math.abs(x - BOSS_POS.x) + Math.abs(y - BOSS_POS.y);
     if (dist <= 5) {
       addMessage('妖気が強まっている。強力な魔物が近いようだ。');
     }
-  };
+  }, [bossDefeated, addMessage]);
 
   // 出口の確認
-  const checkExit = (x, y) => {
+  const checkExit = useCallback((x, y) => {
     if (bossDefeated && x === BOSS_POS.x && y === BOSS_POS.y) {
       showDialog(
           '迷宮の出口', 
@@ -115,10 +112,10 @@ function App() {
           true
       );
     }
-  };
+  }, [bossDefeated, showDialog]);
 
   // 立て札（しるべ）のチェック
-  const checkSignboard = (newX, newY, oldX, oldY) => {
+  const checkSignboard = useCallback((newX, newY, oldX, oldY) => {
     const DEBUG_ENTRANCE_POS = { x: 1, y: 0 }; // 朱雀門（開始地点の隣）
     const ENTRANCE_POS = { x: 1, y: 2 };       // 御神木の隣
     const MISSION_POS = { x: 1, y: 3 };        // 鵺の使命
@@ -155,11 +152,10 @@ function App() {
         addMessage('使命：迷宮の主「鵺」を調伏せよ。');
       }
     }
-  };
+  }, [hasReadScroll, showDialog, addMessage]);
 
   // 回復地点のチェック (計3箇所: 1,1 / 8,1 / 1,6)
-  const HEAL_SPOTS = [{x:1, y:1}, {x:8, y:1}, {x:1, y:6}];
-  const checkHealSpot = (x, y) => {
+  const checkHealSpot = useCallback((x, y) => {
     const isHeal = HEAL_SPOTS.some(s => s.x === x && s.y === y);
     if (isHeal) {
       setParty(prev => prev.map(m => {
@@ -170,10 +166,10 @@ function App() {
       }));
       addMessage('神社の結界にて加護を得、生命の力が満たされた！');
     }
-  };
+  }, [addMessage]);
 
   // 移動処理の共通化 (キー入力とモバイルボタンの両方で使用)
-  const processMove = (moveType) => {
+  const processMove = useCallback((moveType) => {
     // ダイアログ表示中や戦闘中、死亡時は移動入力を完全に拒否
     if (activeDialog || gameState !== 'EXPLORING') return;
 
@@ -237,7 +233,7 @@ function App() {
         addMessage(`闇から ${newEnemy.name} (Lv${newEnemy.lv}) があらわれた！`);
       }
     }
-  };
+  }, [activeDialog, gameState, bossDefeated, party, addMessage, checkHealSpot, checkOminousPresence, checkExit, checkSignboard]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -253,10 +249,10 @@ function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState, party, bossDefeated, hasReadScroll, activeDialog]);
+  }, [processMove]);
 
   // レベルアップ処理
-  const handleLevelUp = (member) => {
+  const handleLevelUp = useCallback((member) => {
     let m = { ...member };
     while (m.exp >= getRequiredExp(m.lv + 1) && m.lv < 50) {
       m.lv += 1;
@@ -285,28 +281,10 @@ function App() {
     m.hp = m.maxHp;
     m.mp = m.maxMp;
     return m;
-  };
-
-  // 逃げるアクション
-  const handleRun = () => {
-    if (gameState !== 'BATTLE' || !enemy) return;
-    // ボス（鵺など）からは逃げにくい、または逃げられない設計
-    const baseChance = enemy.isBoss ? 0.2 : 0.5;
-    const avgLv = party.reduce((sum, m) => sum + m.lv, 0) / 3;
-    const runChance = Math.min(0.9, Math.max(0.1, baseChance + (avgLv - enemy.lv) * 0.1));
-    
-    if (Math.random() < runChance) {
-        addMessage('脱兎の如く逃げ出した！');
-        setEnemy(null);
-        setGameState('EXPLORING');
-    } else {
-        addMessage('逃げ道が塞がれている！ 背後を突かれた！');
-        processEnemyTurn(party, enemy); // 失敗すると敵のターンへ
-    }
-  };
+  }, [addMessage]);
 
   // バトル終了処理
-  const endBattle = (won) => {
+  const endBattle = useCallback((won) => {
     if (won) {
         addMessage(`${enemy.name} を撃破した！`);
         // ボス勝利フラグ
@@ -346,23 +324,24 @@ function App() {
     }
     setActiveBattler(0);
     setShowSpells(null);
-  };
+  }, [enemy, addMessage, showDialog, handleLevelUp]);
 
-  const processEnemyTurn = (currentParty, currentEnemy) => {
+  const processEnemyTurn = useCallback((currentParty, currentEnemy) => {
       if (!currentEnemy) return;
       const aliveMembers = currentParty.map((m, i) => ({ ...m, originalIndex: i })).filter(m => m.hp > 0);
       if (aliveMembers.length === 0) {
           endBattle(false);
           return;
       }
-      const target = aliveMembers[Math.floor(Math.random() * aliveMembers.length)];
-      const eAttack = calculateHitAndDamage(currentEnemy.ac, currentEnemy.minDmg, currentEnemy.maxDmg, target.ac);
+      const target = Math.floor(Math.random() * aliveMembers.length);
+      const targetMember = aliveMembers[target];
+      const eAttack = calculateHitAndDamage(currentEnemy.ac, currentEnemy.minDmg, currentEnemy.maxDmg, targetMember.ac);
       
       let newParty = [...currentParty];
       if (eAttack.hit) {
-        addMessage(`${currentEnemy.name} の攻撃! ${target.name} に ${eAttack.damage} の痛手!`);
-        const newHp = Math.max(0, target.hp - eAttack.damage);
-        newParty[target.originalIndex] = { ...target, hp: newHp, status: newHp === 0 ? '討死' : target.status };
+        addMessage(`${currentEnemy.name} の攻撃! ${targetMember.name} に ${eAttack.damage} の痛手!`);
+        const newHp = Math.max(0, targetMember.hp - eAttack.damage);
+        newParty[targetMember.originalIndex] = { ...targetMember, hp: newHp, status: newHp === 0 ? '討死' : targetMember.status };
       } else {
         addMessage(`${currentEnemy.name} の攻撃を華麗に受け流した!`);
       }
@@ -376,9 +355,27 @@ function App() {
           const nextAlive = newParty.findIndex(m => m.hp > 0);
           setActiveBattler(nextAlive !== -1 ? nextAlive : 0);
       }
-  };
+  }, [endBattle, addMessage]);
 
-  const handleFight = () => {
+  // 逃げるアクション
+  const handleRun = useCallback(() => {
+    if (gameState !== 'BATTLE' || !enemy) return;
+    // ボス（鵺など）からは逃げにくい、または逃げられない設計
+    const baseChance = enemy.isBoss ? 0.2 : 0.5;
+    const avgLv = party.reduce((sum, m) => sum + m.lv, 0) / 3;
+    const runChance = Math.min(0.9, Math.max(0.1, baseChance + (avgLv - enemy.lv) * 0.1));
+    
+    if (Math.random() < runChance) {
+        addMessage('脱兎の如く逃げ出した！');
+        setEnemy(null);
+        setGameState('EXPLORING');
+    } else {
+        addMessage('逃げ道が塞がれている！ 背後を突かれた！');
+        processEnemyTurn(party, enemy); // 失敗すると敵のターンへ
+    }
+  }, [gameState, enemy, party, addMessage, processEnemyTurn]);
+
+  const handleFight = useCallback(() => {
     if (gameState !== 'BATTLE') return;
     const attacker = party[activeBattler];
     
@@ -412,9 +409,9 @@ function App() {
       processEnemyTurn(party, { ...enemy, hp: newEnemyHp });
       setEnemy({ ...enemy, hp: newEnemyHp });
     }
-  };
+  }, [gameState, party, activeBattler, enemy, addMessage, endBattle, processEnemyTurn]);
 
-  const castSpell = (spell) => {
+  const castSpell = useCallback((spell) => {
     const attacker = party[activeBattler];
     if (attacker.mp < spell.mp) {
       addMessage(`${attacker.name} は魔力が足りない！`);
@@ -455,7 +452,7 @@ function App() {
       if (nextBattler !== -1) setActiveBattler(nextBattler);
       else processEnemyTurn(newParty, newEnemy);
     }
-  };
+  }, [party, activeBattler, enemy, addMessage, endBattle, processEnemyTurn]);
   
   // --- AI 戦闘ロジック ---
   useEffect(() => {
@@ -512,7 +509,7 @@ function App() {
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [isAutoBattle, gameState, activeBattler, enemy]);
+  }, [isAutoBattle, gameState, enemy, party, activeBattler, handleFight, castSpell]);
 
   const renderMapCell = (cell, x, y) => {
     const isPlayerPos = playerState.x === x && playerState.y === y;
@@ -554,7 +551,7 @@ function App() {
           </div>
         )}
         <div className="wireframe-container" style={{ position: 'relative' }}>
-          <WireframeView mapData={mapDataRef.current} playerPos={playerState} playerDir={playerState.dir} />
+          <WireframeView mapData={mapData} playerPos={playerState} playerDir={playerState.dir} />
           {gameState === 'DEAD' && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(80,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ color: '#F22', fontSize: '3rem' }}>討死</div></div>}
           {gameState === 'CLEAR' && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,40,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ color: '#Ff2', fontSize: '3rem', textAlign: 'center' }}>🎉 階層突破 🎉<div style={{ fontSize: '1.5rem', marginTop: '10px' }}>都の安寧へ一歩近づいた...</div></div></div>}
           
@@ -663,6 +660,7 @@ function App() {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '10px' }}>
           {/* ヘッダー行 (モバイル時は少し簡略化) */}
           <div className="status-grid" style={{ borderBottom: '1px solid #555', paddingBottom: '8px', marginBottom: '8px', fontWeight: 'bold' }}>
+            <div className="status-header">記</div>
             <div className="status-header">職種</div>
             <div className="status-header">氏名</div>
             <div className="status-header">階級</div>
@@ -677,15 +675,31 @@ function App() {
               <div key={m.id} className="status-grid" style={{ 
                 backgroundColor: (gameState === 'BATTLE' && activeBattler === idx) ? '#153315' : 'transparent', 
                 color: (gameState === 'BATTLE' && activeBattler === idx) ? '#3f3' : '#fff',
-                padding: '10px 0',
+                padding: '12px 0',
                 fontSize: showStatus ? '1.2rem' : '1.1rem',
                 borderBottom: '1px solid #222'
               }}>
+                <div style={{ fontSize: '1.4rem' }}>{m.icon}</div>
                 <div style={{ fontSize: '0.9rem', color: '#aaa' }}>{m.job}</div>
                 <div style={{ textAlign: 'left', paddingLeft: '5px' }}>{m.name}</div>
                 <div>Lv{m.lv}</div>
-                <div style={{ color: m.hp < (m.maxHp * 0.3) ? '#f33' : 'inherit' }}>{m.hp}/{m.maxHp}</div>
-                <div>{m.mp}/{m.maxMp}</div>
+                
+                {/* 体力バー */}
+                <div style={{ padding: '0 10px' }}>
+                  <div className="status-value-text" style={{ color: m.hp < (m.maxHp * 0.3) ? '#f33' : 'inherit' }}>{m.hp}/{m.maxHp}</div>
+                  <div className="pc-bar-container">
+                    <div className="pc-bar-hp" style={{ width: `${(m.hp / m.maxHp) * 100}%` }} />
+                  </div>
+                </div>
+
+                {/* 霊力バー */}
+                <div style={{ padding: '0 10px' }}>
+                  <div className="status-value-text">{m.mp}/{m.maxMp}</div>
+                  <div className="pc-bar-container">
+                    <div className="pc-bar-mp" style={{ width: `${(m.mp / m.maxMp) * 100}%` }} />
+                  </div>
+                </div>
+
                 <div style={{ color: m.status === '討死' ? '#f33' : 'inherit' }}>{m.status}</div>
               </div>
             ))}

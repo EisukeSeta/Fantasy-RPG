@@ -124,13 +124,40 @@ body {
 
 .status-grid {
   display: grid;
-  /* 横幅が広がるため、よりゆったりした比率へ戻す */
-  grid-template-columns: 0.8fr 1.5fr 0.6fr 1fr 1fr 0.8fr;
+  /* 7カラム構成: 記(0.4) 職(0.6) 名(1.2) 階(0.5) 体(1.5) 霊(1.5) 状(0.7) */
+  grid-template-columns: 0.4fr 0.6fr 1.2fr 0.5fr 1.5fr 1.5fr 0.7fr;
   text-align: center;
   align-items: center;
   gap: 10px;
   width: 100%;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
+}
+
+/* PC用ステータスバー */
+.pc-bar-container {
+  width: 100%;
+  height: 8px;
+  background: #222;
+  border: 1px solid #444;
+  margin-top: 4px;
+  position: relative;
+}
+
+.pc-bar-hp {
+  height: 100%;
+  background: linear-gradient(90deg, #822, #f33);
+  transition: width 0.3s ease-out;
+}
+
+.pc-bar-mp {
+  height: 100%;
+  background: linear-gradient(90deg, #228, #33f);
+  transition: width 0.3s ease-out;
+}
+
+.status-value-text {
+  font-size: 0.9rem;
+  font-family: monospace;
 }
 
 .status-header {
