@@ -881,7 +881,7 @@ function App() {
         <span className="window-title">絵図と絵巻 (Map & Log)</span>
         <div className="map-view-wrapper">
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', paddingBottom: '15px', gap: '20px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${MAP_WIDTH}, 35px)`, gridTemplateRows: `repeat(${MAP_HEIGHT}, 35px)`, border: '2px solid #555' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${MAP_WIDTH}, 35px)`, gridTemplateRows: `repeat(${MAP_HEIGHT}, 35px)`, border: '2px solid #555', padding: '2px' }}>
               {mapData.map((row, y) => row.map((cell, x) => renderMapCell(cell, x, y)))}
             </div>
             <div style={{ fontSize: '1.2rem', color: '#aaa', border: '1px solid #444', padding: '12px', backgroundColor: '#080808', flexShrink: 0 }}>
