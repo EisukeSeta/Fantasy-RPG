@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --bg-color: #050505;
   --text-color: #E0E0E0;
   --border-color: #AAAAAA;
@@ -17,7 +17,7 @@ body {
   background-color: var(--bg-color);
   color: var(--text-color);
   font-family: var(--font-family);
-  font-size: 1.6rem; /* 縺輔ｉ縺ｫ繝輔か繝ｳ繝医ｒ諡｡螟ｧ */
+  font-size: 1.6rem; /* 邵ｺ霈費ｽ臥ｸｺ・ｫ郢晁ｼ斐°郢晢ｽｳ郢晏現・定ｫ｡・｡陞滂ｽｧ */
   height: 100vh;
   width: 100vw;
   overflow: hidden;
@@ -32,14 +32,14 @@ body {
   padding: 10px;
 }
 
-/* 繧ｦ繧｣繝ｳ繝峨え蜈ｱ騾壹せ繧ｿ繧､繝ｫ */
+/* 郢ｧ・ｦ郢ｧ・｣郢晢ｽｳ郢晏ｳｨ縺郁怦・ｱ鬨ｾ螢ｹ縺帷ｹｧ・ｿ郢ｧ・､郢晢ｽｫ */
 .window {
   border: var(--border-width) solid var(--border-color);
   background-color: #000;
   padding: 1rem;
-  /* Wizardry鬚ｨ縺ｮ莠碁㍾邱壹ヵ繝ｬ繝ｼ繝� */
+  /* Wizardry鬯夲ｽｨ邵ｺ・ｮ闔遒√裟驍ｱ螢ｹ繝ｵ郢晢ｽｬ郢晢ｽｼ郢晢ｿｽ */
   box-shadow: inset 0 0 0 2px var(--bg-color), inset 0 0 0 3px var(--border-color);
-  overflow: visible; /* 繧ｿ繧､繝医Ν繧定｡ｨ遉ｺ縺吶ｋ縺溘ａ縺ｫ蠢��� */
+  overflow: visible; /* 郢ｧ・ｿ郢ｧ・､郢晏現ﾎ晉ｹｧ螳夲ｽ｡・ｨ驕会ｽｺ邵ｺ蜷ｶ・狗ｸｺ貅假ｽ∫ｸｺ・ｫ陟｢・ｽ・ｽ・ｽ */
 }
 
 .window-title {
@@ -49,15 +49,15 @@ body {
   background-color: #000;
   padding: 0 0.8rem;
   color: var(--text-color);
-  font-size: 1.3rem; /* 蟆代＠蟆上＆縺上＠縺ｦ蜿弱∪繧翫ｒ濶ｯ縺上☆繧� */
+  font-size: 1.3rem; /* 陝・ｻ｣・陝・ｸ奇ｼ・ｸｺ荳奇ｼ邵ｺ・ｦ陷ｿ蠑ｱ竏ｪ郢ｧ鄙ｫ・呈ｿｶ・ｯ邵ｺ荳岩・郢ｧ・ｽ */
   z-index: 20;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: calc(100% - 3rem); /* 譫�縺九ｉ縺ｯ縺ｿ蜃ｺ縺輔↑縺�ｈ縺�↓蛻ｶ髯� */
+  max-width: calc(100% - 3rem); /* 隴ｫ・ｽ邵ｺ荵晢ｽ臥ｸｺ・ｯ邵ｺ・ｿ陷・ｽｺ邵ｺ霈披・邵ｺ・ｽ・育ｸｺ・ｽ竊楢崕・ｶ鬮ｯ・ｽ */
 }
 
-/* 繧ｲ繝ｼ繝�蜈ｨ菴薙�繧ｳ繝ｳ繝�リ (PC) */
+/* 郢ｧ・ｲ郢晢ｽｼ郢晢ｿｽ陷茨ｽｨ闖ｴ阮呻ｿｽ郢ｧ・ｳ郢晢ｽｳ郢晢ｿｽ繝ｪ (PC) */
 .game-container {
   display: grid;
   grid-template-columns: 63% 35%;
@@ -65,7 +65,7 @@ body {
   gap: 20px;
   width: 100%;
   height: 100%;
-  padding: 30px 15px 15px 15px; /* 荳企Κ繧�30px縺ｫ縺励※繧ｿ繧､繝医Ν縺ｮ繧ｹ繝壹�繧ｹ繧堤｢ｺ菫� */
+  padding: 30px 15px 15px 15px; /* 闕ｳ莨∃夂ｹｧ・ｽ30px邵ｺ・ｫ邵ｺ蜉ｱ窶ｻ郢ｧ・ｿ郢ｧ・､郢晏現ﾎ晉ｸｺ・ｮ郢ｧ・ｹ郢晏｣ｹ・ｽ郢ｧ・ｹ郢ｧ蝣､・｢・ｺ闖ｫ・ｽ */
   box-sizing: border-box;
 }
 
@@ -79,7 +79,7 @@ body {
   align-items: center !important;
 }
 
-/* 繝繝ｳ繧ｸ繝ｧ繝ｳ逕ｻ髱｢繧呈ｭ｣譁ｹ蠖｢縺ｫ縺励∝ｷｦ蜿ｳ縺ｫ遨ｺ髢薙ｒ谿九☆ */
+/* 郢敖郢晢ｽｳ郢ｧ・ｸ郢晢ｽｧ郢晢ｽｳ騾包ｽｻ鬮ｱ・｢郢ｧ蜻茨ｽｭ・｣隴・ｽｹ陟厄ｽ｢邵ｺ・ｫ邵ｺ蜉ｱﾂ竏晢ｽｷ・ｦ陷ｿ・ｳ邵ｺ・ｫ驕ｨ・ｺ鬮｢阮呻ｽ定ｰｿ荵昶・ */
 .pane-main > .wireframe-container {
   aspect-ratio: 1 / 1 !important;
   height: 100% !important;
@@ -124,7 +124,7 @@ body {
 
 .status-grid {
   display: grid;
-  /* 7繧ｫ繝ｩ繝�讒区�: 險�(0.4) 閨ｷ(0.6) 蜷�(1.2) 髫�(0.5) 菴�(1.5) 髴�(1.5) 迥ｶ(0.7) */
+  /* 7郢ｧ・ｫ郢晢ｽｩ郢晢ｿｽ隶貞玄・ｽ: 髫ｪ・ｽ(0.4) 髢ｨ・ｷ(0.6) 陷ｷ・ｽ(1.2) 鬮ｫ・ｽ(0.5) 闖ｴ・ｽ(1.5) 鬮ｴ・ｽ(1.5) 霑･・ｶ(0.7) */
   grid-template-columns: 0.4fr 0.6fr 1.2fr 0.5fr 1.5fr 1.5fr 0.7fr;
   text-align: center;
   align-items: center;
@@ -133,7 +133,7 @@ body {
   font-size: 1.1rem;
 }
 
-/* PC逕ｨ繧ｹ繝��繧ｿ繧ｹ繝舌� */
+/* PC騾包ｽｨ郢ｧ・ｹ郢晢ｿｽ・ｽ郢ｧ・ｿ郢ｧ・ｹ郢晁・・ｽ */
 .pc-bar-container {
   width: 100%;
   height: 8px;
@@ -176,18 +176,18 @@ body {
   overflow: hidden;
 }
 
-/* 蜥碁｢ｨ螟ｧ逕ｻ髱｢繝繧､繧｢繝ｭ繧ｰ (蟷ｳ螳峨�髣�) */
+/* 陷･遒・ｽ｢・ｨ陞滂ｽｧ騾包ｽｻ鬮ｱ・｢郢敖郢ｧ・､郢ｧ・｢郢晢ｽｭ郢ｧ・ｰ (陝ｷ・ｳ陞ｳ蟲ｨ・ｽ鬮｣・ｽ) */
 .dialog-overlay {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%); /* 荳ｭ螟ｮ驟咲ｽｮ */
-  width: 95%; /* 縺ｻ縺ｼ蜈ｨ蟷�ｒ菴ｿ逕ｨ */
+  transform: translate(-50%, -50%); /* 闕ｳ・ｭ陞滂ｽｮ鬩溷調・ｽ・ｮ */
+  width: 95%; /* 邵ｺ・ｻ邵ｺ・ｼ陷茨ｽｨ陝ｷ・ｽ・定抄・ｿ騾包ｽｨ */
   height: 90%; 
   background: rgba(0, 0, 0, 0.95);
-  border: 4px double #8a6d3b; /* 蜿､縺�≡縺ｮ邵∝叙繧� */
-  padding: 40px; /* 繝代ョ繧｣繝ｳ繧ｰ繧貞｢励ｄ縺励※繧�▲縺溘ｊ縺輔○繧� */
-  z-index: 2000; /* 蜈ｨ縺ｦ縺ｮ隕∫ｴ�繧医ｊ蜑埼擇縺ｸ */
+  border: 4px double #8a6d3b; /* 陷ｿ・､邵ｺ・ｽ竕｡邵ｺ・ｮ驍ｵ竏晏徐郢ｧ・ｽ */
+  padding: 40px; /* 郢昜ｻ｣繝ｧ郢ｧ・｣郢晢ｽｳ郢ｧ・ｰ郢ｧ雋橸ｽ｢蜉ｱ・・ｸｺ蜉ｱ窶ｻ郢ｧ・ｽ笆ｲ邵ｺ貅假ｽ顔ｸｺ霈披雷郢ｧ・ｽ */
+  z-index: 2000; /* 陷茨ｽｨ邵ｺ・ｦ邵ｺ・ｮ髫補悪・ｴ・ｽ郢ｧ蛹ｻ・願恆蝓ｼ謫・ｸｺ・ｸ */
   display: flex;
   flex-direction: column;
   color: #f0e68c; 
@@ -204,7 +204,7 @@ body {
   margin-bottom: 25px;
   padding-bottom: 10px;
   text-align: center;
-  color: #d4af37; /* 魄ｮ繧�°縺ｪ驥� */
+  color: #d4af37; /* 鬲・ｽｮ郢ｧ・ｽﾂｰ邵ｺ・ｪ鬩･・ｽ */
 }
 
 .dialog-content {
@@ -246,7 +246,7 @@ body {
 }
 
 
-/* --- PC陦ｨ遉ｺ譎ゅ�繧ｯ繝ｪ繝ｼ繝ｳ繧｢繝�� --- */
+/* --- PC髯ｦ・ｨ驕会ｽｺ隴弱ｅ・ｽ郢ｧ・ｯ郢晢ｽｪ郢晢ｽｼ郢晢ｽｳ郢ｧ・｢郢晢ｿｽ・ｽ --- */
 @media (min-width: 769px) {
   .mobile-log-display, .mini-status-panel, .dungeon-tap-overlay, .mobile-controls, .map-toggle-btn {
     display: none !important;
@@ -259,7 +259,7 @@ body {
   }
 }
 
-/* --- 繝｢繝舌う繝ｫ蟇ｾ蠢� (Responsive) --- */
+/* --- 郢晢ｽ｢郢晁・縺・ｹ晢ｽｫ陝・ｽｾ陟｢・ｽ (Responsive) --- */
 @media (max-width: 768px) {
   body {
     overflow: hidden !important;
@@ -278,7 +278,7 @@ body {
     height: 100vh !important;
     gap: 0 !important;
     padding: 0 !important;
-    padding-top: env(safe-area-inset-top, 25px) !important; /* スマホ上部の時計などを避ける */
+    padding-top: env(safe-area-inset-top, 25px) !important; /* 繧ｹ繝槭・荳企Κ縺ｮ譎りｨ医↑縺ｩ繧帝∩縺代ｋ */
     overflow: hidden !important;
     background: #000;
   }
@@ -291,10 +291,10 @@ body {
     border-right: none !important;
   }
 
-  /* 繝｡繧､繝ｳ逕ｻ髱｢�壹Δ繝舌う繝ｫ縺ｧ縺ｮ鬮倥＆遒ｺ菫� */
+  /* 郢晢ｽ｡郢ｧ・､郢晢ｽｳ騾包ｽｻ鬮ｱ・｢・ｽ螢ｹﾎ皮ｹ晁・縺・ｹ晢ｽｫ邵ｺ・ｧ邵ｺ・ｮ鬯ｮ蛟･・・￡・ｺ闖ｫ・ｽ */
   .pane-main {
     width: 100% !important;
-    height: 100vw !important; /* 1:1縺ｮ豁｣譁ｹ蠖｢繧堤ｶｭ謖� */
+    height: 100vw !important; /* 1:1邵ｺ・ｮ雎・ｽ｣隴・ｽｹ陟厄ｽ｢郢ｧ蝣､・ｶ・ｭ隰厄ｿｽ */
     max-height: 50vh !important;
     margin: 0 !important;
     flex-shrink: 0 !important;
@@ -307,7 +307,7 @@ body {
     height: 100% !important;
   }
 
-  /* 繝｢繝舌う繝ｫ譎ゅ�ｭ皮黄遯薙�菴咲ｽｮ繧定ｪｿ謨ｴ */
+  /* 郢晢ｽ｢郢晁・縺・ｹ晢ｽｫ隴弱ｅﾂ・ｽ・ｭ逧ｮ鮟・・阮呻ｿｽ闖ｴ蜥ｲ・ｽ・ｮ郢ｧ螳夲ｽｪ・ｿ隰ｨ・ｴ */
   .pane-enemy {
     top: 135px !important;
     left: 10px !important;
@@ -317,12 +317,12 @@ body {
     z-index: 150 !important;
   }
 
-  /* PC蜷代￠繝ｭ繧ｰ縺ｯ髱櫁｡ｨ遉ｺ縺ｫ */
+  /* PC陷ｷ莉｣・郢晢ｽｭ郢ｧ・ｰ邵ｺ・ｯ鬮ｱ讚・ｽ｡・ｨ驕会ｽｺ邵ｺ・ｫ */
   .pc-log-display {
     display: none !important;
   }
 
-  /* 繝｢繝舌う繝ｫ逕ｨ繝｡繝�そ繝ｼ繧ｸ繝ｭ繧ｰ */
+  /* 郢晢ｽ｢郢晁・縺・ｹ晢ｽｫ騾包ｽｨ郢晢ｽ｡郢晢ｿｽ縺晉ｹ晢ｽｼ郢ｧ・ｸ郢晢ｽｭ郢ｧ・ｰ */
   .mobile-log-display {
     display: flex !important;
     flex-direction: column !important;
@@ -345,7 +345,7 @@ body {
     border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
   }
 
-  /* 繝溘ル繧ｹ繝��繧ｿ繧ｹ繝ｻ繝繝�す繝･繝懊�繝� */
+  /* 郢晄ｺ倥Ν郢ｧ・ｹ郢晢ｿｽ・ｽ郢ｧ・ｿ郢ｧ・ｹ郢晢ｽｻ郢敖郢晢ｿｽ縺咏ｹ晢ｽ･郢晄㈱・ｽ郢晢ｿｽ */
   .mini-status-panel {
     position: absolute !important;
     top: 10px !important;
@@ -376,7 +376,7 @@ body {
   .bar-hp { background: #d44; height: 100%; }
   .bar-mp { background: #44d; height: 100%; }
 
-  /* 繝繝ｳ繧ｸ繝ｧ繝ｳ逕ｻ髱｢繧ｿ繝��繧ｨ繝ｪ繧｢ */
+  /* 郢敖郢晢ｽｳ郢ｧ・ｸ郢晢ｽｧ郢晢ｽｳ騾包ｽｻ鬮ｱ・｢郢ｧ・ｿ郢晢ｿｽ・ｽ郢ｧ・ｨ郢晢ｽｪ郢ｧ・｢ */
   .dungeon-tap-overlay {
     position: absolute !important;
     top: 0 !important;
@@ -394,7 +394,7 @@ body {
   .tap-right { grid-column: 3 / 4 !important; grid-row: 1 / 4 !important; }
   .tap-backward { grid-column: 2 / 3 !important; grid-row: 3 / 4 !important; }
 
-  /* 繝懊ち繝ｳ繧偵ム繝ｳ繧ｸ繝ｧ繝ｳ荳九↓遘ｻ蜍� */
+  /* 郢晄㈱縺｡郢晢ｽｳ郢ｧ蛛ｵ繝郢晢ｽｳ郢ｧ・ｸ郢晢ｽｧ郢晢ｽｳ闕ｳ荵昶・驕假ｽｻ陷搾ｿｽ */
   .mobile-btn-container {
     position: relative !important;
     top: 0 !important;
@@ -417,17 +417,17 @@ body {
     min-width: 80px;
   }
 
-  /* 荳矩Κ諠��ｱ繝代ロ繝ｫ�壹％繧後ｉ繧偵後ム繝ｳ繧ｸ繝ｧ繝ｳ荳九�鬆伜沺縲阪↓縺吶ｋ */
+  /* 闕ｳ遏ｩﾎ夊ｫ・ｽ・ｽ・ｱ郢昜ｻ｣繝ｭ郢晢ｽｫ・ｽ螢ｹ・・ｹｧ蠕鯉ｽ臥ｹｧ蛛ｵﾂ蠕後Β郢晢ｽｳ郢ｧ・ｸ郢晢ｽｧ郢晢ｽｳ闕ｳ荵晢ｿｽ鬯・ｼ懈ｲｺ邵ｲ髦ｪ竊鍋ｸｺ蜷ｶ・・*/
   .pane-status, .pane-map {
     display: none !important;
     flex: 1 !important;
     background: #000 !important;
-    padding: 30px 10px 10px !important; /* 上部にボタンとの余白を追加 */
+    padding: 30px 10px 10px !important; /* 荳企Κ縺ｫ繝懊ち繝ｳ縺ｨ縺ｮ菴咏區繧定ｿｽ蜉 */
     overflow-y: auto !important;
     border: none !important;
   }
 
-  /* 繧ｹ繝槭�縺ｧ縺ｮ陦ｨ遉ｺ蠑ｷ蛻ｶ��pp.jsx縺ｧ繧ｯ繝ｩ繧ｹ莉倅ｸ弱＆繧後ｋ蜑肴署�� */
+  /* 郢ｧ・ｹ郢晄ｧｭ・ｽ邵ｺ・ｧ邵ｺ・ｮ髯ｦ・ｨ驕会ｽｺ陟托ｽｷ陋ｻ・ｶ・ｽ・ｽpp.jsx邵ｺ・ｧ郢ｧ・ｯ郢晢ｽｩ郢ｧ・ｹ闔牙・ｽｸ蠑ｱ・・ｹｧ蠕鯉ｽ玖恆閧ｴ鄂ｲ・ｽ・ｽ */
   .mobile-active-pane {
     display: flex !important;
     flex-direction: column !important;
@@ -439,14 +439,14 @@ body {
     display: flex !important;
     flex-direction: column !important;
     flex: 1 !important;
-    position: relative !important; /* absolute繧偵ｄ繧√ｋ */
+    position: relative !important; /* absolute郢ｧ蛛ｵ・・ｹｧ竏夲ｽ・*/
     background: #000 !important;
     padding: 10px !important;
     overflow-y: auto !important;
     z-index: 50 !important;
   }
 
-  /* 繝繧､繧｢繝ｭ繧ｰ隱ｿ謨ｴ */
+  /* 郢敖郢ｧ・､郢ｧ・｢郢晢ｽｭ郢ｧ・ｰ髫ｱ・ｿ隰ｨ・ｴ */
   .dialog-overlay {
     width: 95% !important;
     height: 80% !important;
@@ -457,7 +457,7 @@ body {
   .dialog-content { font-size: 1rem !important; line-height: 1.6 !important; }
 }
 
-/* --- PCでの強制モバイルシミュレータ (?mobile=1) --- */
+/* --- PC縺ｧ縺ｮ蠑ｷ蛻ｶ繝｢繝舌う繝ｫ繧ｷ繝溘Η繝ｬ繝ｼ繧ｿ (?mobile=1) --- */
 .is-mobile-body #root {
   background-color: #050505 !important;
   display: flex !important;
@@ -467,7 +467,7 @@ body {
   padding: 0 !important;
 }
 
-/* スマホ筐体（ベゼル）のシミュレーション */
+/* 繧ｹ繝槭・遲蝉ｽ難ｼ医・繧ｼ繝ｫ・峨・繧ｷ繝溘Η繝ｬ繝ｼ繧ｷ繝ｧ繝ｳ */
 .is-mobile-body .game-container.layout-mobile {
   width: 390px !important;
   height: 844px !important;
@@ -486,7 +486,7 @@ body {
   background: #000;
 }
 
-/* モバイル用レイアウトの強制適用 (PC上のシミュレータ内) */
+/* 繝｢繝舌う繝ｫ逕ｨ繝ｬ繧､繧｢繧ｦ繝医・蠑ｷ蛻ｶ驕ｩ逕ｨ (PC荳翫・繧ｷ繝溘Η繝ｬ繝ｼ繧ｿ蜀・ */
 .is-mobile-body .pane-main, 
 .is-mobile-body .pane-status, 
 .is-mobile-body .pane-map {
@@ -544,11 +544,30 @@ body {
   display: grid !important;
   grid-template-columns: 1fr 1.5fr 1fr !important;
   grid-template-rows: 1fr 1fr 1fr !important;
+
+/* --- シミュレーターおよび実機での表示最終調整 (修正版) --- */
+
+/* タイトル位置の調整 (実機 & シミュレーター共通) */
+@media (max-width: 768px) {
+  .pane-main .window-title { top: 12px !important; }
 }
 
-.is-mobile-body .dialog-overlay {
-  width: 90% !important;
-  height: 70% !important;
-  padding: 15px !important;
-  border-radius: 10px;
+.is-mobile-body .pane-main .window-title { 
+  top: 12px !important; 
+}
+
+/* シミュレーターでのパネル排他制御 */
+.is-mobile-body .pane-status,
+.is-mobile-body .pane-map {
+  display: none !important; /* 初期状態では隠す */
+  position: relative !important;
+  left: auto !important;
+  top: auto !important;
+  width: 100% !important;
+}
+
+/* ボタン押下時に表示 */
+.is-mobile-body .mobile-active-pane {
+  display: flex !important;
+  padding-top: 30px !important;
 }
