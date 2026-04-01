@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --bg-color: #050505;
   --text-color: #E0E0E0;
   --border-color: #AAAAAA;
@@ -544,6 +544,7 @@ body {
   display: grid !important;
   grid-template-columns: 1fr 1.5fr 1fr !important;
   grid-template-rows: 1fr 1fr 1fr !important;
+}
 
 /* --- シミュレーターおよび実機での表示最終調整 (修正版) --- */
 
@@ -570,4 +571,11 @@ body {
 .is-mobile-body .mobile-active-pane {
   display: flex !important;
   padding-top: 30px !important;
+}
+
+.is-mobile-body .dialog-overlay {
+  width: 90% !important;
+  height: 70% !important;
+  padding: 15px !important;
+  border-radius: 10px;
 }
