@@ -96,31 +96,76 @@ body {
     background: #000;
   }
 
-  /* ダンジョン画面を最上部に 1:1 で固定 */
+  .window-title {
+    padding: 1px 6px !important;
+    font-size: 0.65rem !important;
+  }
+
   .pane-main {
     position: relative !important;
     width: 100% !important;
     aspect-ratio: 1 / 1 !important;
     height: auto !important;
-    max-height: 100vw !important; /* 強制的な正方形維持 */
+    max-height: 100vw !important;
     flex-shrink: 0 !important;
     z-index: 100;
-    overflow: hidden; /* ダイアログ等がはみ出さないように */
+    overflow: hidden;
+    border-bottom: 2px solid #555;
   }
 
-  .window-title { top: 10px !important; }
+  .mobile-ui-container {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    background: #000;
+    padding-bottom: env(safe-area-inset-bottom); /* iPhone ホームバー対策 */
+  }
 
-  /* 操作ボタンを常に下部に配置するためのコンテナ */
-  .mobile-btn-container {
-    position: relative;
-    width: 100%;
-    display: flex;
-    justify-content: space-around;
-    padding: 10px 0 calc(10px + env(safe-area-inset-bottom)) !important; /* iPhone ホームバー回避 */
-    background: #111;
-    border-top: 1px solid #444;
-    z-index: 2000;
+  .mini-status-panel {
+    display: flex !important;
+    width: 100% !important;
+    gap: 4px !important;
+    padding: 4px !important;
+    background: #111 !important;
+    border-bottom: 1px solid #333 !important;
     flex-shrink: 0 !important;
+    z-index: 200;
+  }
+
+  .mobile-btn-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 5px !important;
+    padding: 8px 5px !important;
+    background: #0a0a0a !important;
+    flex-shrink: 0 !important;
+  }
+
+  .mobile-log-display {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    padding: 5px 10px !important;
+    background: #000 !important;
+    font-size: 0.8rem !important;
+    line-height: 1.4 !important;
+    border-top: 1px solid #222 !important;
+  }
+
+  /* 地図・ステータスパネルのオーバーレイ制御 */
+  .layout-mobile .pane-status,
+  .layout-mobile .pane-map {
+    display: none !important;
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 5000 !important;
+    background: #000 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .layout-mobile .mobile-active-pane {
+    display: flex !important;
   }
 
   /* モバイル環境共通：敵ウィンドウを最上部に配置 */
