@@ -123,19 +123,19 @@ body {
     flex-shrink: 0 !important;
   }
 
-  /* モバイル版：敵ウィンドウをオーバーレイ化してダンジョンの比率崩れを防止 */
-  .layout-mobile .pane-enemy {
+  /* モバイル環境共通：敵ウィンドウを最上部に配置（味方を見やすくするため） */
+  .is-mobile-body .pane-enemy {
     position: absolute !important;
-    top: 130px; /* ステータス・オーバーレイ(10px〜120px)の下 */
+    top: 10px !important; 
     left: 10px;
     right: 10px;
     height: auto !important;
     min-height: 80px;
-    background: rgba(0, 0, 0, 0.9) !important;
+    background: rgba(0, 0, 0, 0.95) !important;
     border: 1px solid #722 !important;
     border-top: 2px solid #f33 !important;
     padding-bottom: 5px !important;
-    z-index: 50;
+    z-index: 1000 !important;
     pointer-events: none;
     animation: enemyAppear 0.2s ease-out;
   }
@@ -145,15 +145,24 @@ body {
     to { opacity: 1; transform: translateY(0); }
   }
 
-  /* 和風ダイアログオーバーレイ（モバイル全画面没入モード） */
-  .layout-mobile .dialog-overlay {
-    position: fixed !important;
+  /* 味方ステータス：魔物の下に配置して視認性を確保 */
+  .is-mobile-body .mini-status-panel {
+    position: absolute !important;
+    top: 130px !important; /* 敵窓(10px〜120px想定)の直下 */
+    left: 10px !important;
+    right: 10px !important;
+    z-index: 1100 !important;
+  }
+
+  /* 和風ダイアログオーバーレイ（全モバイル環境共通：全画面没入モード） */
+  .is-mobile-body .dialog-overlay {
+    position: fixed !important; 
     top: 0 !important;
     left: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
     background-color: rgba(0, 0, 0, 0.98) !important;
-    z-index: 9999 !important; /* 全ての要素の前面 */
+    z-index: 9999 !important; 
     display: flex;
     flex-direction: column;
     padding: 24px;
