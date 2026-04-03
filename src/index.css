@@ -122,6 +122,22 @@ body {
     flex-shrink: 0 !important;
   }
 
+  .layout-mobile .pane-enemy + div,
+  .layout-mobile .pane-map .battle-btn,
+  .layout-mobile .pane-map .spell-btn {
+    display: none !important;
+  }
+
+  /* バーコンテナの調整 */
+  .pc-bar-container {
+    height: 12px;
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+
   .map-toggle-btn {
     padding: 10px 20px;
     background: #222;

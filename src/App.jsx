@@ -80,12 +80,8 @@ function App() {
     ],
     currentPage: 0
   }); // { title: string, pages: string[], currentPage: 0, onConfirm?: func, showChoices?: boolean }
-  const [isAutoBattle, setIsAutoBattle] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth <= 768;
-    }
-    return false;
-  });
+  const [isAutoBattle, setIsAutoBattle] = useState(true); // スマホ版はAI応援を標準に
+  const [isAudioInitialized, setAudioInitialized] = useState(false); // 重複通知防止
   const [showMap, setShowMap] = useState(false);
   const [showStatus, setShowStatus] = useState(false);
   const [messages, setMessages] = useState(['【御神木の社】から冒険が始まった...']);
@@ -153,9 +149,13 @@ function App() {
     SoundEngine.init();
     SoundEngine.setVolume(isMuted ? 0 : volume);
     SoundEngine.transitionTo(gameState);
-    // iOS/Android向けに一度だけ無音を鳴らして完了を知らせる
-    addMessage('⛩️ 奏曲（サウンド）が初期化されました。');
-  }, [gameState, volume, isMuted, addMessage]);
+    
+    // 初回のみ通知（平安の静寂を守るため）
+    if (!isAudioInitialized) {
+      addMessage('⛩️ 奏曲（サウンド）が初期化されました。');
+      setAudioInitialized(true);
+    }
+  }, [gameState, volume, isMuted, addMessage, isAudioInitialized]);
 
   const checkOminousPresence = useCallback((x, y) => {
     if (bossDefeated) return;
@@ -739,25 +739,52 @@ function App() {
       {/* --- スマホ専用：ダンジョン下の操作・情報パネル --- */}
       {(gameState === 'EXPLORING' || gameState === 'BATTLE') && !activeDialog && (
         <>
-          <div className="mobile-btn-container">
-            <button className="map-toggle-btn" 
-                    style={{ background: showMap ? '#b89a42' : '#222', color: showMap ? '#000' : '#f0e68c' }}
-                    onClick={() => { initAudio(); setShowMap(!showMap); setShowStatus(false); }}>
-               📜 {showMap ? '閉じる' : '絵図'}
-            </button>
-            <button className="map-toggle-btn" 
-                    style={{ background: showStatus ? '#b89a42' : '#222', color: showStatus ? '#000' : '#f0e68c' }}
-                    onClick={() => { initAudio(); setShowStatus(!showStatus); setShowMap(false); }}>
-               📜 {showStatus ? '閉じる' : '隊員証'}
-            </button>
-            <button className="map-toggle-btn" onClick={() => { initAudio(); setShowMap(false); setShowStatus(false); }}>
-               📜 記録
-            </button>
+          <div className="mobile-btn-container" style={{ padding: '8px', gap: '8px' }}>
+            {gameState === 'BATTLE' ? (
+              /* 戦闘時：専用コマンドを最優先に表示 */
+              <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: '8px' }}>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button onClick={handleFight} className="battle-btn" style={{ flex: 2, fontSize: '1.2rem', padding: '12px' }}>打ちかかる</button>
+                  <button onClick={() => setShowSpells(showSpells === party[activeBattler].id ? null : party[activeBattler].id)} className="battle-btn" style={{ flex: 1.5, fontSize: '1rem' }}>術・祈祷</button>
+                  <button onClick={() => { initAudio(); setIsAutoBattle(!isAutoBattle); }} style={{ flex: 1, backgroundColor: isAutoBattle ? '#050' : '#444', color: isAutoBattle ? '#3f3' : '#eee', border: '1px solid #777' }}>
+                    AI:{isAutoBattle ? '自動' : '手動'}
+                  </button>
+                </div>
+                {showSpells && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', backgroundColor: '#111', padding: '8px' }}>
+                    {(SPELLS[party[activeBattler].jobKey] || []).filter(s => s.lv <= party[activeBattler].lv).map(s => (
+                      <button key={s.id} onClick={() => castSpell(s)} className="spell-btn" style={{ fontSize: '1rem', padding: '10px' }}>{s.name}</button>
+                    ))}
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button onClick={handleRun} className="battle-btn" style={{ flex: 1, fontSize: '1rem', backgroundColor: '#422' }}>逃走</button>
+                  <button onClick={() => { initAudio(); setShowStatus(!showStatus); setShowMap(false); }} className="map-toggle-btn" style={{ flex: 1, background: showStatus ? '#c93' : '#222' }}>隊員証</button>
+                </div>
+              </div>
+            ) : (
+              /* 移動時：通常のボタンを表示 */
+              <>
+                <button className="map-toggle-btn" 
+                        style={{ background: showMap ? '#b89a42' : '#222', color: showMap ? '#000' : '#f0e68c' }}
+                        onClick={() => { initAudio(); setShowMap(!showMap); setShowStatus(false); }}>
+                   📜 {showMap ? '閉じる' : '絵図'}
+                </button>
+                <button className="map-toggle-btn" 
+                        style={{ background: showStatus ? '#b89a42' : '#222', color: showStatus ? '#000' : '#f0e68c' }}
+                        onClick={() => { initAudio(); setShowStatus(!showStatus); setShowMap(false); }}>
+                   🪪 {showStatus ? '閉じる' : '隊員証'}
+                </button>
+                <button className="save-btn" onClick={() => { initAudio(); handleSave(); }}>
+                   💾 記録
+                </button>
+              </>
+            )}
           </div>
 
-          {/* スマホ用ログ：マップもステータスも開いていない時に表示 */}
+          {/* スマホ用ログ：メッセージを表示（余白十分） */}
           {!showMap && !showStatus && (
-            <div className="mobile-log-display" id="mobile-log-display" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+            <div className="mobile-log-display" id="mobile-log-display" style={{ paddingBottom: '120px' }}>
               {messages.map((m, i) => {
                  const attackerNames = party.map(p => p.name);
                  const isPlayerDamage = (m.includes('ダメージ') && !attackerNames.some(name => m.startsWith(name))) || m.includes('痛手') || m.includes('飲まれて');
@@ -765,7 +792,6 @@ function App() {
                  const color = isPlayerDamage ? '#ffbbbb' : isHeal ? '#bbffbb' : '#eee';
                  return <div key={i} className="mobile-log-line" style={{ color }}>{'>'} {m}</div>;
               })}
-              <div style={{ height: '40px' }}></div>
             </div>
           )}
         </>
