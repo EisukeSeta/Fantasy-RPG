@@ -148,14 +148,10 @@ function App() {
   }, [volume, isMuted]);
 
   // ダイアログの「読み終える」または遷移時に音声を初期化（ブラウザポリシー対応）
-  const initAudio = useCallback(async () => {
-    try {
-      await SoundEngine.init();
-      SoundEngine.setVolume(isMuted ? 0 : volume);
-      SoundEngine.transitionTo(gameState);
-    } catch (e) {
-      console.warn('Audio initialization failed, will retry on next tap.', e);
-    }
+  const initAudio = useCallback(() => {
+    SoundEngine.init();
+    SoundEngine.setVolume(isMuted ? 0 : volume);
+    SoundEngine.transitionTo(gameState);
   }, [gameState, volume, isMuted]);
 
   const checkOminousPresence = useCallback((x, y) => {
@@ -835,7 +831,7 @@ function App() {
           </button>
         )}
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '10px' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '10px', overflowX: 'auto' }}>
           {/* ヘッダー行 (モバイル時は少し簡略化) */}
           <div className="status-grid" style={{ borderBottom: '1px solid #555', paddingBottom: '8px', marginBottom: '8px', fontWeight: 'bold' }}>
             <div className="status-header">記</div>
@@ -859,7 +855,7 @@ function App() {
               }}>
                 <div style={{ fontSize: '1.4rem' }}>{m.icon}</div>
                 <div style={{ fontSize: '0.9rem', color: '#aaa' }}>{m.job}</div>
-                <div style={{ textAlign: 'left', paddingLeft: '5px' }}>{m.name}</div>
+                <div style={{ textAlign: 'left', paddingLeft: '5px', whiteSpace: 'nowrap', minWidth: '100px', fontWeight: 'bold' }}>{m.name}</div>
                 <div>Lv{m.lv}</div>
                 
                 {/* 体力バー */}
@@ -983,7 +979,14 @@ function App() {
         .battle-btn:hover { background: #444; }
         .spell-btn { cursor: pointer; font-family: 'DotGothic16'; background: #222; color: #3f3; border: 1px solid #444; }
         .spell-btn:hover { background: #333; }
-        .pane-status .status-grid { display: grid; text-align: center; }
+        .pane-status .status-grid {
+          display: grid;
+          grid-template-columns: 35px 50px 2.2fr 45px 65px 65px 65px;
+          align-items: center;
+          text-align: center;
+          font-size: 0.9rem;
+          min-width: 480px; /* 全ステータスを一行で保つための最小幅 */
+        }
       `}</style>
     </div>
   );

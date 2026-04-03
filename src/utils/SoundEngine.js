@@ -18,12 +18,14 @@ class HeianSoundEngine {
   /**
    * 初回のユーザー操作（クリック等）で呼び出し、AudioContextを有効化
    */
-  async init() {
+  init() {
+    if (this.ctx && this.ctx.state === 'running') return;
+
     try {
       if (!this.ctx) {
         this.ctx = new (window.AudioContext || window.webkitAudioContext)();
         this.masterGain = this.ctx.createGain();
-        this.masterGain.gain.value = 0; // 最初は 0 から開始
+        this.masterGain.gain.value = 0.5; // 初期音量を 0.5 に固定して開始
         this.masterGain.connect(this.ctx.destination);
         
         this.setupSho();
@@ -33,22 +35,23 @@ class HeianSoundEngine {
         this.isStarted = true;
       }
 
-      // 常に resume を試みる（何度押しても安全）
+      // 常に resume を試みる。同期的に呼び出して Safari の判定をパスさせる。
       if (this.ctx.state === 'suspended') {
-        await this.ctx.resume();
+        this.ctx.resume().then(() => {
+          console.log('⛩️ 平安音響合成エンジン 覚醒完了:', this.ctx.state);
+        });
       }
 
-      // iOS対策：短い無音を再生して「実際に音を出した」実績を作る
+      // 明示的に状態へ遷移
+      this.transitionTo(this.currentMode || 'EXPLORING');
+
+      // 無音実績用のダミー。同期プロセスの直後で実行。
       const dummyBuffer = this.ctx.createBuffer(1, 1, 22050);
       const dummySource = this.ctx.createBufferSource();
       dummySource.buffer = dummyBuffer;
       dummySource.connect(this.ctx.destination);
       dummySource.start(0);
 
-      // 明示的に EXPLORING へ遷移（フェードイン開始）
-      this.transitionTo('EXPLORING');
-
-      console.log('⛩️ 平安音響合成エンジン 覚醒:', this.ctx.state);
     } catch (e) {
       console.error('音響エンジンの初期化に失敗しました:', e);
     }

@@ -71,10 +71,12 @@ body {
 
 .status-grid {
   display: grid;
-  grid-template-columns: 30px 60px 1fr 40px 60px 60px 60px;
+  grid-template-columns: 35px 50px 2.2fr 45px 65px 65px 65px;
   align-items: center;
   text-align: center;
   font-size: 0.9rem;
+  overflow-x: auto;
+  min-width: 420px; /* 全ステータスが一画面に収まらない場合の最小幅 */
 }
 
 .status-header { color: var(--primary-gold); font-size: 0.75rem; margin-bottom: 2px; }
