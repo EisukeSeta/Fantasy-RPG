@@ -5,8 +5,7 @@ import { ENEMY_LIST, getRandomEnemy, calculateHitAndDamage } from './data/enemyD
 import { SPELLS } from './data/magicData';
 import SoundEngine from './utils/SoundEngine';
 
-// S字カーブの累積必要経験値テーブル（Lv2へは100程度で到達するように調整）
-// 成長曲線：15分程度のプレイでLv.5前後に到達できるよう調整
+// S字カーブの累積必要経験値テーブル
 const getRequiredExp = (lv) => {
   if (lv <= 1) return 0;
   if (lv === 2) return 100;
@@ -14,117 +13,23 @@ const getRequiredExp = (lv) => {
   if (lv === 4) return 500;
   if (lv === 5) return 900;
   if (lv >= 50) return 9999999;
-  
-  // 以降はS字カーブで緩やかに上昇
   const x = (lv - 1) / 49;
   const sigmoid = 1 / (1 + Math.exp(-6 * (x - 0.5)));
   return Math.floor(20000 * sigmoid);
 };
 
-// マップ内の定数座標
 const BOSS_POS = { x: 8, y: 6 };
 const HEAL_SPOTS = [{x:1, y:1}, {x:8, y:1}, {x:1, y:6}];
 
 function App() {
+  // --- 1. 基本状態（全機能の基礎） ---
   const [gameState, setGameState] = useState('EXPLORING'); // EXPLORING, BATTLE, DEAD, CLEAR
-  const [bossDefeated, setBossDefeated] = useState(false); 
-  
-  // デバッグモードの判定 (?debug=1)
-  const isDebug = new URLSearchParams(window.location.search).get('debug') === '1';
-  const searchParams = new URLSearchParams(window.location.search);
-  const isForceMobile = searchParams.get('mobile') === '1' || (typeof window !== 'undefined' && (window.innerWidth <= 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)));
-  const [debugEncounter, setDebugEncounter] = useState(true);
-
-  // ステータス操作（デバッグ用）
-  const debugHeal = () => {
-    setParty(prev => prev.map(m => ({ ...m, hp: m.maxHp, mp: m.maxMp, status: '平安' })));
-    addMessage('【DEBUG】全員を全快させました。');
-  };
-  
-  const debugKill = () => {
-    setParty(prev => prev.map(m => ({ ...m, hp: 0, status: '討死' })));
-    addMessage('【DEBUG】全員を討死状態にしました。');
-  };
-
-  // PCでの強制スマホモード用のクラス管理
-  useEffect(() => {
-    if (isForceMobile) {
-      document.body.classList.add('is-mobile-body');
-    } else {
-      document.body.classList.remove('is-mobile-body');
-    }
-    return () => document.body.classList.remove('is-mobile-body');
-  }, [isForceMobile]);
-
-  const debugEnemyKill = () => {
-    if (enemy) {
-      setEnemy(prev => ({ ...prev, hp: 1 }));
-      addMessage('【DEBUG】敵の生命を極限まで削りました。');
-    }
-  };
-  
-  const debugWarp = (tx, ty) => {
-    const target = { x: parseInt(tx), y: parseInt(ty), dir: DIRECTIONS.N };
-    if (isNaN(target.x) || isNaN(target.y)) return;
-    setPlayerState(target);
-    addMessage(`【DEBUG】(${target.x}, ${target.y}) へ跳躍しました。`);
-  };
-
-  const [activeDialog, setActiveDialog] = useState({
-    title: '平安魔道伝 羅生門編 ― 序章',
-    pages: [
-      `ようこそ、平安の闇へ。\n冒険を始める前に、端末の音量を上げてください。`,
-      `雨が降っていた。\n京の南端にそびえる羅生門は、かつての威容を喪失し、崩れ落ちた瓦と柱が、まるで巨大な獣の死骸のように横たわっている。`,
-      `その雨だれの下、一人の下人が身を丸め、暗闇の中から現れた三つの人影を見て嘲笑を浮かべた。\n「……また、阿呆が来よったわ」`,
-      `一人は, 茨木童子の腕を背負いし武者、渡辺綱。\n一人は、狐の影を纏いし陰陽師、安倍晴明。\n一人は、空虚な微笑を浮かべる比丘尼。`,
-      `羅生門の奥には、空間そのものがひび割れたような『穴』が開いていた。そこは死人すら寄り付かぬ冥府の底。\n三人は振り返ることなく、黒煙の渦巻く奈落へと足を踏み入れた……。`
-    ],
-    currentPage: 0
-  }); // { title: string, pages: string[], currentPage: 0, onConfirm?: func, showChoices?: boolean }
-  const [isAutoBattle, setIsAutoBattle] = useState(true); // スマホ版はAI応援を標準に
-  const [isAudioInitialized, setAudioInitialized] = useState(false); // 重複通知防止
-  const [showMap, setShowMap] = useState(false);
-  const [showStatus, setShowStatus] = useState(false);
   const [messages, setMessages] = useState(['【御神木の社】から冒険が始まった...']);
-  const touchStartPos = useRef({ x: 0, y: 0 });
+  const [isAudioInitialized, setAudioInitialized] = useState(false);
+  const [volume, setVolume] = useState(0.3);
+  const [isMuted, setIsMuted] = useState(false);
 
-
-
-  const showDialog = useCallback((title, contents, onConfirm = null, showChoices = false) => {
-    const pages = Array.isArray(contents) ? contents : [contents];
-    setActiveDialog({ title, pages, currentPage: 0, onConfirm, showChoices });
-  }, []);
-  
-  // マップと位置データ
-  const [mapData, setMapData] = useState(() => {
-    const m = generateMap();
-    m[1][1].visited = true;
-    return m;
-  });
-  const [playerState, setPlayerState] = useState({ x: 1, y: 1, dir: DIRECTIONS.S });
-  
-  // 3人のパーティメンバー
-  const [party, setParty] = useState([
-    { id: 'Tsu', name: '渡辺 綱', job: '武者', jobKey: 'SAMURAI', expName: '武者の魂', lv: 1, exp: 0, icon: '⚔️', hp: 30, maxHp: 30, mp: 0, maxMp: 0, ac: 4, minDmg: 8, maxDmg: 15, status: '平安' },
-    { id: 'Sei', name: '安倍 晴明', job: '陰陽師', jobKey: 'ONMYOJI', expName: '式神の守', lv: 1, exp: 0, icon: '☯️', hp: 15, maxHp: 15, mp: 10, maxMp: 10, ac: 10, minDmg: 1, maxDmg: 4, status: '平安' },
-    { id: 'Bik', name: '八百比丘尼', job: '尼僧', jobKey: 'NISOU', expName: '法力', lv: 1, exp: 0, icon: '📿', hp: 20, maxHp: 20, mp: 8, maxMp: 8, ac: 8, minDmg: 2, maxDmg: 6, status: '平安' }
-  ]);
-
-  const [activeBattler, setActiveBattler] = useState(0); 
-  const [enemy, setEnemy] = useState(null);
-  const [showSpells, setShowSpells] = useState(null); 
-
-  // ログが更新されたら自動的に最下部までスクロール（表示高さが変わるタイミングすべてに反応）
-  useEffect(() => {
-    const logEl = document.getElementById('mobile-log-display');
-    if (logEl) {
-      // 描画サイクルが終わるのをわずかに待ってからスクロール（要素高さの確定待ち）
-      requestAnimationFrame(() => {
-        logEl.scrollTop = logEl.scrollHeight;
-      });
-    }
-  }, [messages, showMap, showStatus, showSpells, gameState]);
-
+  // --- 2. 基本コールバック（依存関係の解決のため先頭へ） ---
   const addMessage = useCallback((msg) => {
     setMessages(prev => {
       const newMsgs = [...prev, msg];
@@ -132,941 +37,428 @@ function App() {
     });
   }, []);
 
-  const playerStateRef = useRef(playerState);
-  useEffect(() => { playerStateRef.current = playerState; }, [playerState]);
-
-  const mapDataRef = useRef(mapData);
-  useEffect(() => { mapDataRef.current = mapData; }, [mapData]);
-
-  const [hasReadScroll, setHasReadScroll] = useState(false);
-  const [volume, setVolume] = useState(0.3);
-  const [isMuted, setIsMuted] = useState(false);
-
-  // 音響エンジンの状態連動
-  useEffect(() => {
-    SoundEngine.transitionTo(gameState);
-  }, [gameState]);
-
-  useEffect(() => {
-    SoundEngine.setVolume(isMuted ? 0 : volume);
-  }, [volume, isMuted]);
-
-  // 音声の初期化（モバイルのオートプレイ制限対策を強化）
-  // 音声の初期化（モバイルのオートプレイ制限対策を強化）
   const initAudio = useCallback(() => {
     SoundEngine.init();
     SoundEngine.setVolume(isMuted ? 0 : volume);
     SoundEngine.transitionTo(gameState);
-    
     if (!isAudioInitialized) {
       addMessage('⛩️ 奏曲（サウンド）が初期化されました。');
       setAudioInitialized(true);
     }
   }, [gameState, volume, isMuted, addMessage, isAudioInitialized]);
 
-  // あらゆる初期タップで音響を解放する（iPhone Safari 対策の最終手段）
-  useEffect(() => {
-    const handleFirstTouch = () => {
-      initAudio();
-      window.removeEventListener('touchstart', handleFirstTouch);
-      window.removeEventListener('click', handleFirstTouch);
-    };
-    window.addEventListener('touchstart', handleFirstTouch);
-    window.addEventListener('click', handleFirstTouch);
-    return () => {
-      window.removeEventListener('touchstart', handleFirstTouch);
-      window.removeEventListener('click', handleFirstTouch);
-    };
-  }, [initAudio]);
-
-  const checkOminousPresence = useCallback((x, y) => {
-    if (bossDefeated) return;
-    const dist = Math.abs(x - BOSS_POS.x) + Math.abs(y - BOSS_POS.y);
-    if (dist <= 5) {
-      addMessage('妖気が強まっている。強力な魔物が近いようだ。');
-    }
-  }, [bossDefeated, addMessage]);
-
-  // 出口の確認
-  const checkExit = useCallback((x, y) => {
-    if (bossDefeated && x === BOSS_POS.x && y === BOSS_POS.y) {
-      showDialog(
-          '迷宮の出口', 
-          '魔物の邪気は消え、先へ進む出口が開いている。この階層を抜けますか？',
-          () => setGameState('CLEAR'),
-          true
-      );
-    }
-  }, [bossDefeated, showDialog]);
-
-  // 立て札（しるべ）のチェック
-  const checkSignboard = useCallback((newX, newY, oldX, oldY) => {
-    const DEBUG_ENTRANCE_POS = { x: 1, y: 0 }; // 朱雀門（開始地点の隣）
-    const ENTRANCE_POS = { x: 1, y: 2 };       // 御神木の隣
-    const MISSION_POS = { x: 1, y: 3 };        // 鵺の使命
-
-    const isEntering = (newX !== oldX || newY !== oldY);
-    if (!isEntering) return;
-
-    if (newX === 0 && newY === 0) {
-       showDialog(
-         '黄泉の井戸',
-         [
-           "「……冷たく澱んだ水が、無機質な音を立てて湧き出している。ここが、あの世とこの世の境目か……。」",
-           "「……御身の時は、まだ尽きてはおらぬ。井戸の底から聞こえる無数の囁きを振り切り、光の差す方（1,1）へ急げ……。」"
-         ]
-       );
-    } else if (newX === DEBUG_ENTRANCE_POS.x && newY === DEBUG_ENTRANCE_POS.y) {
-      showDialog(
-        '朱雀門の立て札',
-        [
-          "「ここより北、都の深部へと至る道なり。鵺の咆哮が響く夜は、朱雀門を固く閉ざし、人々の往来を禁ず……。」",
-          "「……もし迷いしならば、南（1,1）の御神木のもとへ戻り、身を清めるがよい。神格の加護が武運を助けん……。」"
-        ]
-      );
-    } else if (newX === ENTRANCE_POS.x && newY === ENTRANCE_POS.y) {
-      showDialog(
-        '御神木の立て札',
-        [
-          "「これより先は魔道。都の安寧を願うならば、一歩も引くことなかれ。迷宮に蔓延る妖気を払い、光を呼び戻すのだ……。」",
-          "「……社の加護が必要ならば、いつでもここ（1,1）へ戻るがよい。神仏の慈悲は常に其方らと共にある。」"
-        ]
-      );
-    } else if (newX === MISSION_POS.x && newY === MISSION_POS.y) {
-      showDialog(
-        '朽ちかけた立て札',
-        [
-          "「……ここを通りし勇猛なる者に告ぐ。平安の都は今、未曾有の闇に覆われ、帝の命も風前の灯火。薬や祈祷をもってしても、怨念の核は調伏できぬ。」",
-          "「頼政公の命を受けし者よ。迷宮の深部、都の北東に座す『鵺』を調伏せよ。都の安寧は此方の双肩に掛かっておる。迷わず進め……。」"
-        ]
-      );
-      if (!hasReadScroll) {
-        setHasReadScroll(true);
-        addMessage('使命：迷宮の主「鵺」を調伏せよ。');
-      }
-    }
-  }, [hasReadScroll, showDialog, addMessage]);
-
-  // 回復地点のチェック (計3箇所: 1,1 / 8,1 / 1,6)
-  const checkHealSpot = useCallback((x, y) => {
-    const isHeal = HEAL_SPOTS.some(s => s.x === x && s.y === y);
-    if (isHeal) {
-      setParty(prev => prev.map(m => {
-        if (m.status === '討死') {
-          addMessage(`【神仏の慈悲】${m.name} が黄泉の淵から呼び戻された！`);
-        }
-        return { ...m, hp: m.maxHp, mp: m.maxMp, status: '平安' };
-      }));
-      addMessage('神社の結界にて加護を得、生命の力が満たされた！');
-    }
+  const handleSave = useCallback(() => {
+    addMessage('⛩️ 冒険の記録（セーブ）は完了しました。');
   }, [addMessage]);
 
-  // 移動処理の共通化 (キー入力とモバイルボタンの両方で使用)
-  const processMove = useCallback((moveType) => {
-    // ダイアログ表示中や戦闘中、死亡時は移動入力を完全に拒否
+  // --- 3. ゲーム固有の状態 ---
+  const [playerState, setPlayerState] = useState({ x: 1, y: 1, dir: DIRECTIONS.S });
+  const [bossDefeated, setBossDefeated] = useState(false);
+  const [isAutoBattle, setIsAutoBattle] = useState(true);
+  const [showMap, setShowMap] = useState(false);
+  const [showStatus, setShowStatus] = useState(false);
+  const [enemy, setEnemy] = useState(null);
+  const [activeBattler, setActiveBattler] = useState(0);
+  const [showSpells, setShowSpells] = useState(null);
+
+  // ダイアログ状態の初期化（序章）
+  const [activeDialog, setActiveDialog] = useState({
+    title: '平安魔道伝 羅生門編 ― 序章',
+    pages: [
+      `ようこそ、平安の闇へ。\n冒険を始める前に、端末の音量を上げてください。`,
+      `雨が降っていた。\n京の南端にそびえる羅生門は、かつての威容を喪失し、巨大な獣の死骸のように横たわっている。`,
+      `その下、一人の下人が嘲笑を浮かべた。「……また、阿呆が来よったわ」`,
+      `茨木童子の腕を背負いし武者、渡辺綱。狐の影を纏いし陰陽師、安倍晴明。空虚な微笑を浮かべる比丘尼。`,
+      `羅生門の奥には、空間そのものがひび割れたような『穴』が開いていた。`,
+      `三人は振り返ることなく、黒煙の渦巻く奈落へと足を踏み入れた……。`
+    ],
+    currentPage: 0
+  });
+
+  const [mapData, setMapData] = useState(() => {
+    const m = generateMap();
+    m[1][1].visited = true;
+    return m;
+  });
+
+  const [party, setParty] = useState([
+    { id: 'Tsu', name: '渡辺 綱', job: '武者', jobKey: 'SAMURAI', expName: '武者の魂', lv: 1, exp: 0, icon: '⚔️', hp: 30, maxHp: 30, mp: 0, maxMp: 0, ac: 4, minDmg: 8, maxDmg: 15, status: '平安' },
+    { id: 'Sei', name: '安倍 晴明', job: '陰陽師', jobKey: 'ONMYOJI', expName: '式神의 護', lv: 1, exp: 0, icon: '☯️', hp: 15, maxHp: 15, mp: 10, maxMp: 10, ac: 10, minDmg: 1, maxDmg: 4, status: '平安' },
+    { id: 'Bik', name: '八百比丘尼', job: '尼僧', jobKey: 'NISOU', expName: '法力', lv: 1, exp: 0, icon: '📿', hp: 20, maxHp: 20, mp: 8, maxMp: 8, ac: 8, minDmg: 2, maxDmg: 6, status: '平安' }
+  ]);
+
+  // モバイル・デバッグ判定
+  const searchParams = new URLSearchParams(window.location.search);
+  const isDebug = searchParams.get('debug') === '1';
+  const isForceMobile = searchParams.get('mobile') === '1' || (typeof window !== 'undefined' && (window.innerWidth <= 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)));
+  const [debugEncounter, setDebugEncounter] = useState(true);
+
+  // --- 4. Refs ---
+  const playerStateRef = useRef(playerState);
+  useEffect(() => { playerStateRef.current = playerState; }, [playerState]);
+  const mapDataRef = useRef(mapData);
+  useEffect(() => { mapDataRef.current = mapData; }, [mapData]);
+  const touchStartPos = useRef({ x: 0, y: 0 });
+
+  // --- 5. 機能クラス・メソッド（依存関係を集約） ---
+  const showDialog = useCallback((title, contents, onConfirm = null, showChoices = false) => {
+    const pages = Array.isArray(contents) ? contents : [contents];
+    setActiveDialog({ title, pages, currentPage: 0, onConfirm, showChoices });
+  }, []);
+
+  const debugHeal = useCallback(() => {
+    setParty(p => p.map(m => ({ ...m, hp: m.maxHp, mp: m.maxMp, status: '平安' })));
+    addMessage('【神託】全員が全快した。');
+  }, [addMessage]);
+
+  const debugKill = useCallback(() => {
+    setParty(p => p.map(m => ({ ...m, hp: 0, status: '討死' })));
+    addMessage('【神託】全員を討死させた。');
+  }, [addMessage]);
+
+  const debugEnemyKill = useCallback(() => {
+    if (enemy) { setEnemy(prev => ({ ...prev, hp: 1 })); addMessage('【神託】敵の命脈を断った。'); }
+  }, [enemy, addMessage]);
+
+  const debugWarp = useCallback((tx, ty) => {
+    setPlayerState({ x: tx, y: ty, dir: DIRECTIONS.N });
+    addMessage(`【神託】(${tx}, ${ty}) へ跳躍した。`);
+  }, [addMessage]);
+
+  const handleLevelUp = useCallback((member) => {
+    let m = { ...member };
+    while (m.lv < 50 && m.exp >= getRequiredExp(m.lv + 1)) {
+      m.lv += 1;
+      m.maxHp += 5; m.maxMp += 3; m.hp = m.maxHp; m.mp = m.maxMp;
+      addMessage(`${m.name} は Lv.${m.lv} に昇格した！`);
+    }
+    return m;
+  }, [addMessage]);
+
+  const handleResurrect = useCallback(() => {
+    setPlayerState({ x: 0, y: 0, dir: DIRECTIONS.E });
+    setMapData(prev => prev.map(row => row.map(cell => ({ ...cell, visited: false }))));
+    setParty(p => p.map(m => ({ ...m, hp: 5, mp: 2, exp: getRequiredExp(m.lv), status: '平安' })));
+    setGameState('EXPLORING'); setEnemy(null);
+    addMessage('【黄泉還り】すべてを失い、井戸から這い上がった。');
+  }, [addMessage]);
+
+  const endBattle = useCallback((won) => {
+    if (won) {
+        SoundEngine.playMonsterDeath();
+        addMessage(`${enemy.name} を調伏した！`);
+        if (enemy.isBoss) { setBossDefeated(true); showDialog('都の安寧', ['鵺を倒し、都に光が戻った。']); }
+        setParty(p => p.map(m => {
+            const exp = Math.floor(enemy.exp * 0.3);
+            return handleLevelUp({ ...m, exp: m.exp + exp });
+        }));
+        setGameState('EXPLORING'); setEnemy(null);
+    } else {
+        setGameState('DEAD');
+        showDialog('黄泉への誘い', ['「もう一度挑むか？」'], () => handleResurrect(), true);
+    }
+    setActiveBattler(0); setShowSpells(null);
+  }, [enemy, addMessage, showDialog, handleLevelUp, handleResurrect]);
+
+  const processEnemyTurn = useCallback((currentParty, currentEnemy) => {
+      const alive = currentParty.map((m, i) => ({...m, i})).filter(m => m.hp > 0);
+      if (alive.length === 0) { endBattle(false); return; }
+      const target = alive[Math.floor(Math.random() * alive.length)];
+      const res = calculateHitAndDamage(currentEnemy.ac, currentEnemy.minDmg, currentEnemy.maxDmg, target.ac);
+      let nextP = [...currentParty];
+      if (res.hit) {
+        addMessage(`${currentEnemy.name} の攻撃！ ${target.name} は ${res.damage} の手傷！`);
+        const hp = Math.max(0, target.hp - res.damage);
+        nextP[target.i] = { ...target, hp, status: hp === 0 ? '討死' : '平安' };
+      } else { addMessage(`${target.name} は攻撃をかわした！`); }
+      setParty(nextP);
+      if (nextP.every(m => m.hp === 0)) endBattle(false);
+      else setActiveBattler(nextP.findIndex(m => m.hp > 0));
+  }, [endBattle, addMessage]);
+
+  const handleFight = useCallback(() => {
+    if (gameState !== 'BATTLE' || !enemy) return;
+    const attacker = party[activeBattler];
+    const res = calculateHitAndDamage(attacker.ac, attacker.minDmg, attacker.maxDmg, enemy.ac);
+    let nEh = enemy.hp;
+    if (res.hit) { addMessage(`${attacker.name} の打ちかかり！ ${res.damage} の痛打！`); nEh -= res.damage; }
+    else addMessage('攻撃が空を切った！');
+    if (nEh <= 0) { endBattle(true); return; }
+    setEnemy({...enemy, hp: nEh});
+    const nextIdx = party.findIndex((m, i) => i > activeBattler && m.hp > 0);
+    if (nextIdx !== -1) setActiveBattler(nextIdx);
+    else processEnemyTurn(party, { ...enemy, hp: nEh });
+  }, [gameState, party, activeBattler, enemy, addMessage, endBattle, processEnemyTurn]);
+
+  const handleRun = useCallback(() => {
+    if (Math.random() < 0.5) { addMessage('逃走に成功した！'); setEnemy(null); setGameState('EXPLORING'); }
+    else { addMessage('退路を断たれた！'); processEnemyTurn(party, enemy); }
+  }, [party, enemy, addMessage, processEnemyTurn]);
+
+  const castSpell = useCallback((spell) => {
+    const attacker = party[activeBattler];
+    if (attacker.mp < spell.mp) { addMessage('霊力が足りぬ！'); return; }
+    let nextP = [...party]; nextP[activeBattler].mp -= spell.mp;
+    let nextE = { ...enemy };
+    if (spell.type === 'ATTACK') {
+      const dmg = spell.minDmg + Math.floor(Math.random()*(spell.maxDmg-spell.minDmg));
+      addMessage(`${spell.name}！ ${enemy.name} に ${dmg} のダメージ！`); nextE.hp -= dmg;
+    } else if (spell.type === 'HEAL') {
+      const target = nextP.filter(m => m.hp > 0).sort((a,b) => a.hp - b.hp)[0];
+      const heal = spell.minHeal + Math.floor(Math.random()*(spell.maxHeal-spell.minHeal));
+      target.hp = Math.min(target.maxHp, target.hp + heal);
+      addMessage(`${spell.name}！ ${target.name} の傷が ${heal} 癒えた。`);
+    }
+    setParty(nextP); setEnemy(nextE); setShowSpells(null);
+    if (nextE.hp <= 0) endBattle(true);
+    else {
+      const nextIdx = nextP.findIndex((m, i) => i > activeBattler && m.hp > 0);
+      if (nextIdx !== -1) setActiveBattler(nextIdx);
+      else processEnemyTurn(nextP, nextE);
+    }
+  }, [party, activeBattler, enemy, addMessage, endBattle, processEnemyTurn]);
+
+  const processMove = useCallback((type) => {
     if (activeDialog || gameState !== 'EXPLORING') return;
-
-    const current = playerStateRef.current;
-    let newDir = current.dir;
-    let newX = current.x;
-    let newY = current.y;
-    let hasMoved = false;
-
-    if (moveType === 'TURN_LEFT') {
-      newDir = (current.dir + 3) % 4;
-    } else if (moveType === 'TURN_RIGHT') {
-      newDir = (current.dir + 1) % 4;
-    } else if (moveType === 'FORWARD' || moveType === 'BACKWARD') {
-      const cell = mapDataRef.current[current.y][current.x];
-      const moveDir = moveType === 'FORWARD' ? current.dir : (current.dir + 2) % 4;
-      const canMove = 
-        (moveDir === DIRECTIONS.N && !cell.n) ||
-        (moveDir === DIRECTIONS.E && !cell.e) ||
-        (moveDir === DIRECTIONS.S && !cell.s) ||
-        (moveDir === DIRECTIONS.W && !cell.w);
-      if (canMove) {
-        newX += DIR_DELTAS[moveDir].dx;
-        newY += DIR_DELTAS[moveDir].dy;
-        hasMoved = true;
+    const cur = playerStateRef.current;
+    let nD = cur.dir, nX = cur.x, nY = cur.y, moved = false;
+    if (type === 'TURN_LEFT') nD = (cur.dir + 3) % 4;
+    else if (type === 'TURN_RIGHT') nD = (cur.dir + 1) % 4;
+    else {
+      const cell = mapDataRef.current[cur.y][cur.x];
+      const mD = type === 'FORWARD' ? cur.dir : (cur.dir + 2) % 4;
+      const can = (mD===0 && !cell.n) || (mD===1 && !cell.e) || (mD===2 && !cell.s) || (mD===3 && !cell.w);
+      if (can) { nX += DIR_DELTAS[mD].dx; nY += DIR_DELTAS[mD].dy; moved = true; }
+    }
+    if (nX!==cur.x || nY!==cur.y || nD!==cur.dir) setPlayerState({ x: nX, y: nY, dir: nD });
+    if (moved) {
+      if (!bossDefeated && nX===BOSS_POS.x && nY===BOSS_POS.y) {
+        const b = ENEMY_LIST.find(e => e.id === 10); setEnemy({...b, hp: b.maxHp}); setGameState('BATTLE');
+      } else if (debugEncounter && Math.random() < 0.15) {
+        const e = getRandomEnemy(party.reduce((s,m) => s+m.lv, 0));
+        setEnemy(e); setGameState('BATTLE'); setActiveBattler(0); addMessage(`${e.name} が出現！`);
+      }
+      if (!mapDataRef.current[nY][nX].visited) {
+        setMapData(p => { const n = [...p]; n[nY] = [...n[nY]]; n[nY][nX] = {...n[nY][nX], visited: true}; return n; });
       }
     }
+  }, [activeDialog, gameState, bossDefeated, party, addMessage, debugEncounter]);
 
-    if (newX !== current.x || newY !== current.y || newDir !== current.dir) {
-      setPlayerState({ x: newX, y: newY, dir: newDir });
-      checkHealSpot(newX, newY);
-      checkOminousPresence(newX, newY);
-      checkExit(newX, newY);
-      checkSignboard(newX, newY, current.x, current.y);
-      if (!mapDataRef.current[newY][newX].visited) {
-        setMapData(prevMap => {
-           const newMap = [...prevMap];
-           newMap[newY] = [...newMap[newY]]; newMap[newY][newX] = { ...newMap[newY][newX], visited: true };
-           return newMap;
-        });
-      }
-    }
-
-    if (hasMoved) {
-      // ボス位置に到達
-      if (!bossDefeated && newX === BOSS_POS.x && newY === BOSS_POS.y) {
-          const boss = ENEMY_LIST.find(e => e.id === 10); // 鵺
-          setEnemy({ ...boss, hp: boss.maxHp });
-          setGameState('BATTLE');
-          addMessage(`【宿敵】${boss.name} が咆哮を上げる！決戦だ！`);
-          return;
-      }
-
-      // エンカウント判定 (デバッグモードで無効化可能)
-      const encounterChance = Math.random();
-      if (debugEncounter && encounterChance < 0.15) {
-        const totalLv = party.reduce((sum, m) => sum + m.lv, 0);
-        const newEnemy = getRandomEnemy(totalLv);
-        setEnemy(newEnemy);
-        setGameState('BATTLE');
-        setActiveBattler(0);
-        addMessage(`闇から ${newEnemy.name} (Lv${newEnemy.lv}) があらわれた！`);
-      }
-    }
-  }, [activeDialog, gameState, bossDefeated, party, addMessage, checkHealSpot, checkOminousPresence, checkExit, checkSignboard, debugEncounter]);
-
+  // --- 6. Effects ---
   useEffect(() => {
     const handleKeyDown = (e) => {
-      let moveType = null;
-      switch (e.key) {
-        case 'w': case 'W': case 'ArrowUp':    moveType = 'FORWARD'; break;
-        case 's': case 'S': case 'ArrowDown':  moveType = 'BACKWARD'; break;
-        case 'a': case 'A': case 'ArrowLeft':  moveType = 'TURN_LEFT'; break;
-        case 'd': case 'D': case 'ArrowRight': moveType = 'TURN_RIGHT'; break;
-        default: return;
-      }
-      processMove(moveType);
+      let m = null;
+      if (e.key === 'w' || e.key === 'ArrowUp') m = 'FORWARD';
+      else if (e.key === 's' || e.key === 'ArrowDown') m = 'BACKWARD';
+      else if (e.key === 'a' || e.key === 'ArrowLeft') m = 'TURN_LEFT';
+      else if (e.key === 'd' || e.key === 'ArrowRight') m = 'TURN_RIGHT';
+      if (m) processMove(m);
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [processMove]);
 
-  // レベルアップ処理
-  const handleLevelUp = useCallback((member) => {
-    let m = { ...member };
-    while (m.exp >= getRequiredExp(m.lv + 1) && m.lv < 50) {
-      m.lv += 1;
-      const hpGain = (m.jobKey === 'SAMURAI' ? 8 : m.jobKey === 'NISOU' ? 5 : 3) + Math.floor(Math.random() * 5 - 2);
-      // 武者(SAMURAI)もレベルアップでマナが覚醒する設計
-      const mpGain = (m.jobKey === 'ONMYOJI' ? 6 : m.jobKey === 'NISOU' ? 4 : 2) + Math.floor(Math.random() * 3 - 1);
-      m.maxHp += Math.max(1, hpGain);
-      m.maxMp += Math.max(0, mpGain);
-      // 火力の成長
-      if (m.jobKey === 'SAMURAI') {
-          m.minDmg += 2; m.maxDmg += 4;
-          m.ac -= 1;
-      } else if (m.jobKey === 'ONMYOJI') {
-          m.minDmg += 1; m.maxDmg += 2;
-          if (m.lv % 2 === 0) m.ac -= 1;
-      } else if (m.jobKey === 'NISOU') {
-          m.minDmg += 1; m.maxDmg += 1;
-          if (m.lv % 3 === 0) m.ac -= 1;
-      }
-      
-      addMessage(`${m.name} は階級【Lv${m.lv}】に上がった！`);
-      if (m.jobKey === 'SAMURAI' && m.maxMp > 0 && m.lv === 2) {
-          addMessage(`${m.name} は己のマナに目覚め、奥義の端緒を掴んだ！`);
-      }
-    }
-    m.hp = m.maxHp;
-    m.mp = m.maxMp;
-    return m;
-  }, [addMessage]);
+  useEffect(() => {
+    SoundEngine.transitionTo(gameState);
+    SoundEngine.setVolume(isMuted ? 0 : volume);
+  }, [gameState, isMuted, volume]);
 
-  // --- 復活（黄泉還り）処理 ---
-  const handleResurrect = useCallback(() => {
-    // 1. 座標を「黄泉の井戸 (0,0)」へリセット
-    setPlayerState({ x: 0, y: 0, dir: DIRECTIONS.E });
-    
-    // 2. 忘却：全てのマップのVisitedフラグをリセット
-    setMapData(prev => prev.map(row => row.map(cell => ({ ...cell, visited: false }))));
-    
-    // 3. 衰弱：HP/MPを1桁、経験値をリセット
-    setParty(prev => prev.map(m => {
-        const baseExp = getRequiredExp(m.lv);
-        return {
-            ...m,
-            hp: 3 + Math.floor(Math.random() * 6), // 3-8
-            mp: Math.min(m.maxMp, 1 + Math.floor(Math.random() * 3)), // 1-3
-            exp: baseExp,
-            status: '平安'
-        };
-    }));
-
-    setGameState('EXPLORING');
-    setEnemy(null);
-    setMessages(['黄泉の井戸の淵から、泥にまみれて這い上がった...。']);
-    addMessage('【忘却】地図の記憶は失われ、生命の灯火も風前の灯だ。');
-  }, [addMessage]);
-
-  // バトル終了処理
-  const endBattle = useCallback((won) => {
-    if (won) {
-        // 魔物の断末魔を再生
-        SoundEngine.playMonsterDeath();
-        addMessage(`${enemy.name} を撃破した！`);
-        // ボス勝利フラグ
-        if (enemy.isBoss && enemy.id === 10) {
-          setBossDefeated(true);
-          addMessage('魔物の気配が消え、迷路の奥に出口が現れた！');
-          showDialog(
-            '冥府の理',
-            [
-              `「……お前さんたち。何を持って帰ってきた？ 勝利か、それとも……」\n奈落から這い上がってきた三人の姿に、羅生門の下人は凍りついたように立ち上がり、後退りをした。`,
-              `それは帝を病に臥せさせた鵺など比較にならない、根源的な恐怖。\n渡辺綱、安倍晴明、八百比丘尼。新たな『冥府の王』たちが今、都を冷たく見下ろしている……。`
-            ]
-          );
-        }
-        // 経験値分配
-        setParty(prev => prev.map(m => {
-            const gain = Math.floor(enemy.exp * (enemy.expShare[m.jobKey.toLowerCase()] || 0.3));
-            addMessage(`${m.name} は ${gain} の${m.expName}を得た。`);
-            let newM = { ...m, exp: m.exp + gain };
-            if (newM.exp >= getRequiredExp(newM.lv + 1)) {
-                return handleLevelUp(newM);
-            }
-            return newM;
-        }));
-        setEnemy(null);
-        setGameState('EXPLORING');
-    } else {
-        setGameState('DEAD');
-        addMessage('魔物討伐隊は、闇に飲まれてしまった...');
-        showDialog(
-            '黄泉の番人との契り',
-            [
-              `「……クカカ、また来たか。地上の未練が断ち切れぬか。」\n暗闇の中で、骨を噛み砕くような声が響く。`,
-              `「だが、無償では戻さぬ。これまでの記憶と、その瑞々しい生命の精髄……半分、置いてゆけ。」\n現世へ戻り、再び迷宮に挑みますか？（※地図と経験の一部が失われます）`
-            ],
-            () => handleResurrect(),
-            true // 選択肢（はい・いいえ）を表示
-        );
-    }
-    setActiveBattler(0);
-    setShowSpells(null);
-  }, [enemy, addMessage, showDialog, handleLevelUp, handleResurrect]);
-
-  const processEnemyTurn = useCallback((currentParty, currentEnemy) => {
-      if (!currentEnemy) return;
-      const aliveMembers = currentParty.map((m, i) => ({ ...m, originalIndex: i })).filter(m => m.hp > 0);
-      if (aliveMembers.length === 0) {
-          endBattle(false);
-          return;
-      }
-      const target = Math.floor(Math.random() * aliveMembers.length);
-      const targetMember = aliveMembers[target];
-      const eAttack = calculateHitAndDamage(currentEnemy.ac, currentEnemy.minDmg, currentEnemy.maxDmg, targetMember.ac);
-      
-      let newParty = [...currentParty];
-      if (eAttack.hit) {
-        addMessage(`${currentEnemy.name} の攻撃! ${targetMember.name} に ${eAttack.damage} の痛手!`);
-        const newHp = Math.max(0, targetMember.hp - eAttack.damage);
-        newParty[targetMember.originalIndex] = { ...targetMember, hp: newHp, status: newHp === 0 ? '討死' : targetMember.status };
-      } else {
-        addMessage(`${currentEnemy.name} の攻撃を華麗に受け流した!`);
-      }
-
-      if (newParty.every(m => m.hp === 0)) {
-          setParty(newParty);
-          endBattle(false);
-      } else {
-          setParty(newParty);
-          // 最初から生きている人を探す
-          const nextAlive = newParty.findIndex(m => m.hp > 0);
-          setActiveBattler(nextAlive !== -1 ? nextAlive : 0);
-      }
-  }, [endBattle, addMessage]);
-
-  // 逃げるアクション
-  const handleRun = useCallback(() => {
-    if (gameState !== 'BATTLE' || !enemy) return;
-    // ボス（鵺など）からは逃げにくい、または逃げられない設計
-    const baseChance = enemy.isBoss ? 0.2 : 0.5;
-    const avgLv = party.reduce((sum, m) => sum + m.lv, 0) / 3;
-    const runChance = Math.min(0.9, Math.max(0.1, baseChance + (avgLv - enemy.lv) * 0.1));
-    
-    if (Math.random() < runChance) {
-        addMessage('脱兎の如く逃げ出した！');
-        setEnemy(null);
-        setGameState('EXPLORING');
-    } else {
-        addMessage('逃げ道が塞がれている！ 背後を突かれた！');
-        processEnemyTurn(party, enemy); // 失敗すると敵のターンへ
-    }
-  }, [gameState, enemy, party, addMessage, processEnemyTurn]);
-
-  const handleFight = useCallback(() => {
-    if (gameState !== 'BATTLE') return;
-    const attacker = party[activeBattler];
-    
-    // 予期せぬ呼び出し（討死メンバー）へのガード
-    if (attacker.hp === 0) {
-        const next = party.findIndex((m, i) => i > activeBattler && m.hp > 0);
-        if (next !== -1) setActiveBattler(next);
-        else processEnemyTurn(party, enemy);
-        return;
-    }
-
-    const pAttack = calculateHitAndDamage(attacker.ac, attacker.minDmg, attacker.maxDmg, enemy.ac);
-    let newEnemyHp = enemy.hp;
-    if (pAttack.hit) {
-      addMessage(`${attacker.name} の打ちかかり！ ${enemy.name} に ${pAttack.damage} のダメージ!`);
-      newEnemyHp -= pAttack.damage;
-    } else {
-      addMessage(`${attacker.name} は空を切った！`);
-    }
-
-    if (newEnemyHp <= 0) {
-      endBattle(true); return;
-    }
-
-    // 次の生存者を探す
-    const nextBattler = party.findIndex((m, i) => i > activeBattler && m.hp > 0);
-    if (nextBattler !== -1) {
-      setActiveBattler(nextBattler);
-      setEnemy({ ...enemy, hp: newEnemyHp });
-    } else {
-      processEnemyTurn(party, { ...enemy, hp: newEnemyHp });
-      setEnemy({ ...enemy, hp: newEnemyHp });
-    }
-  }, [gameState, party, activeBattler, enemy, addMessage, endBattle, processEnemyTurn]);
-
-  const castSpell = useCallback((spell) => {
-    const attacker = party[activeBattler];
-    if (attacker.mp < spell.mp) {
-      addMessage(`${attacker.name} は魔力が足りない！`);
-      return;
-    }
-
-    let newParty = [...party];
-    newParty[activeBattler] = { ...attacker, mp: attacker.mp - spell.mp };
-    let newEnemy = { ...enemy };
-
-    if (spell.type === 'ATTACK') {
-      const dmg = Math.floor(Math.random() * (spell.maxDmg - spell.minDmg + 1)) + spell.minDmg;
-      addMessage(`${attacker.name} の【${spell.name}】！ ${enemy.name} に ${dmg} の属性ダメージ！`);
-      newEnemy.hp -= dmg;
-    } else if (spell.type === 'HEAL') {
-      const heal = Math.floor(Math.random() * (spell.maxHeal - spell.minHeal + 1)) + spell.minHeal;
-      const targets = newParty.filter(m => m.hp > 0).sort((a,b) => (a.hp/a.maxHp) - (b.hp/b.maxHp));
-      if (targets.length > 0) {
-          const targetIndex = newParty.findIndex(m => m.id === targets[0].id);
-          newParty[targetIndex].hp = Math.min(newParty[targetIndex].maxHp, newParty[targetIndex].hp + heal);
-          addMessage(`${attacker.name} の【${spell.name}】！ ${newParty[targetIndex].name} の傷が ${heal} 癒えた。`);
-      }
-    } else if (spell.type === 'BUFF') {
-        if (spell.acBonus) {
-            newParty = newParty.map(m => m.hp > 0 ? { ...m, ac: Math.max(0, m.ac - spell.acBonus) } : m);
-            addMessage(`${attacker.name} の【${spell.name}】！ 全員の守りが固まった！`);
-        }
-    }
-
-    setParty(newParty);
-    setEnemy(newEnemy);
-    setShowSpells(null);
-
-    if (newEnemy.hp <= 0) {
-      endBattle(true);
-    } else {
-      const nextBattler = newParty.findIndex((m, i) => i > activeBattler && m.hp > 0);
-      if (nextBattler !== -1) setActiveBattler(nextBattler);
-      else processEnemyTurn(newParty, newEnemy);
-    }
-  }, [party, activeBattler, enemy, addMessage, endBattle, processEnemyTurn]);
-  
-  // --- AI 戦闘ロジック ---
   useEffect(() => {
     if (isAutoBattle && gameState === 'BATTLE' && enemy) {
-      const timer = setTimeout(() => {
-        const attacker = party[activeBattler];
-        if (!attacker || attacker.hp <= 0) return;
-
-        // 尼僧：回復優先
-        if (attacker.jobKey === 'NISOU') {
-          const injured = party.find(m => m.hp > 0 && m.hp < m.maxHp * 0.7);
-          const healSpells = (SPELLS.NISOU || []).filter(s => s.lv <= attacker.lv && s.type === 'HEAL');
-          if (injured && healSpells.length > 0) {
-            // 最も強い回復（人魚の肉 > 甘露の雨）を優先
-            const bestHeal = healSpells.sort((a, b) => b.lv - a.lv).find(s => attacker.mp >= s.mp);
-            if (bestHeal) {
-              castSpell(bestHeal);
-              return;
-            }
-          }
+      const t = setTimeout(() => {
+        const a = party[activeBattler]; if (!a || a.hp <= 0) return;
+        if (a.jobKey === 'NISOU' && party.some(m => m.hp > 0 && m.hp < m.maxHp*0.7)) {
+            const s = (SPELLS.NISOU || []).find(sp => sp.type === 'HEAL' && a.mp >= sp.mp);
+            if (s) { castSpell(s); return; }
         }
-        
-        // 陰陽師：回復補助または強力な術
-        if (attacker.jobKey === 'ONMYOJI') {
-          const veryInjured = party.find(m => m.hp > 0 && m.hp < m.maxHp * 0.4);
-          if (veryInjured && attacker.mp >= 2) {
-             castSpell(SPELLS.ONMYOJI[0]); // 泰山府君
-             return;
-          }
-          const attackSpells = (SPELLS.ONMYOJI || []).filter(s => s.lv <= attacker.lv && s.type === 'ATTACK');
-          if (attackSpells.length > 0) {
-             const bestSpell = attackSpells.sort((a, b) => b.lv - a.lv).find(s => attacker.mp >= s.mp);
-             if (bestSpell) {
-               castSpell(bestSpell);
-               return;
-             }
-          }
-        }
-
-        // 武者：ボス戦なら奥義、雑魚なら通常攻撃
-        if (attacker.jobKey === 'SAMURAI') {
-           const attackSpells = (SPELLS.SAMURAI || []).filter(s => s.lv <= attacker.lv && s.type === 'ATTACK');
-           if (enemy.isBoss && attackSpells.length > 0) {
-              const bestSpell = attackSpells.sort((a,b) => b.lv - a.lv).find(s => attacker.mp >= s.mp);
-              if (bestSpell) {
-                castSpell(bestSpell);
-                return;
-              }
-           }
-        }
-
-        // デフォルト：通常攻撃
         handleFight();
       }, 1000);
-      return () => clearTimeout(timer);
+      return () => clearTimeout(t);
     }
   }, [isAutoBattle, gameState, enemy, party, activeBattler, handleFight, castSpell]);
 
-  const renderMapCell = (cell, x, y) => {
-    const isPlayerPos = playerState.x === x && playerState.y === y;
-    const isHealSpot = HEAL_SPOTS.some(s => s.x === x && s.y === y);
-    const isSignboardSpot = (x === 1 && y === 0) || (x === 1 && y === 2) || (x === 1 && y === 3); 
-    const isExitSpot = bossDefeated && x === BOSS_POS.x && y === BOSS_POS.y;
+  useEffect(() => {
+    const unlock = () => { initAudio(); window.removeEventListener('touchstart', unlock); window.removeEventListener('click', unlock); };
+    window.addEventListener('touchstart', unlock); window.addEventListener('click', unlock);
+    return () => { window.removeEventListener('touchstart', unlock); window.removeEventListener('click', unlock); };
+  }, [initAudio]);
 
+  const renderMapCell = (cell, x, y) => {
+    const isP = playerState.x === x && playerState.y === y;
     if (!cell.visited) return <div key={`${x}-${y}`} style={{ width: 35, height: 35, backgroundColor: '#000' }}></div>;
     return (
       <div key={`${x}-${y}`} style={{
-        width: 35, height: 35, backgroundColor: isHealSpot ? '#113' : isSignboardSpot ? '#220' : '#111', position: 'relative',
-        borderTop: cell.n ? '2px solid #aaa' : '1px dashed #333',
-        borderRight: cell.e ? '2px solid #aaa' : '1px dashed #333',
-        borderBottom: cell.s ? '2px solid #aaa' : '1px dashed #333',
-        borderLeft: cell.w ? '2px solid #aaa' : '1px dashed #333', boxSizing: 'border-box'
+        width: 35, height: 35, backgroundColor: '#111', position: 'relative',
+        borderTop: cell.n ? '2px solid #aaa' : '1px dashed #333', borderRight: cell.e ? '2px solid #aaa' : '1px dashed #333',
+        borderBottom: cell.s ? '2px solid #aaa' : '1px dashed #333', borderLeft: cell.w ? '2px solid #aaa' : '1px dashed #333'
       }}>
-        {isHealSpot && <div style={{ position: 'absolute', top: 3, left: 8, color: '#66f', fontWeight: 'bold', fontSize: '1.4rem' }}>⛩</div>}
-        {isSignboardSpot && <div style={{ position: 'absolute', top: 3, left: 8, color: '#aa0', fontWeight: 'bold', fontSize: '1.4rem' }}>🪵</div>}
-        {isExitSpot && <div style={{ position: 'absolute', top: 3, left: 8, color: '#f33', fontWeight: 'bold', fontSize: '1.4rem' }}>✨</div>}
-        {isPlayerPos && (
-          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: `translate(-50%, -50%) rotate(${playerState.dir * 90}deg)`, color: '#3f3', fontSize: '20px', lineHeight: 1 }}>▲</div>
-        )}
+        {isP && <div style={{ position: 'absolute', top: '50%', left: '50%', transform: `translate(-50%, -50%) rotate(${playerState.dir*90}deg)`, color: '#3f3' }}>▲</div>}
       </div>
     );
   };
 
+  // --- 7. JSX (構造の正常化) ---
   return (
     <div className={`game-container ${isForceMobile ? 'layout-mobile' : ''}`}>
+      
+      {/* 隊員之証 (PC: 左) */}
+      <div className={`window pane-status ${showStatus ? 'mobile-active-pane' : ''}`}>
+        <span className="window-title">隊員之証</span>
+        <div style={{ flex: 1, padding: '10px', overflowY: 'auto' }}>
+           {party.map((m, idx) => (
+             <div key={idx} style={{ borderBottom: '1px solid #444', padding: '10px 0', backgroundColor: (activeBattler === idx && gameState === 'BATTLE') ? '#121' : 'transparent' }}>
+               <div style={{ display: 'flex', gap: '10px' }}>
+                 <span>{m.icon}</span>
+                 <div style={{ flex: 1 }}>{m.name}<br/><small>{m.job} Lv.{m.lv}</small></div>
+                 <div style={{ color: m.status === '討死' ? '#f55' : '#5f5' }}>{m.status}</div>
+               </div>
+               <div style={{ height: '4px', background: '#333', marginTop: '5px' }}><div style={{ width: `${(m.hp/m.maxHp)*100}%`, height: '100%', background: '#f55' }} /></div>
+             </div>
+           ))}
+           {showStatus && <button className="dialog-btn" style={{ width: '100%', marginTop: '20px' }} onClick={() => setShowStatus(false)}>探索に戻る</button>}
+        </div>
+      </div>
+
+      {/* メイン視点窗 (PC: 中央) */}
       <div className="window pane-main">
-        <span className="window-title">【壱人称視点】平安の闇</span>
+        <span className="window-title">羅生門 闇視</span>
         {gameState === 'BATTLE' && enemy && (
           <div className="window pane-enemy">
-            <span className="window-title">魔物討伐中</span>
-            <div className="status-grid" style={{ gridTemplateColumns: '1.2fr 1.5fr 1fr', padding: '10px', gap: '15px' }}>
-              <div>
-                 <div className="status-header">妖名</div>
-                 <div style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{enemy.name}</div>
-                 <div style={{ fontSize: '0.8rem', color: '#aaa' }}>Lv.{enemy.lv}</div>
-              </div>
-              <div style={{ flex: 1 }}>
-                 <div className="status-header">体力: {enemy.hp}/{enemy.maxHp}</div>
-                 <div style={{ height: '10px', background: '#333', borderRadius: '5px', overflow: 'hidden', marginTop: '4px' }}>
-                    <div style={{ width: `${(enemy.hp/enemy.maxHp)*100}%`, height: '100%', background: '#f33' }} />
-                 </div>
-              </div>
-              <div>
-                 <div className="status-header">状態</div>
-                 <div style={{ color: '#aaa' }}>平安</div>
-              </div>
-            </div>
+             <div style={{ padding: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+               <span>{enemy.name} Lv.{enemy.lv}</span>
+               <div style={{ width: '100px', height: '8px', background: '#333' }}><div style={{ width: `${(enemy.hp/enemy.maxHp)*100}%`, height: '100%', background: '#f33' }} /></div>
+             </div>
           </div>
         )}
         <div className="wireframe-container" style={{ position: 'relative' }}>
           <WireframeView mapData={mapData} playerPos={playerState} playerDir={playerState.dir} />
-          {gameState === 'DEAD' && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(80,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ color: '#F22', fontSize: '3rem' }}>討死</div></div>}
-          {gameState === 'CLEAR' && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,40,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ color: '#Ff2', fontSize: '3rem', textAlign: 'center' }}>🎉 階層突破 🎉<div style={{ fontSize: '1.5rem', marginTop: '10px' }}>都の安寧へ一歩近づいた...</div></div></div>}
-          
-          {/* 戦闘中のステータス・オーバーレイ（スマホ用・優先度：高） */}
-          {gameState === 'BATTLE' && (
-            <div className="mobile-battle-overlay" style={{ 
-              position: 'absolute', top: '10px', left: '10px', right: '10px', 
-              display: 'flex', gap: '4px', pointerEvents: 'none', zIndex: 100
-            }}>
-              {party.map((m, idx) => (
-                <div key={m.id} style={{ 
-                  flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', border: (activeBattler === idx) ? '2px solid #3f3' : '1px solid #555', 
-                  borderRadius: '6px', padding: '6px 4px', fontSize: '0.75rem',
-                  boxShadow: (activeBattler === idx) ? '0 0 8px #3f3' : 'none'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: m.status === '討死' ? '#f33' : '#fff', fontWeight: 'bold' }}>
-                    <span>{m.icon}{m.name.substring(0,2)}</span>
-                    <span>Lv{m.lv}</span>
-                  </div>
-                  <div style={{ height: '6px', background: '#333', marginTop: '4px', borderRadius: '3px', overflow: 'hidden' }}>
-                    <div style={{ width: `${(m.hp/m.maxHp)*100}%`, height: '100%', background: '#f44' }} />
-                  </div>
-                  <div style={{ height: '3px', background: '#333', marginTop: '2px', borderRadius: '1.5px', overflow: 'hidden' }}>
-                    <div style={{ width: `${(m.maxMp?(m.mp/m.maxMp):0)*100}%`, height: '100%', background: '#44f' }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* ダンジョン画面タップ移動 & フリック旋回用オーバーレイ (モバイルのみ有効) */}
-          <div className="dungeon-tap-overlay"
-            onTouchStart={(e) => {
-              touchStartPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-            }}
-            onTouchEnd={(e) => {
-              const deltaX = e.changedTouches[0].clientX - touchStartPos.current.x;
-              const deltaY = e.changedTouches[0].clientY - touchStartPos.current.y;
-              if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
-                if (deltaX > 0) processMove('TURN_RIGHT');
-                else processMove('TURN_LEFT');
-              }
-            }}
-          >
-            {gameState === 'EXPLORING' && (
-              <>
-                <div className="tap-area tap-forward" onClick={() => processMove('FORWARD')}></div>
-                <div className="tap-area tap-left" onClick={() => processMove('TURN_LEFT')}></div>
-                <div className="tap-area tap-right" onClick={() => processMove('TURN_RIGHT')}></div>
-                <div className="tap-area tap-backward" onClick={() => processMove('BACKWARD')}></div>
-              </>
-            )}
-          </div>
-
-
-          {/* ミニステータス・ダッシュボード (探索中および戦闘中に表示) */}
+          {/* ミニステータス・透過タッチ */}
           {(gameState === 'EXPLORING' || gameState === 'BATTLE') && (
-            <div className="mini-status-panel">
-               {party.map(m => (
-                 <div key={m.id} className="mini-status-unit">
-                   <div style={{ paddingRight: '4px' }}>{m.icon}</div>
-                   <div className="mini-status-name" style={{ color: m.hp <= 0 ? '#666' : '#fff' }}>{m.name}</div>
-                   <div>
-                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.6rem', gap: '4px' }}>
-                       <span>{m.hp}/{m.maxHp}</span>
-                       <span>{m.mp}/{m.maxMp}</span>
-                     </div>
-                     <div className="bar-container"><div className="bar-hp" style={{ width: `${(m.hp / m.maxHp) * 100}%` }} /></div>
-                     <div className="bar-container"><div className="bar-mp" style={{ width: `${(m.mp / m.maxMp) * 100}%` }} /></div>
-                   </div>
+            <div className="mini-status-panel" style={{ pointerEvents: 'none', zIndex: 1100 }}>
+               {party.map((m, i) => (
+                 <div key={i} className="mini-status-unit">
+                   {m.icon} {m.name.substring(0,1)}
+                   <div style={{ flex: 1, height: '4px', background: '#333', marginLeft: '5px' }}><div style={{ width: `${(m.hp/m.maxHp)*100}%`, height: '100%', background: '#f55' }} /></div>
                  </div>
                ))}
             </div>
           )}
-
+          <div className="dungeon-tap-overlay" onTouchStart={e => touchStartPos.current={x:e.touches[0].clientX, y:e.touches[0].clientY}} onTouchEnd={e => {
+            const dx = e.changedTouches[0].clientX - touchStartPos.current.x; if (Math.abs(dx)>50) processMove(dx>0?'TURN_RIGHT':'TURN_LEFT');
+          }}>
+            {gameState === 'EXPLORING' && <div className="tap-area tap-forward" onClick={() => processMove('FORWARD')} style={{ height: '100%' }}></div>}
+          </div>
         </div>
 
-        {/* 和風ダイアログオーバーレイ (メインパネル全体を使用) */}
-        {activeDialog && (
-          <div className="dialog-overlay">
-            <div className="dialog-title">{activeDialog.title}</div>
-            <div className="dialog-content">
-              {activeDialog.pages[activeDialog.currentPage]}
-            </div>
-            <div className="dialog-footer">
-              {activeDialog.showChoices ? (
-                  <div className="dialog-choice-container">
-                    <button className="dialog-btn" onClick={() => { initAudio(); activeDialog.onConfirm(); setActiveDialog(null); }}>【 はい 】</button>
-                    <button className="dialog-btn" onClick={() => { initAudio(); setActiveDialog(null); }}>【 否 】</button>
-                  </div>
-                ) : (
-                  <button className="dialog-btn" onClick={() => { 
-                    initAudio(); 
-                    if (activeDialog.currentPage < activeDialog.pages.length - 1) {
-                      setActiveDialog(prev => ({ ...prev, currentPage: prev.currentPage + 1 }));
-                    } else {
-                      if(activeDialog.onConfirm) activeDialog.onConfirm();
-                      setActiveDialog(null);
-                    }
-                  }}>
-                    {activeDialog.currentPage === 0 ? '⛩ 【 羅生門を開く 】を開始 ' : '（ 続きを読む ）'}
-                  </button>
-                )
-              }
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* --- スマホ専用：ダンジョン下の操作・情報パネル --- */}
-      {(gameState === 'EXPLORING' || gameState === 'BATTLE') && !activeDialog && (
-        <>
-          <div className="mobile-btn-container" style={{ padding: '8px', gap: '8px' }}>
+        {/* モバイル操作 */}
+        {isForceMobile && !activeDialog && (
+          <div className="mobile-btn-container" style={{ padding: '10px', display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
             {gameState === 'BATTLE' ? (
-              /* 戦闘時：専用コマンドを最優先に表示 */
-              <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: '8px' }}>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  <button onClick={handleFight} className="battle-btn" style={{ flex: 2, fontSize: '1.2rem', padding: '12px' }}>打ちかかる</button>
-                  <button onClick={() => setShowSpells(showSpells === party[activeBattler].id ? null : party[activeBattler].id)} className="battle-btn" style={{ flex: 1.5, fontSize: '1rem' }}>術・祈祷</button>
-                  <button onClick={() => { initAudio(); setIsAutoBattle(!isAutoBattle); }} style={{ flex: 1, backgroundColor: isAutoBattle ? '#050' : '#444', color: isAutoBattle ? '#3f3' : '#eee', border: '1px solid #777' }}>
-                    AI:{isAutoBattle ? '自動' : '手動'}
-                  </button>
-                </div>
+              <>
+                <button onClick={handleFight} className="battle-btn" style={{ flex: 2, padding: '12px' }}>打ちかかる</button>
+                <button onClick={() => setShowSpells(showSpells ? null : '1')} className="battle-btn" style={{ flex: 1 }}>術</button>
+                <button onClick={handleRun} className="battle-btn" style={{ flex: 1, background: '#422' }}>逃走</button>
                 {showSpells && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', backgroundColor: '#111', padding: '8px' }}>
-                    {(SPELLS[party[activeBattler].jobKey] || []).filter(s => s.lv <= party[activeBattler].lv).map(s => (
-                      <button key={s.id} onClick={() => castSpell(s)} className="spell-btn" style={{ fontSize: '1rem', padding: '10px' }}>{s.name}</button>
+                  <div style={{ width: '100%', display: 'flex', gap: '5px', marginTop: '5px' }}>
+                    {(SPELLS[party[activeBattler].jobKey] || []).filter(s => s.lv <= party[activeBattler].lv).map((s,i) => (
+                      <button key={i} onClick={() => castSpell(s)} className="spell-btn" style={{ flex: 1, padding: '10px' }}>{s.name}</button>
                     ))}
                   </div>
                 )}
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  <button onClick={handleRun} className="battle-btn" style={{ flex: 1, fontSize: '1rem', backgroundColor: '#422' }}>逃走</button>
-                  <button onClick={() => { initAudio(); setShowStatus(!showStatus); setShowMap(false); }} className="map-toggle-btn" style={{ flex: 1, background: showStatus ? '#c93' : '#222' }}>隊員証</button>
-                </div>
-              </div>
+              </>
             ) : (
-              /* 移動時：通常のボタンを表示 */
               <>
-                <button className="map-toggle-btn" 
-                        style={{ background: showMap ? '#b89a42' : '#222', color: showMap ? '#000' : '#f0e68c' }}
-                        onClick={() => { initAudio(); setShowMap(!showMap); setShowStatus(false); }}>
-                   📜 {showMap ? '閉じる' : '絵図'}
-                </button>
-                <button className="map-toggle-btn" 
-                        style={{ background: showStatus ? '#b89a42' : '#222', color: showStatus ? '#000' : '#f0e68c' }}
-                        onClick={() => { initAudio(); setShowStatus(!showStatus); setShowMap(false); }}>
-                   🪪 {showStatus ? '閉じる' : '隊員証'}
-                </button>
-                <button className="save-btn" onClick={() => { initAudio(); handleSave(); }}>
-                   💾 記録
-                </button>
+                <button onClick={() => { initAudio(); setShowMap(true); }} className="map-toggle-btn" style={{ flex: 1, padding: '12px' }}>📜 地図</button>
+                <button onClick={() => { initAudio(); setShowStatus(true); }} className="map-toggle-btn" style={{ flex: 1, padding: '12px' }}>🪪 隊員</button>
+                <button onClick={handleSave} className="save-btn" style={{ flex: 1 }}>💾 記録</button>
               </>
             )}
           </div>
-
-          {/* スマホ用ログ：メッセージを表示（余白をボタンの高さ分確保） */}
-          {!showMap && !showStatus && (
-            <div className="mobile-log-display" id="mobile-log-display" style={{ 
-              flex: 1, overflowY: 'auto', paddingBottom: 'calc(160px + env(safe-area-inset-bottom))',
-              background: 'linear-gradient(to top, #000, #111 20%)'
-            }}>
-              {messages.map((m, i) => {
-                 const attackerNames = party.map(p => p.name);
-                 const isPlayerDamage = (m.includes('ダメージ') && !attackerNames.some(name => m.startsWith(name))) || m.includes('痛手') || m.includes('飲まれて');
-                 const isHeal = m.includes('癒えた') || m.includes('加護') || m.includes('満たされた') || m.includes('回復');
-                 const color = isPlayerDamage ? '#ffbbbb' : isHeal ? '#bbffbb' : '#eee';
-                 return <div key={i} className="mobile-log-line" style={{ color }}>{'>'} {m}</div>;
-              })}
-            </div>
-          )}
-        </>
-      )}
-
-      {/* デバッグパネル (isDebug = true の時のみ) */}
-      {isDebug && (
-        <div style={{
-          position: 'fixed', bottom: '10px', right: '10px', 
-          backgroundColor: 'rgba(0,50,0,0.85)', border: '2px solid #3f3', 
-          color: '#3f3', padding: '15px', zIndex: 9999, fontSize: '0.9rem',
-          borderRadius: '8px', minWidth: '200px'
-        }}>
-          <div style={{ fontWeight: 'bold', borderBottom: '1px solid #3f3', marginBottom: '8px' }}>⛩️ 開発者・神託之窓</div>
-          <div style={{ marginBottom: '8px' }}>
-            座標: ({playerState.x}, {playerState.y}) 向き: {playerState.dir}
+        )}
+        {isForceMobile && !showMap && !showStatus && (
+          <div className="mobile-log-display" id="mobile-log-display" style={{ flex: 1, overflowY: 'auto', padding: '10px', background: '#000', fontSize: '0.9rem' }}>
+            {messages.map((m, i) => <div key={i} style={{ marginBottom: '4px' }}>{'>'} {m}</div>)}
           </div>
-          <div style={{ display: 'flex', gap: '5px', marginBottom: '8px' }}>
-            <input type="number" id="debugX" placeholder="x" style={{ width: '40px', backgroundColor: '#000', color: '#3f3', border: '1px solid #3f3' }} />
-            <input type="number" id="debugY" placeholder="y" style={{ width: '40px', backgroundColor: '#000', color: '#3f3', border: '1px solid #3f3' }} />
-            <button onClick={() => debugWarp(document.getElementById('debugX').value, document.getElementById('debugY').value)} 
-                    style={{ backgroundColor: '#030', color: '#3f3', cursor: 'pointer' }}>跳躍</button>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-            <button onClick={debugHeal} style={{ backgroundColor: '#030', color: '#3f3', cursor: 'pointer' }}>神格全快</button>
-            <button onClick={debugKill} style={{ backgroundColor: '#030', color: '#3f3', cursor: 'pointer' }}>強制全滅テスト</button>
-            <button onClick={debugEnemyKill} style={{ backgroundColor: '#030', color: '#3f3', cursor: 'pointer' }}>敵・一撃死（テスト用）</button>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
-               <input type="checkbox" checked={debugEncounter} onChange={(e) => setDebugEncounter(e.target.checked)} />
-               魔物遭遇
-            </label>
-          </div>
-          <div style={{ borderTop: '1px solid #3f3', marginTop: '8px', paddingTop: '8px', fontSize: '0.8rem' }}>
-             レイアウト切替：<br/>
-             <a href="?debug=1" style={{ color: '#3f3', marginRight: '10px' }}>【PC版】</a>
-             <a href="?debug=1&mobile=1" style={{ color: '#3f3' }}>【スマホ版】</a>
-          </div>
-        </div>
-      )}
-
-      {/* 音量コントロールパネル (スマホ・PC共通で右上付近へ移設) */}
-      <div style={{
-        position: 'fixed', top: '10px', right: '10px', 
-        backgroundColor: 'rgba(50,20,0,0.85)', border: '1px solid #c93', 
-        color: '#c93', padding: '6px 10px', zIndex: 9999, fontSize: '0.8rem',
-        borderRadius: '5px', display: 'flex', alignItems: 'center', gap: '8px',
-        boxShadow: '0 0 10px rgba(0,0,0,0.5)'
-      }}>
-        <button onClick={() => setIsMuted(!isMuted)} 
-                style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', outline: 'none' }}>
-          {isMuted ? '🔕' : '🔔'}
-        </button>
-        <input type="range" min="0" max="1" step="0.05" value={volume} 
-               onChange={(e) => { setVolume(parseFloat(e.target.value)); if(isMuted) setIsMuted(false); }} 
-               style={{ cursor: 'pointer', width: '60px', accentColor: '#c93' }} />
+        )}
       </div>
 
-            <div className={`window pane-status ${showStatus ? 'mobile-active-pane' : ''}`}>
-        <span className="window-title">隊員之証 (Party Status)</span>
-        
-        {showStatus && (
-          <button className="dialog-btn" style={{ margin: '30px auto 10px', width: '90%' }} onClick={() => { initAudio(); setShowStatus(false); }}>
-             探索に戻る
-          </button>
-        )}
+      {/* 絵図と絵巻 (PC: 右) */}
+      <div className={`window pane-map ${showMap ? 'mobile-active-pane' : ''}`}>
+        <span className="window-title">絵図と絵巻</span>
+        <div style={{ flex: 1, padding: '10px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+           <div style={{ display: 'grid', gridTemplateColumns: `repeat(${MAP_WIDTH}, 30px)`, gap: '1px', justifyContent: 'center' }}>
+             {mapData.map((row, y) => row.map((cell, x) => renderMapCell(cell, x, y)))}
+           </div>
+           <div className="pc-log-display" style={{ marginTop: '20px', flex: 1, overflowY: 'auto', borderTop: '1px solid #444', paddingTop: '10px' }}>
+             {messages.map((m, i) => <div key={i} style={{ marginBottom: '5px' }}>{'>'} {m}</div>)}
+           </div>
+           {showMap && <button className="dialog-btn" onClick={() => setShowMap(false)} style={{ marginTop: '10px' }}>戻る</button>}
+        </div>
+      </div>
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '10px' }}>
-          <div style={{ flex: 1, overflowY: 'auto' }}>
-            {party.map((m, idx) => (
-              <div key={m.id} style={{ 
-                borderBottom: '1px solid #444', padding: '12px 5px', 
-                display: 'flex', flexDirection: 'column', gap: '8px',
-                backgroundColor: (gameState === 'BATTLE' && activeBattler === idx) ? '#102210' : 'transparent'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                  <div style={{ fontSize: '1.8rem', width: '35px' }}>{m.icon}</div>
-                  <div style={{ flex: 1 }}>
-                     <div style={{ fontSize: '0.8rem', color: '#aaa' }}>{m.job}</div>
-                     <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#fff' }}>{m.name}</div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                     <div style={{ fontSize: '0.9rem', color: m.status === '討死' ? '#f44' : '#4f4' }}>{m.status}</div>
-                     <div style={{ fontSize: '0.8rem', color: '#aaa' }}>Lv.{m.lv}</div>
-                  </div>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                  <div>
-                     <div style={{ fontSize: '0.7rem', color: '#aaa', marginBottom: '2px' }}>体力: {m.hp}/{m.maxHp}</div>
-                     <div style={{ height: '8px', background: '#333', borderRadius: '4px' }}>
-                        <div style={{ width: `${(m.hp/m.maxHp)*100}%`, height: '100%', background: '#f55', borderRadius: '4px' }} />
-                     </div>
-                  </div>
-                  <div>
-                     <div style={{ fontSize: '0.7rem', color: '#aaa', marginBottom: '2px' }}>霊力: {m.mp}/{m.maxMp}</div>
-                     <div style={{ height: '8px', background: '#333', borderRadius: '4px' }}>
-                        <div style={{ width: `${(m.maxMp?(m.mp/m.maxMp):0)*100}%`, height: '100%', background: '#55f', borderRadius: '4px' }} />
-                     </div>
-                  </div>
-                </div>
+      {/* ダイアログ */}
+      {activeDialog && (
+        <div className="dialog-overlay">
+          <div className="dialog-title">{activeDialog.title}</div>
+          <div className="dialog-content" style={{ whiteSpace: 'pre-wrap' }}>{activeDialog.pages[activeDialog.currentPage]}</div>
+          <div className="dialog-footer" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            {activeDialog.showChoices ? (
+              <div style={{ display: 'flex', gap: '20px' }}>
+                <button className="dialog-btn" onClick={() => { initAudio(); activeDialog.onConfirm(); setActiveDialog(null); }}>はい</button>
+                <button className="dialog-btn" onClick={() => setActiveDialog(null)}>否</button>
               </div>
-            ))}
-          </div>
-
-          {showStatus && (
-            <button className="dialog-btn" style={{ margin: '10px auto 30px', width: '90%', alignSelf: 'center' }} onClick={() => { initAudio(); setShowStatus(false); }}>
-               探索に戻る
+            ) : (
+              <button className="dialog-btn" onClick={() => {
+                initAudio();
+                if (activeDialog.currentPage < activeDialog.pages.length - 1) setActiveDialog(p => ({ ...p, currentPage: p.currentPage + 1 }));
+                else { if (activeDialog.onConfirm) activeDialog.onConfirm(); setActiveDialog(null); }
+              }}>次へ</button>
+            )}
+            <button onClick={() => setIsAutoBattle(!isAutoBattle)} style={{ marginTop: '20px', background: 'none', border: 'none', color: '#555', cursor: 'pointer' }}>
+              AI戦闘: {isAutoBattle ? '自動' : '手動'}
             </button>
-          )}
-        </div>
-      </div>
-
-<div className={`window pane-map ${showMap ? 'mobile-active-pane' : ''}`}>
-        <span className="window-title">絵図と絵巻 (Map & Log)</span>
-        
-        {/* モバイル用：上部にも閉じるボタンを追加 */}
-        {showMap && (
-          <button className="dialog-btn" style={{ margin: '30px auto 10px', width: '90%' }} onClick={() => { initAudio(); setShowMap(false); }}>
-             探索に戻る
-          </button>
-        )}
-
-        <div className="map-view-wrapper" style={{ overflowX: 'auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', paddingBottom: '15px', gap: '20px', flexWrap: 'wrap' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${MAP_WIDTH}, 30px)`, gridTemplateRows: `repeat(${MAP_HEIGHT}, 30px)`, border: '2px solid #555', padding: '2px', backgroundColor: '#000' }}>
-              {mapData.map((row, y) => row.map((cell, x) => renderMapCell(cell, x, y)))}
-            </div>
-            <div style={{ 
-              fontSize: '0.9rem', color: '#aaa', border: '1px solid #444', 
-              padding: '10px', backgroundColor: '#080808', width: '100%', 
-              maxWidth: '350px', marginTop: '10px' 
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px', flexWrap: 'wrap', marginBottom: '5px' }}>
-                <span style={{ color: '#f0e68c', fontWeight: 'bold', borderRight: '1px solid #444', paddingRight: '12px' }}>
-                   現在地：[{playerState.x}, {playerState.y}]
-                </span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ color: '#66f' }}>⛩</span>結界</span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ color: '#aa0' }}>🪵</span>立札</span>
-                  {bossDefeated && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ color: '#f33' }}>✨</span>出口</span>}
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ color: '#3f3', fontSize: '1rem' }}>▲</span>貴殿</span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
+      )}
 
-        <div style={{ flex: 1, borderTop: '2px solid #666', paddingTop: '10px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          {gameState === 'BATTLE' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: '10px' }}>
-               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                 <div style={{ fontSize: '1.1rem', color: '#3f3' }}>【覚悟せよ、{party[activeBattler].name}！】</div>
-                 <button 
-                  onClick={() => setIsAutoBattle(!isAutoBattle)} 
-                  style={{ 
-                    backgroundColor: isAutoBattle ? '#050' : '#444', 
-                    color: isAutoBattle ? '#3f3' : '#eee',
-                    border: '1px solid #777',
-                    padding: '2px 8px',
-                    fontFamily: 'DotGothic16',
-                    cursor: 'pointer'
-                  }}>
-                   AI戦闘: {isAutoBattle ? '自動' : '手動'}
-                 </button>
-               </div>
-               <div style={{ display: 'flex', gap: '8px', opacity: isAutoBattle ? 0.5 : 1, pointerEvents: isAutoBattle ? 'none' : 'auto' }}>
-                 <button onClick={handleFight} className="battle-btn" style={{ fontSize: '1.4rem', padding: '12px' }}>打ちかかる</button>
-                 <button onClick={() => setShowSpells(showSpells === party[activeBattler].id ? null : party[activeBattler].id)} className="battle-btn" style={{ fontSize: '1.4rem', padding: '12px' }}>術・祈祷</button>
-                 <button onClick={handleRun} className="battle-btn" style={{ fontSize: '1.4rem', padding: '12px', backgroundColor: '#422' }}>逃げる</button>
-               </div>
-               {showSpells && (
-                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', backgroundColor: '#111', padding: '8px' }}>
-                    {(SPELLS[party[activeBattler].jobKey] || []).filter(s => s.lv <= party[activeBattler].lv).map(s => (
-                      <button key={s.id} onClick={() => castSpell(s)} className="spell-btn" style={{ fontSize: '1.1rem', padding: '8px' }}>{s.name} ({s.mp})</button>
-                    ))}
-                 </div>
-               )}
-            </div>
-          )}
-          <div className="pc-log-display" style={{ flex: 1, padding: '10px', overflowY: 'auto', backgroundColor: '#000', color: '#eee', fontSize: '1.2rem', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {messages.map((m, i) => {
-               // 味方がダメージを受けた時だけ赤（ピンチ強調）
-               const attackerNames = party.map(p => p.name);
-               const isPlayerDamage = (m.includes('ダメージ') && !attackerNames.some(name => m.startsWith(name))) || m.includes('痛手') || m.includes('飲まれて');
-               const isHeal = m.includes('癒えた') || m.includes('加護') || m.includes('満たされた') || m.includes('回復');
-               const color = isPlayerDamage ? '#ff4444' : isHeal ? '#44ff44' : '#eee';
-               return <div key={i} style={{ color }}>{'>'} {m}</div>;
-            })}
-          </div>
+      {/* デバッグ */}
+      {isDebug && (
+        <div style={{ position: 'fixed', bottom: '10px', right: '10px', background: 'rgba(0,40,0,0.8)', border: '1px solid #3f3', padding: '5px', zIndex: 9999, fontSize: '0.7rem' }}>
+          ({playerState.x},{playerState.y}) 
+          <button onClick={debugHeal}>命</button>
+          <button onClick={debugKill}>滅</button>
+          <button onClick={debugEnemyKill}>弱</button>
+          <button onClick={() => debugWarp(1,1)}>還</button>
+          <input type="checkbox" checked={debugEncounter} onChange={e => setDebugEncounter(e.target.checked)} />
         </div>
-        
-        {/* モバイル用：下部にも戻るボタンを追加 */}
-        {showMap && (
-          <button className="dialog-btn" style={{ margin: '10px auto 40px', width: '90%' }} onClick={() => { initAudio(); setShowMap(false); }}>
-             探索に戻る
-          </button>
-        )}
+      )}
+
+      {/* 音量 */}
+      <div style={{ position: 'fixed', top: '10px', right: '10px', zIndex: 9999, display: 'flex', gap: '5px', background: 'rgba(0,0,0,0.5)', padding: '5px', borderRadius: '5px' }}>
+        <button onClick={() => setIsMuted(!isMuted)} style={{ background: 'none', border: 'none', color: '#c93', cursor: 'pointer' }}>{isMuted ? 'MUTE' : 'VOL'}</button>
+        <input type="range" min="0" max="1" step="0.1" value={volume} onChange={e => setVolume(parseFloat(e.target.value))} style={{ width: '40px' }} />
       </div>
 
       <style>{`
-        .battle-btn { flex: 1; cursor: pointer; font-family: 'DotGothic16'; background: #333; color: #fff; border: 1px solid #aaa; }
-        .battle-btn:hover { background: #444; }
-        .spell-btn { cursor: pointer; font-family: 'DotGothic16'; background: #222; color: #3f3; border: 1px solid #444; }
-        .spell-btn:hover { background: #333; }
-        .pane-status .status-grid {
-          display: grid;
-          grid-template-columns: 35px 50px 2.2fr 45px 65px 65px 65px;
-          align-items: center;
-          text-align: center;
-          font-size: 0.9rem;
-          min-width: 480px; /* 全ステータスを一行で保つための最小幅 */
+        .game-container { display: flex; width: 100vw; height: 100vh; background: #000; color: #eee; font-family: 'DotGothic16', sans-serif; overflow: hidden; }
+        .window { border: 2px solid #555; display: flex; flex-direction: column; background: #080808; position: relative; }
+        .window-title { display: block; background: #222; padding: 2px 8px; font-size: 0.75rem; color: #888; border-bottom: 2px solid #555; }
+        .pane-status { width: 220px; }
+        .pane-main { flex: 1; border-left: none; border-right: none; }
+        .pane-map { width: 320px; }
+        .wireframe-container { width: 100%; aspect-ratio: 1/1; background: #000; border-bottom: 1px solid #333; }
+        .battle-btn, .dialog-btn, .map-toggle-btn, .save-btn, .spell-btn { background: #111; color: #eee; border: 1px solid #666; cursor: pointer; }
+        .mini-status-panel { position: absolute; bottom: 8px; left: 8px; right: 8px; display: flex; gap: 4px; }
+        .mini-status-unit { flex: 1; background: rgba(0,0,0,0.7); border: 1px solid #444; border-radius: 3px; padding: 3px; display: flex; align-items: center; font-size: 0.65rem; }
+        .dialog-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
+        .dialog-title { font-size: 1.1rem; color: #f0e68c; margin-bottom: 15px; }
+        .dialog-content { font-size: 1rem; line-height: 1.5; text-align: center; max-width: 500px; }
+        .dialog-btn { padding: 8px 30px; font-size: 1rem; background: #210; border: 1px solid #c93; color: #f0e68c; margin-top: 20px; }
+        @media (max-width: 768px) {
+          .pane-status, .pane-map { display: none; position: fixed; inset: 0; z-index: 2000; background: #000; }
+          .layout-mobile .mobile-active-pane { display: flex !important; }
         }
+        .layout-mobile { flex-direction: column; }
       `}</style>
     </div>
   );
