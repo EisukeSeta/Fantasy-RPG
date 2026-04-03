@@ -122,7 +122,29 @@ body {
     flex-shrink: 0 !important;
   }
 
-  .layout-mobile .pane-enemy + div,
+  /* モバイル版：敵ウィンドウをオーバーレイ化してダンジョンの比率崩れを防止 */
+  .layout-mobile .pane-enemy {
+    position: absolute !important;
+    top: 70px; /* ステータス・オーバーレイ(10px+α)の下 */
+    left: 10px;
+    right: 10px;
+    height: auto !important;
+    min-height: 80px;
+    background: rgba(0, 0, 0, 0.85) !important;
+    border: 1px solid #722 !important;
+    border-top: 2px solid #f33 !important;
+    padding-bottom: 5px !important;
+    z-index: 50;
+    pointer-events: none;
+    animation: enemyAppear 0.2s ease-out;
+  }
+  
+  @keyframes enemyAppear {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* モバイル時は pane-map 内の戦闘コマンドを非表示（専用ボタンエリアと重複するため） */
   .layout-mobile .pane-map .battle-btn,
   .layout-mobile .pane-map .spell-btn {
     display: none !important;

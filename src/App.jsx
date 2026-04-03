@@ -88,11 +88,16 @@ function App() {
   const [messages, setMessages] = useState(['【御神木の社】から冒険が始まった...']);
   const touchStartPos = useRef({ x: 0, y: 0 });
 
-  // ログが更新されたら自動的に最下部までスクロール
+  // ログが更新されたら自動的に最下部までスクロール（表示高さが変わるタイミングすべてに反応）
   useEffect(() => {
     const logEl = document.getElementById('mobile-log-display');
-    if (logEl) logEl.scrollTop = logEl.scrollHeight;
-  }, [messages, showMap, showStatus]);
+    if (logEl) {
+      // 描画サイクルが終わるのをわずかに待ってからスクロール（要素高さの確定待ち）
+      requestAnimationFrame(() => {
+        logEl.scrollTop = logEl.scrollHeight;
+      });
+    }
+  }, [messages, showMap, showStatus, showSpells, gameState]);
 
 
   const showDialog = useCallback((title, contents, onConfirm = null, showChoices = false) => {
@@ -645,11 +650,23 @@ function App() {
         <span className="window-title">【壱人称視点】平安の闇</span>
         {gameState === 'BATTLE' && enemy && (
           <div className="window pane-enemy">
-            <span className="window-title">魔物</span>
-            <div className="status-grid" style={{ gridTemplateColumns: '1.2fr 1fr 1fr', padding: '10px' }}>
-              <div><div className="status-header">妖名</div><div style={{ fontSize: '1.4rem' }}>{enemy.name} <span style={{ fontSize: '1rem', color: '#aaa' }}>Lv.{enemy.lv}</span></div></div>
-              <div><div className="status-header">体力</div><div>{enemy.hp} / {enemy.maxHp}</div></div>
-              <div><div className="status-header">状態</div><div>平安</div></div>
+            <span className="window-title">魔物討伐中</span>
+            <div className="status-grid" style={{ gridTemplateColumns: '1.2fr 1.5fr 1fr', padding: '10px', gap: '15px' }}>
+              <div>
+                 <div className="status-header">妖名</div>
+                 <div style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{enemy.name}</div>
+                 <div style={{ fontSize: '0.8rem', color: '#aaa' }}>Lv.{enemy.lv}</div>
+              </div>
+              <div style={{ flex: 1 }}>
+                 <div className="status-header">体力: {enemy.hp}/{enemy.maxHp}</div>
+                 <div style={{ height: '10px', background: '#333', borderRadius: '5px', overflow: 'hidden', marginTop: '4px' }}>
+                    <div style={{ width: `${(enemy.hp/enemy.maxHp)*100}%`, height: '100%', background: '#f33' }} />
+                 </div>
+              </div>
+              <div>
+                 <div className="status-header">状態</div>
+                 <div style={{ color: '#aaa' }}>平安</div>
+              </div>
             </div>
           </div>
         )}
