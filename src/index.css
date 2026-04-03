@@ -98,6 +98,7 @@ body {
 
   /* ダンジョン画面を最上部に 1:1 で固定 */
   .pane-main {
+    position: relative !important;
     width: 100% !important;
     aspect-ratio: 1 / 1 !important;
     height: auto !important;
