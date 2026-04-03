@@ -305,26 +305,21 @@ function App() {
       <div className={`window pane-status ${showStatus ? 'mobile-active-pane' : ''}`}>
         <span className="window-title">隊員之証</span>
         <div style={{ flex: 1, padding: '10px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-           {/* モバイル用戻るボタン（最上部に常駐） */}
            {(isForceMobile || showStatus) && (
-             <button className="dialog-btn" style={{ position: 'sticky', top: 0, zIndex: 10, width: '100%', marginBottom: '15px', boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }} 
-                     onClick={() => setShowStatus(false)}>
-                探索に戻る
-             </button>
+             <button className="dialog-btn" style={{ position: 'sticky', top: 0, zIndex: 10, width: '100%', marginBottom: '15px' }} onClick={() => setShowStatus(false)}>探索に戻る</button>
            )}
            <div style={{ flex: 1 }}>
              {party.map((m, idx) => (
-               <div key={idx} style={{ borderBottom: '1px solid #444', padding: '10px 0', backgroundColor: (activeBattler === idx && gameState === 'BATTLE') ? '#121' : 'transparent' }}>
+               <div key={idx} style={{ borderBottom: '1px solid #444', padding: '10px 0' }}>
                  <div style={{ display: 'flex', gap: '10px' }}>
                    <span style={{ fontSize: '1.5rem' }}>{m.icon}</span>
                    <div style={{ flex: 1 }}>
                      <div style={{ fontWeight: 'bold' }}>{m.name}</div>
                      <div style={{ fontSize: '0.8rem', color: '#aaa' }}>{m.job} Lv.{m.lv}</div>
                    </div>
-                   <div style={{ color: m.status === '討死' ? '#f55' : '#5f5' }}>{m.status}</div>
                  </div>
                  <div style={{ marginTop: '5px' }}>
-                   <div style={{ fontSize: '0.7rem' }}>体力: {m.hp}/{m.maxHp}</div>
+                   <div style={{ fontSize: '0.7rem' }}>体力 {m.hp}/{m.maxHp}</div>
                    <div style={{ height: '6px', background: '#333' }}><div style={{ width: `${(m.hp/m.maxHp)*100}%`, height: '100%', background: '#f55' }} /></div>
                  </div>
                </div>
@@ -352,7 +347,7 @@ function App() {
         <div className="wireframe-container" style={{ position: 'relative', flexShrink: 0 }}>
           <WireframeView mapData={mapData} playerPos={playerState} playerDir={playerState.dir} />
           
-          {/* モバイル専用：ミニステータス */}
+          {/* ミニステータス */}
           {(gameState === 'EXPLORING' || gameState === 'BATTLE') && (
             <div className="mini-status-panel" style={{ pointerEvents: 'none', zIndex: 1100 }}>
                {party.map((m, i) => (
@@ -375,10 +370,12 @@ function App() {
             )}
           </div>
         </div>
+      </div>
 
-        {/* モバイル操作ボタン */}
-        {isForceMobile && !activeDialog && (
-          <div className="mobile-btn-container">
+      {/* 以下、モバイル時は pane-main の外に出す */}
+      {isForceMobile && !showMap && !showStatus && (
+        <>
+          <div className="mobile-btn-container" style={{ flexShrink: 0 }}>
             {gameState === 'BATTLE' ? (
               <div style={{ display: 'flex', width: '100%', gap: '5px', flexWrap: 'wrap', padding: '0 8px' }}>
                 <button onClick={handleFight} className="battle-btn" style={{ flex: 2, padding: '15px' }}>打ちかかる</button>
@@ -394,32 +391,24 @@ function App() {
               </div>
             ) : (
               <div style={{ display: 'flex', width: '100%', gap: '10px', padding: '0 10px' }}>
-                <button className="map-toggle-btn" style={{ flex: 1 }} onClick={() => { initAudio(); setShowMap(true); }}>📜 地図</button>
-                <button className="map-toggle-btn" style={{ flex: 1 }} onClick={() => { initAudio(); setShowStatus(true); }}>🪪 隊員</button>
+                <button className="map-toggle-btn" style={{ flex: 1, padding: '12px' }} onClick={() => { initAudio(); setShowMap(true); }}>📜 絵図</button>
+                <button className="map-toggle-btn" style={{ flex: 1, padding: '12px' }} onClick={() => { initAudio(); setShowStatus(true); }}>🪪 隊員</button>
                 <button className="save-btn" style={{ flex: 1 }} onClick={handleSave}>💾 記録</button>
               </div>
             )}
           </div>
-        )}
-
-        {/* メッセージログ (モバイル用) */}
-        {isForceMobile && !showMap && !showStatus && (
-          <div className="mobile-log-display" id="mobile-log-display">
+          <div className="mobile-log-display" id="mobile-log-display" style={{ flex: 1, overflowY: 'auto' }}>
             {messages.map((m, i) => <div key={i} style={{ color: '#eee', fontSize: '0.9rem', marginBottom: '3px' }}>{'>'} {m}</div>)}
           </div>
-        )}
-      </div>
+        </>
+      )}
 
-      {/* 3. 地図窓 (PCでは右) */}
+      {/* 3. 絵図窓 (PC: 右) */}
       <div className={`window pane-map ${showMap ? 'mobile-active-pane' : ''}`}>
         <span className="window-title">絵図と絵巻</span>
         <div style={{ flex: 1, padding: '10px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-           {/* モバイル用戻るボタン（最上部に常駐） */}
            {(isForceMobile || showMap) && (
-             <button className="dialog-btn" style={{ position: 'sticky', top: 0, zIndex: 10, width: '100%', marginBottom: '15px', boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }} 
-                     onClick={() => setShowMap(false)}>
-                探索に戻る
-             </button>
+             <button className="dialog-btn" style={{ position: 'sticky', top: 0, zIndex: 10, width: '100%', marginBottom: '15px' }} onClick={() => setShowMap(false)}>探索に戻る</button>
            )}
            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${MAP_WIDTH}, 30px)`, gap: '1px', justifyContent: 'center' }}>
              {mapData.map((row, y) => row.map((cell, x) => renderMapCell(cell, x, y)))}
@@ -430,12 +419,12 @@ function App() {
         </div>
       </div>
 
-      {/* ダイアログ */}
+      {/* ダイアログ、デバッグ、音量 */}
       {activeDialog && (
         <div className="dialog-overlay">
           <div className="dialog-title">{activeDialog.title}</div>
-          <div className="dialog-content" style={{ whiteSpace: 'pre-wrap' }}>{activeDialog.pages[activeDialog.currentPage]}</div>
-          <div className="dialog-footer" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div className="dialog-content">{activeDialog.pages[activeDialog.currentPage]}</div>
+          <div className="dialog-footer">
             {activeDialog.showChoices ? (
               <div style={{ display: 'flex', gap: '20px' }}>
                 <button className="dialog-btn" onClick={() => { initAudio(); activeDialog.onConfirm(); setActiveDialog(null); }}>はい</button>
@@ -455,25 +444,20 @@ function App() {
         </div>
       )}
 
-      {/* デバッグパネル */}
       {isDebug && (
         <div style={{ position: 'fixed', bottom: '10px', right: '10px', backgroundColor: 'rgba(0,50,0,0.85)', border: '2px solid #3f3', color: '#3f3', padding: '10px', zIndex: 9999, fontSize: '0.8rem', borderRadius: '8px' }}>
-          <div>座標: ({playerState.x}, {playerState.y}) 遭遇: {debugEncounter ? 'ON' : 'OFF'}</div>
+          <div>({playerState.x}, {playerState.y}) <input type="checkbox" checked={debugEncounter} onChange={e => setDebugEncounter(e.target.checked)} /></div>
           <div style={{ display: 'flex', gap: '5px', marginTop: '5px' }}>
-            <button onClick={debugHeal} style={{ background: '#030', color: '#3f3', border: '1px solid #3f3' }}>全快</button>
+            <button onClick={debugHeal} style={{ background: '#030', color: '#3f3', border: '1px solid #3f3' }}>命</button>
             <button onClick={debugKill} style={{ background: '#300', color: '#f33', border: '1px solid #3f3' }}>滅</button>
-            <button onClick={debugEnemyKill} style={{ background: '#030', color: '#3f3', border: '1px solid #3f3' }}>敵薄</button>
-            <input type="checkbox" checked={debugEncounter} onChange={e => setDebugEncounter(e.target.checked)} />
-          </div>
-          <div style={{ marginTop: '5px' }}>
-            <button onClick={() => debugWarp(1,1)} style={{ background: '#033', color: '#3ff', border: '1px solid #3ff' }}>帰還</button>
+            <button onClick={debugEnemyKill} style={{ background: '#030', color: '#3f3', border: '1px solid #3f3' }}>弱</button>
+            <button onClick={() => debugWarp(1,1)} style={{ background: '#033', color: '#3ff', border: '1px solid #3ff' }}>還</button>
           </div>
         </div>
       )}
 
-      {/* 音量コントロール */}
       <div style={{ position: 'fixed', top: '10px', right: '10px', zIndex: 9999, display: 'flex', gap: '5px', background: 'rgba(0,0,0,0.5)', padding: '5px', borderRadius: '5px' }}>
-        <button onClick={() => setIsMuted(!isMuted)} style={{ background: 'none', border: 'none', color: '#c93', cursor: 'pointer' }}>{isMuted ? '静音' : '音量'}</button>
+        <button onClick={() => setIsMuted(!isMuted)} style={{ background: 'none', border: 'none', color: '#c93', cursor: 'pointer', fontSize: '0.7rem' }}>{isMuted ? '静音' : '音量'}</button>
         <input type="range" min="0" max="1" step="0.1" value={volume} onChange={e => setVolume(parseFloat(e.target.value))} style={{ width: '40px' }} />
       </div>
 
