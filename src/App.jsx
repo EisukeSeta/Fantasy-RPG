@@ -31,7 +31,8 @@ function App() {
   
   // デバッグモードの判定 (?debug=1)
   const isDebug = new URLSearchParams(window.location.search).get('debug') === '1';
-  const isForceMobile = new URLSearchParams(window.location.search).get('mobile') === '1';
+  const searchParams = new URLSearchParams(window.location.search);
+  const isForceMobile = searchParams.get('mobile') === '1' || (typeof window !== 'undefined' && (window.innerWidth <= 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)));
   const [debugEncounter, setDebugEncounter] = useState(true);
 
   // ステータス操作（デバッグ用）
@@ -657,26 +658,27 @@ function App() {
           {gameState === 'DEAD' && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(80,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ color: '#F22', fontSize: '3rem' }}>討死</div></div>}
           {gameState === 'CLEAR' && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,40,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ color: '#Ff2', fontSize: '3rem', textAlign: 'center' }}>🎉 階層突破 🎉<div style={{ fontSize: '1.5rem', marginTop: '10px' }}>都の安寧へ一歩近づいた...</div></div></div>}
           
-          {/* 戦闘中のステータス・オーバーレイ（スマホ用） */}
+          {/* 戦闘中のステータス・オーバーレイ（スマホ用・優先度：高） */}
           {gameState === 'BATTLE' && (
             <div className="mobile-battle-overlay" style={{ 
               position: 'absolute', top: '10px', left: '10px', right: '10px', 
-              display: 'flex', gap: '5px', pointerEvents: 'none', zIndex: 10
+              display: 'flex', gap: '4px', pointerEvents: 'none', zIndex: 100
             }}>
               {party.map((m, idx) => (
                 <div key={m.id} style={{ 
-                  flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', border: (activeBattler === idx) ? '1px solid #3f3' : '1px solid #444', 
-                  borderRadius: '4px', padding: '4px', fontSize: '0.7rem' 
+                  flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', border: (activeBattler === idx) ? '2px solid #3f3' : '1px solid #555', 
+                  borderRadius: '6px', padding: '6px 4px', fontSize: '0.75rem',
+                  boxShadow: (activeBattler === idx) ? '0 0 8px #3f3' : 'none'
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: m.status === '討死' ? '#f33' : '#fff' }}>
-                    <span>{m.icon}{m.name.split(' ')[0]}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: m.status === '討死' ? '#f33' : '#fff', fontWeight: 'bold' }}>
+                    <span>{m.icon}{m.name.substring(0,2)}</span>
                     <span>Lv{m.lv}</span>
                   </div>
-                  <div style={{ height: '4px', background: '#333', marginTop: '2px' }}>
-                    <div style={{ width: `${(m.hp/m.maxHp)*100}%`, height: '100%', background: '#f33' }} />
+                  <div style={{ height: '6px', background: '#333', marginTop: '4px', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{ width: `${(m.hp/m.maxHp)*100}%`, height: '100%', background: '#f44' }} />
                   </div>
-                  <div style={{ height: '2px', background: '#333', marginTop: '1px' }}>
-                    <div style={{ width: `${(m.maxMp?(m.mp/m.maxMp):0)*100}%`, height: '100%', background: '#33f' }} />
+                  <div style={{ height: '3px', background: '#333', marginTop: '2px', borderRadius: '1.5px', overflow: 'hidden' }}>
+                    <div style={{ width: `${(m.maxMp?(m.mp/m.maxMp):0)*100}%`, height: '100%', background: '#44f' }} />
                   </div>
                 </div>
               ))}
