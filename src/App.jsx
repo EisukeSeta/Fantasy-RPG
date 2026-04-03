@@ -902,15 +902,22 @@ function App() {
             <div style={{ display: 'grid', gridTemplateColumns: `repeat(${MAP_WIDTH}, 30px)`, gridTemplateRows: `repeat(${MAP_HEIGHT}, 30px)`, border: '2px solid #555', padding: '2px', backgroundColor: '#000' }}>
               {mapData.map((row, y) => row.map((cell, x) => renderMapCell(cell, x, y)))}
             </div>
-            <div style={{ fontSize: '1rem', color: '#aaa', border: '1px solid #444', padding: '10px', backgroundColor: '#080808', minWidth: '150px' }}>
-              <div style={{ color: '#fff', borderBottom: '1px solid #333', marginBottom: '10px', textAlign: 'center' }}>凡例</div>
-              <div style={{ marginBottom: '10px', color: '#f0e68c', textAlign: 'center', borderBottom: '1px solid #444' }}>
-                 [{playerState.x}, {playerState.y}]
+            <div style={{ 
+              fontSize: '0.9rem', color: '#aaa', border: '1px solid #444', 
+              padding: '10px', backgroundColor: '#080808', width: '100%', 
+              maxWidth: '350px', marginTop: '10px' 
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px', flexWrap: 'wrap', marginBottom: '5px' }}>
+                <span style={{ color: '#f0e68c', fontWeight: 'bold', borderRight: '1px solid #444', paddingRight: '12px' }}>
+                   現在地：[{playerState.x}, {playerState.y}]
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ color: '#66f' }}>⛩</span>結界</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ color: '#aa0' }}>🪵</span>立札</span>
+                  {bossDefeated && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ color: '#f33' }}>✨</span>出口</span>}
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ color: '#3f3', fontSize: '1rem' }}>▲</span>貴殿</span>
+                </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}><span style={{ color: '#66f', fontSize: '1.4rem' }}>⛩</span>結界</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}><span style={{ color: '#aa0', fontSize: '1.4rem' }}>🪵</span>立札</div>
-              {bossDefeated && <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}><span style={{ color: '#f33', fontSize: '1.4rem' }}>✨</span>出口</div>}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: '#3f3', fontSize: '1.1rem' }}>▲</span>現在地</div>
             </div>
           </div>
         </div>
