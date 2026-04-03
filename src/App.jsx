@@ -735,35 +735,39 @@ function App() {
 
       {/* --- スマホ専用：ダンジョン下の操作・情報パネル --- */}
       {(gameState === 'EXPLORING' || gameState === 'BATTLE') && !activeDialog && (
-        <div className="mobile-btn-container">
-          <button className="map-toggle-btn" 
-                  style={{ background: showMap ? '#b89a42' : '#222', color: showMap ? '#000' : '#f0e68c' }}
-                  onClick={() => { setShowMap(!showMap); setShowStatus(false); }}>
-             📜 {showMap ? '閉じる' : '絵図'}
-          </button>
-          <button className="map-toggle-btn" 
-                  style={{ background: showStatus ? '#b89a42' : '#222', color: showStatus ? '#000' : '#f0e68c' }}
-                  onClick={() => { setShowStatus(!showStatus); setShowMap(false); }}>
-             📜 {showStatus ? '閉じる' : '隊員証'}
-          </button>
-          <button className="map-toggle-btn" onClick={() => { setShowMap(false); setShowStatus(false); }}>
-             📜 記録
-          </button>
-        </div>
+        <>
+          {/* スマホ用ログ：マップもステータスも開いていない時に表示 */}
+          {!showMap && !showStatus && (
+            <div className="mobile-log-display" id="mobile-log-display">
+              {messages.map((m, i) => {
+                 const attackerNames = party.map(p => p.name);
+                 const isPlayerDamage = (m.includes('ダメージ') && !attackerNames.some(name => m.startsWith(name))) || m.includes('痛手') || m.includes('飲まれて');
+                 const isHeal = m.includes('癒えた') || m.includes('加護') || m.includes('満たされた') || m.includes('回復');
+                 const color = isPlayerDamage ? '#ffbbbb' : isHeal ? '#bbffbb' : '#eee';
+                 return <div key={i} className="mobile-log-line" style={{ color }}>{'>'} {m}</div>;
+              })}
+            </div>
+          )}
+
+          <div className="mobile-btn-container">
+            <button className="map-toggle-btn" 
+                    style={{ background: showMap ? '#b89a42' : '#222', color: showMap ? '#000' : '#f0e68c' }}
+                    onClick={() => { setShowMap(!showMap); setShowStatus(false); }}>
+               📜 {showMap ? '閉じる' : '絵図'}
+            </button>
+            <button className="map-toggle-btn" 
+                    style={{ background: showStatus ? '#b89a42' : '#222', color: showStatus ? '#000' : '#f0e68c' }}
+                    onClick={() => { setShowStatus(!showStatus); setShowMap(false); }}>
+               📜 {showStatus ? '閉じる' : '隊員証'}
+            </button>
+            <button className="map-toggle-btn" onClick={() => { setShowMap(false); setShowStatus(false); }}>
+               📜 記録
+            </button>
+          </div>
+        </>
       )}
 
-      {/* スマホ用ログ：マップもステータスも開いていない時に表示 */}
-      {!activeDialog && !showMap && !showStatus && (
-        <div className="mobile-log-display" id="mobile-log-display">
-          {messages.map((m, i) => {
-             const attackerNames = party.map(p => p.name);
-             const isPlayerDamage = (m.includes('ダメージ') && !attackerNames.some(name => m.startsWith(name))) || m.includes('痛手') || m.includes('飲まれて');
-             const isHeal = m.includes('癒えた') || m.includes('加護') || m.includes('満たされた') || m.includes('回復');
-             const color = isPlayerDamage ? '#ffbbbb' : isHeal ? '#bbffbb' : '#eee';
-             return <div key={i} className="mobile-log-line" style={{ color }}>{'>'} {m}</div>;
-          })}
-        </div>
-      )}
+      {/* デバッグパネルなどはそのままだが、現状維持 */}
 
       {/* デバッグパネル (isDebug = true の時のみ) */}
       {isDebug && (
@@ -800,11 +804,11 @@ function App() {
         </div>
       )}
 
-      {/* 音量コントロールパネル */}
+      {/* 音量コントロールパネル (スマホ・PC共通で右上付近へ移設) */}
       <div style={{
-        position: 'fixed', bottom: '10px', left: '10px', 
+        position: 'fixed', top: '10px', right: '10px', 
         backgroundColor: 'rgba(50,20,0,0.85)', border: '1px solid #c93', 
-        color: '#c93', padding: '10px', zIndex: 9999, fontSize: '0.8rem',
+        color: '#c93', padding: '6px 10px', zIndex: 9999, fontSize: '0.8rem',
         borderRadius: '5px', display: 'flex', alignItems: 'center', gap: '8px',
         boxShadow: '0 0 10px rgba(0,0,0,0.5)'
       }}>
@@ -812,10 +816,9 @@ function App() {
                 style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', outline: 'none' }}>
           {isMuted ? '🔕' : '🔔'}
         </button>
-        <span style={{ fontSize: '0.7rem' }}>奏（音量）</span>
         <input type="range" min="0" max="1" step="0.05" value={volume} 
                onChange={(e) => { setVolume(parseFloat(e.target.value)); if(isMuted) setIsMuted(false); }} 
-               style={{ cursor: 'pointer', width: '80px', accentColor: '#c93' }} />
+               style={{ cursor: 'pointer', width: '60px', accentColor: '#c93' }} />
       </div>
 
       <div className={`window pane-status ${showStatus ? 'mobile-active-pane' : ''}`}>
@@ -939,6 +942,11 @@ function App() {
                return <div key={i} style={{ color }}>{'>'} {m}</div>;
             })}
           </div>
+          {showMap && (
+            <button className="dialog-btn" style={{ marginTop: '20px', width: '200px', alignSelf: 'center', marginBottom: '40px' }} onClick={() => setShowMap(false)}>
+               閉じる
+            </button>
+          )}
         </div>
       </div>
 

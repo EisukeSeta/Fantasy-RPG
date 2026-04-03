@@ -1,581 +1,173 @@
+﻿/* --- 平安魔道伝 羅生門編 統一デザインシステム --- */
 :root {
-  --bg-color: #050505;
-  --text-color: #E0E0E0;
-  --border-color: #AAAAAA;
-  --accent-color: #33FF33;
-  --border-width: 3px;
-  --font-family: 'DotGothic16', monospace;
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+  --primary-gold: #b89a42;
+  --dark-red: #500e0e;
+  --ancient-black: #0a0a0a;
+  --soft-gold: #f0e68c;
 }
 
 body {
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  font-family: var(--font-family);
-  font-size: 1.6rem; /* 邵ｺ霈費ｽ臥ｸｺ・ｫ郢晁ｼ斐°郢晢ｽｳ郢晏現・定ｫ｡・｡陞滂ｽｧ */
-  height: 100vh;
-  width: 100vw;
+  margin: 0;
+  padding: 0;
+  background-color: #000;
+  color: #fff;
+  font-family: 'Sawarabi Mincho', serif;
   overflow: hidden;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-#root {
+.game-container {
   width: 100%;
   height: 100%;
-  padding: 10px;
+  max-width: 1200px;
+  max-height: 800px;
+  display: grid;
+  grid-template-columns: 320px 1fr 340px;
+  grid-template-rows: 1fr;
+  gap: 15px;
+  padding: 15px;
+  background: #000;
+  box-sizing: border-box;
 }
 
-/* 郢ｧ・ｦ郢ｧ・｣郢晢ｽｳ郢晏ｳｨ縺郁怦・ｱ鬨ｾ螢ｹ縺帷ｹｧ・ｿ郢ｧ・､郢晢ｽｫ */
 .window {
-  border: var(--border-width) solid var(--border-color);
-  background-color: #000;
-  padding: 1rem;
-  /* Wizardry鬯夲ｽｨ邵ｺ・ｮ闔遒√裟驍ｱ螢ｹ繝ｵ郢晢ｽｬ郢晢ｽｼ郢晢ｿｽ */
-  box-shadow: inset 0 0 0 2px var(--bg-color), inset 0 0 0 3px var(--border-color);
-  overflow: visible; /* 郢ｧ・ｿ郢ｧ・､郢晏現ﾎ晉ｹｧ螳夲ｽ｡・ｨ驕会ｽｺ邵ｺ蜷ｶ・狗ｸｺ貅假ｽ∫ｸｺ・ｫ陟｢・ｽ・ｽ・ｽ */
+  border: 2px solid var(--primary-gold);
+  background: rgba(10, 10, 10, 0.9);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 20px rgba(184, 154, 66, 0.2);
 }
 
 .window-title {
   position: absolute;
-  top: -1.2rem;
-  left: 1.5rem;
-  background-color: #000;
-  padding: 0 0.8rem;
-  color: var(--text-color);
-  font-size: 1.3rem; /* 陝・ｻ｣・陝・ｸ奇ｼ・ｸｺ荳奇ｼ邵ｺ・ｦ陷ｿ蠑ｱ竏ｪ郢ｧ鄙ｫ・呈ｿｶ・ｯ邵ｺ荳岩・郢ｧ・ｽ */
-  z-index: 20;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: calc(100% - 3rem); /* 隴ｫ・ｽ邵ｺ荵晢ｽ臥ｸｺ・ｯ邵ｺ・ｿ陷・ｽｺ邵ｺ霈披・邵ｺ・ｽ・育ｸｺ・ｽ竊楢崕・ｶ鬮ｯ・ｽ */
-}
-
-/* 郢ｧ・ｲ郢晢ｽｼ郢晢ｿｽ陷茨ｽｨ闖ｴ阮呻ｿｽ郢ｧ・ｳ郢晢ｽｳ郢晢ｿｽ繝ｪ (PC) */
-.game-container {
-  display: grid;
-  grid-template-columns: 63% 35%;
-  grid-template-rows: 1fr 240px;
-  gap: 20px;
-  width: 100%;
-  height: 100%;
-  padding: 30px 15px 15px 15px; /* 闕ｳ莨∃夂ｹｧ・ｽ30px邵ｺ・ｫ邵ｺ蜉ｱ窶ｻ郢ｧ・ｿ郢ｧ・､郢晏現ﾎ晉ｸｺ・ｮ郢ｧ・ｹ郢晏｣ｹ・ｽ郢ｧ・ｹ郢ｧ蝣､・｢・ｺ闖ｫ・ｽ */
-  box-sizing: border-box;
-}
-
-.pane-main {
-  grid-column: 1 / 2;
-  grid-row: 1 / 2;
-  width: 100% !important;
-  height: 100% !important;
-  display: flex !important;
-  justify-content: center !important;
-  align-items: center !important;
-}
-
-/* 郢敖郢晢ｽｳ郢ｧ・ｸ郢晢ｽｧ郢晢ｽｳ騾包ｽｻ鬮ｱ・｢郢ｧ蜻茨ｽｭ・｣隴・ｽｹ陟厄ｽ｢邵ｺ・ｫ邵ｺ蜉ｱﾂ竏晢ｽｷ・ｦ陷ｿ・ｳ邵ｺ・ｫ驕ｨ・ｺ鬮｢阮呻ｽ定ｰｿ荵昶・ */
-.pane-main > .wireframe-container {
-  aspect-ratio: 1 / 1 !important;
-  height: 100% !important;
-  width: auto !important;
-  max-width: 100% !important;
-  border: 4px double #555 !important;
-  box-shadow: 0 0 20px rgba(0,0,0,0.8);
-}
-
-.pane-status {
-  grid-column: 1 / 2;
-  grid-row: 2 / 3;
-  width: 100% !important;
-  height: 100% !important;
-}
-
-.pane-map {
-  grid-column: 2 / 3;
-  grid-row: 1 / 3;
-  width: 100% !important;
-  height: 100% !important;
-}
-
-.pane-main, .pane-status, .pane-map {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: visible;
-  box-sizing: border-box;
-}
-
-.pane-enemy {
-  position: absolute;
-  top: 55px;
+  top: -12px;
   left: 20px;
-  width: fit-content;
-  min-width: 250px;
-  background-color: rgba(0, 0, 0, 0.85);
-  z-index: 100;
-  text-align: center;
+  background: #000;
+  padding: 0 10px;
+  color: var(--primary-gold);
+  font-size: 0.9rem;
+  border-left: 1px solid var(--primary-gold);
+  border-right: 1px solid var(--primary-gold);
+  z-index: 10;
+}
+
+.pane-status { grid-column: 1 / 2; }
+.pane-main { grid-column: 2 / 3; }
+.pane-map { grid-column: 3 / 4; }
+
+.wireframe-container {
+  flex: 1;
+  background: #000;
+  overflow: hidden;
 }
 
 .status-grid {
   display: grid;
-  /* 7郢ｧ・ｫ郢晢ｽｩ郢晢ｿｽ隶貞玄・ｽ: 髫ｪ・ｽ(0.4) 髢ｨ・ｷ(0.6) 陷ｷ・ｽ(1.2) 鬮ｫ・ｽ(0.5) 闖ｴ・ｽ(1.5) 鬮ｴ・ｽ(1.5) 霑･・ｶ(0.7) */
-  grid-template-columns: 0.4fr 0.6fr 1.2fr 0.5fr 1.5fr 1.5fr 0.7fr;
-  text-align: center;
+  grid-template-columns: 30px 60px 1fr 40px 60px 60px 60px;
   align-items: center;
-  gap: 10px;
-  width: 100%;
-  font-size: 1.1rem;
-}
-
-/* PC騾包ｽｨ郢ｧ・ｹ郢晢ｿｽ・ｽ郢ｧ・ｿ郢ｧ・ｹ郢晁・・ｽ */
-.pc-bar-container {
-  width: 100%;
-  height: 8px;
-  background: #222;
-  border: 1px solid #444;
-  margin-top: 4px;
-  position: relative;
-}
-
-.pc-bar-hp {
-  height: 100%;
-  background: linear-gradient(90deg, #822, #f33);
-  transition: width 0.3s ease-out;
-}
-
-.pc-bar-mp {
-  height: 100%;
-  background: linear-gradient(90deg, #228, #33f);
-  transition: width 0.3s ease-out;
-}
-
-.status-value-text {
+  text-align: center;
   font-size: 0.9rem;
-  font-family: monospace;
 }
 
-.status-header {
-  color: var(--accent-color);
-  margin-bottom: 5px;
-}
+.status-header { color: var(--primary-gold); font-size: 0.75rem; margin-bottom: 2px; }
 
-.wireframe-container {
-  width: 100%;
-  height: 100%;
-  border: 1px solid #333;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #000;
-  overflow: hidden;
-}
-
-/* 陷･遒・ｽ｢・ｨ陞滂ｽｧ騾包ｽｻ鬮ｱ・｢郢敖郢ｧ・､郢ｧ・｢郢晢ｽｭ郢ｧ・ｰ (陝ｷ・ｳ陞ｳ蟲ｨ・ｽ鬮｣・ｽ) */
-.dialog-overlay {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%); /* 闕ｳ・ｭ陞滂ｽｮ鬩溷調・ｽ・ｮ */
-  width: 95%; /* 邵ｺ・ｻ邵ｺ・ｼ陷茨ｽｨ陝ｷ・ｽ・定抄・ｿ騾包ｽｨ */
-  height: 90%; 
-  background: rgba(0, 0, 0, 0.95);
-  border: 4px double #8a6d3b; /* 陷ｿ・､邵ｺ・ｽ竕｡邵ｺ・ｮ驍ｵ竏晏徐郢ｧ・ｽ */
-  padding: 40px; /* 郢昜ｻ｣繝ｧ郢ｧ・｣郢晢ｽｳ郢ｧ・ｰ郢ｧ雋橸ｽ｢蜉ｱ・・ｸｺ蜉ｱ窶ｻ郢ｧ・ｽ笆ｲ邵ｺ貅假ｽ顔ｸｺ霈披雷郢ｧ・ｽ */
-  z-index: 2000; /* 陷茨ｽｨ邵ｺ・ｦ邵ｺ・ｮ髫補悪・ｴ・ｽ郢ｧ蛹ｻ・願恆蝓ｼ謫・ｸｺ・ｸ */
-  display: flex;
-  flex-direction: column;
-  color: #f0e68c; 
-  text-shadow: 1px 1px 2px #000;
-  box-shadow: 0 0 100px rgba(0,0,0,1);
-  font-family: 'DotGothic16', sans-serif;
-  overflow: hidden;
-  box-sizing: border-box;
-}
-
-.dialog-title {
-  font-size: 2.2rem;
-  border-bottom: 1px solid #554;
-  margin-bottom: 25px;
-  padding-bottom: 10px;
-  text-align: center;
-  color: #d4af37; /* 鬲・ｽｮ郢ｧ・ｽﾂｰ邵ｺ・ｪ鬩･・ｽ */
-}
-
-.dialog-content {
-  flex: 1;
-  font-size: 1.6rem;
-  line-height: 1.8;
-  overflow-y: auto;
-  white-space: pre-wrap;
-  padding: 0 20px;
-}
-
-.dialog-footer {
-  text-align: right;
-  margin-top: 25px;
-  padding-right: 20px;
-}
-
-.dialog-btn {
-  background: #331111;
-  color: #fff;
-  border: 2px solid #553333;
-  padding: 15px 40px;
-  font-size: 1.4rem;
-  cursor: pointer;
-  font-family: 'DotGothic16';
-  transition: all 0.2s;
-}
-
-.dialog-btn:hover {
-  background: #552222;
-  border-color: #f0e68c;
-}
-
-.dialog-choice-container {
-  display: flex;
-  justify-content: center;
-  gap: 40px;
-  margin-top: 25px;
-}
-
-
-/* --- PC髯ｦ・ｨ驕会ｽｺ隴弱ｅ・ｽ郢ｧ・ｯ郢晢ｽｪ郢晢ｽｼ郢晢ｽｳ郢ｧ・｢郢晢ｿｽ・ｽ --- */
-@media (min-width: 769px) {
-  .mobile-log-display, .mini-status-panel, .dungeon-tap-overlay, .mobile-controls, .map-toggle-btn {
-    display: none !important;
-  }
-  .pane-main, .pane-status, .pane-map {
-    display: flex !important;
-  }
-  .pc-log-display {
-    display: flex !important;
-  }
-}
-
-/* --- 郢晢ｽ｢郢晁・縺・ｹ晢ｽｫ陝・ｽｾ陟｢・ｽ (Responsive) --- */
+/* --- モバイル専用レイアウト --- */
 @media (max-width: 768px) {
-  body {
-    overflow: hidden !important;
-    height: 100vh !important;
-    font-size: 1.1rem !important;
-  }
-
-  #root {
-    padding: 0 !important;
-    height: 100vh !important;
-  }
-
-  .game-container {
+  .game-container.layout-mobile {
     display: flex !important;
     flex-direction: column !important;
-    height: 100vh !important;
-    gap: 0 !important;
     padding: 0 !important;
-    padding-top: env(safe-area-inset-top, 25px) !important; /* 繧ｹ繝槭・荳企Κ縺ｮ譎りｨ医↑縺ｩ繧帝∩縺代ｋ */
-    overflow: hidden !important;
-    background: #000;
+    max-height: none !important;
+    gap: 0 !important;
+    overflow-y: auto !important;
   }
 
-  .pane-main, .pane-status, .pane-map {
-    width: 100% !important;
-    height: auto !important;
-    margin: 0 !important;
-    border-left: none !important;
-    border-right: none !important;
-  }
-
-  /* 郢晢ｽ｡郢ｧ・､郢晢ｽｳ騾包ｽｻ鬮ｱ・｢・ｽ螢ｹﾎ皮ｹ晁・縺・ｹ晢ｽｫ邵ｺ・ｧ邵ｺ・ｮ鬯ｮ蛟･・・￡・ｺ闖ｫ・ｽ */
+  /* ダンジョン画面を最上部に 1:1 で固定 */
   .pane-main {
     width: 100% !important;
-    height: 100vw !important; /* 1:1邵ｺ・ｮ雎・ｽ｣隴・ｽｹ陟厄ｽ｢郢ｧ蝣､・ｶ・ｭ隰厄ｿｽ */
-    max-height: 50vh !important;
-    margin: 0 !important;
+    aspect-ratio: 1 / 1 !important;
+    height: auto !important;
     flex-shrink: 0 !important;
-    position: relative;
-    border-bottom: 2px solid #b89a42 !important;
     z-index: 100;
   }
 
-  .wireframe-container {
-    height: 100% !important;
+  .window-title { top: 10px !important; }
+
+  /* 操作ボタンを常に下部に配置するためのコンテナ */
+  .mobile-btn-container {
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    background: #111;
+    border-top: 1px solid #444;
+    z-index: 2000;
   }
 
-  /* 郢晢ｽ｢郢晁・縺・ｹ晢ｽｫ隴弱ｅﾂ・ｽ・ｭ逧ｮ鮟・・阮呻ｿｽ闖ｴ蜥ｲ・ｽ・ｮ郢ｧ螳夲ｽｪ・ｿ隰ｨ・ｴ */
-  .pane-enemy {
-    top: 135px !important;
-    left: 10px !important;
-    right: 10px !important;
-    width: auto !important;
-    margin: 0 !important;
-    z-index: 150 !important;
+  .map-toggle-btn {
+    padding: 10px 20px;
+    background: #222;
+    border: 1px solid var(--primary-gold);
+    color: var(--soft-gold);
+    font-size: 1rem;
+    min-width: 100px;
   }
 
-  /* PC陷ｷ莉｣・郢晢ｽｭ郢ｧ・ｰ邵ｺ・ｯ鬮ｱ讚・ｽ｡・ｨ驕会ｽｺ邵ｺ・ｫ */
-  .pc-log-display {
-    display: none !important;
-  }
-
-  /* 郢晢ｽ｢郢晁・縺・ｹ晢ｽｫ騾包ｽｨ郢晢ｽ｡郢晢ｿｽ縺晉ｹ晢ｽｼ郢ｧ・ｸ郢晢ｽｭ郢ｧ・ｰ */
+  /* ログ表示エリア */
   .mobile-log-display {
-    display: flex !important;
-    flex-direction: column !important;
-    position: absolute !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    background: rgba(0, 0, 0, 0.85) !important;
-    border-top: 1px solid #444 !important;
-    padding: 8px !important;
-    height: 120px !important;
-    overflow-y: auto !important;
-    z-index: 60 !important;
+    flex: 1;
+    min-height: 100px;
+    background: #000;
+    padding: 10px;
+    overflow-y: auto;
+    font-size: 0.9rem;
   }
 
-  .mobile-log-line {
-    line-height: 1.4 !important;
-    font-size: 0.9rem !important;
-    margin-bottom: 2px !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
-  }
-
-  /* 郢晄ｺ倥Ν郢ｧ・ｹ郢晢ｿｽ・ｽ郢ｧ・ｿ郢ｧ・ｹ郢晢ｽｻ郢敖郢晢ｿｽ縺咏ｹ晢ｽ･郢晄㈱・ｽ郢晢ｿｽ */
-  .mini-status-panel {
-    position: absolute !important;
-    top: 10px !important;
-    right: 10px !important;
-    background: rgba(0, 0, 0, 0.8) !important;
-    border: 1px solid #b89a42 !important;
-    padding: 6px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 4px !important;
-    font-size: 0.75rem !important;
-    z-index: 50 !important;
-    pointer-events: none !important;
-  }
-
-  .mini-status-unit {
-    display: flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-  }
-
-  .bar-container {
-    width: 60px !important;
-    height: 4px !important;
-    background: #333 !important;
-  }
-
-  .bar-hp { background: #d44; height: 100%; }
-  .bar-mp { background: #44d; height: 100%; }
-
-  /* 郢敖郢晢ｽｳ郢ｧ・ｸ郢晢ｽｧ郢晢ｽｳ騾包ｽｻ鬮ｱ・｢郢ｧ・ｿ郢晢ｿｽ・ｽ郢ｧ・ｨ郢晢ｽｪ郢ｧ・｢ */
-  .dungeon-tap-overlay {
-    position: absolute !important;
+  /* 絵図・隊員証をオーバーレイ化 */
+  .pane-status, .pane-map {
+    display: none !important;
+    position: fixed !important;
     top: 0 !important;
     left: 0 !important;
     width: 100% !important;
     height: 100% !important;
-    display: grid !important;
-    grid-template-columns: 1fr 1.5fr 1fr !important;
-    grid-template-rows: 1fr 1fr 1fr !important;
-    z-index: 40 !important;
+    z-index: 5000 !important;
+    background: rgba(0,0,0,0.98) !important;
+    padding-top: 50px !important;
   }
 
-  .tap-forward { grid-column: 2 / 3 !important; grid-row: 1 / 3 !important; }
-  .tap-left { grid-column: 1 / 2 !important; grid-row: 1 / 4 !important; }
-  .tap-right { grid-column: 3 / 4 !important; grid-row: 1 / 4 !important; }
-  .tap-backward { grid-column: 2 / 3 !important; grid-row: 3 / 4 !important; }
-
-  /* 郢晄㈱縺｡郢晢ｽｳ郢ｧ蛛ｵ繝郢晢ｽｳ郢ｧ・ｸ郢晢ｽｧ郢晢ｽｳ闕ｳ荵昶・驕假ｽｻ陷搾ｿｽ */
-  .mobile-btn-container {
-    position: relative !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100%;
-    display: flex !important;
-    justify-content: space-around;
-    background: #111;
-    border-bottom: 1px solid #444;
-    padding: 8px 0 !important;
-    z-index: 2100 !important;
-  }
-
-  .map-toggle-btn {
-    background: #222 !important;
-    border: 1px solid #b89a42 !important;
-    color: #f0e68c !important;
-    padding: 6px 12px !important;
-    font-size: 0.8rem !important;
-    min-width: 80px;
-  }
-
-  /* 闕ｳ遏ｩﾎ夊ｫ・ｽ・ｽ・ｱ郢昜ｻ｣繝ｭ郢晢ｽｫ・ｽ螢ｹ・・ｹｧ蠕鯉ｽ臥ｹｧ蛛ｵﾂ蠕後Β郢晢ｽｳ郢ｧ・ｸ郢晢ｽｧ郢晢ｽｳ闕ｳ荵晢ｿｽ鬯・ｼ懈ｲｺ邵ｲ髦ｪ竊鍋ｸｺ蜷ｶ・・*/
-  .pane-status, .pane-map {
-    display: none !important;
-    flex: 1 !important;
-    background: #000 !important;
-    padding: 30px 10px 10px !important; /* 荳企Κ縺ｫ繝懊ち繝ｳ縺ｨ縺ｮ菴咏區繧定ｿｽ蜉 */
-    overflow-y: auto !important;
-    border: none !important;
-  }
-
-  /* 郢ｧ・ｹ郢晄ｧｭ・ｽ邵ｺ・ｧ邵ｺ・ｮ髯ｦ・ｨ驕会ｽｺ陟托ｽｷ陋ｻ・ｶ・ｽ・ｽpp.jsx邵ｺ・ｧ郢ｧ・ｯ郢晢ｽｩ郢ｧ・ｹ闔牙・ｽｸ蠑ｱ・・ｹｧ蠕鯉ｽ玖恆閧ｴ鄂ｲ・ｽ・ｽ */
   .mobile-active-pane {
-    display: flex !important;
-    flex-direction: column !important;
+     display: flex !important;
   }
-
-  .pc-log-display { display: none !important; }
-
-  .mobile-log-display {
-    display: flex !important;
-    flex-direction: column !important;
-    flex: 1 !important;
-    position: relative !important; /* absolute郢ｧ蛛ｵ・・ｹｧ竏夲ｽ・*/
-    background: #000 !important;
-    padding: 10px !important;
-    overflow-y: auto !important;
-    z-index: 50 !important;
-  }
-
-  /* 郢敖郢ｧ・､郢ｧ・｢郢晢ｽｭ郢ｧ・ｰ髫ｱ・ｿ隰ｨ・ｴ */
-  .dialog-overlay {
-    width: 95% !important;
-    height: 80% !important;
-    padding: 20px !important;
-  }
-
-  .dialog-title { font-size: 1.5rem !important; }
-  .dialog-content { font-size: 1rem !important; line-height: 1.6 !important; }
 }
 
-/* --- PC縺ｧ縺ｮ蠑ｷ蛻ｶ繝｢繝舌う繝ｫ繧ｷ繝溘Η繝ｬ繝ｼ繧ｿ (?mobile=1) --- */
-.is-mobile-body #root {
-  background-color: #050505 !important;
-  display: flex !important;
-  justify-content: center !important;
-  align-items: center !important;
-  height: 100vh !important;
-  padding: 0 !important;
-}
-
-/* 繧ｹ繝槭・遲蝉ｽ難ｼ医・繧ｼ繝ｫ・峨・繧ｷ繝溘Η繝ｬ繝ｼ繧ｷ繝ｧ繝ｳ */
+/* --- PCシミュレーター用 (?mobile=1) --- */
 .is-mobile-body .game-container.layout-mobile {
   width: 390px !important;
   height: 844px !important;
-  max-width: 95vw !important;
-  max-height: 95vh !important;
   border: 12px solid #222 !important;
   border-radius: 45px !important;
-  box-shadow: 0 0 100px rgba(0,0,0,0.9), 0 0 0 2px #444;
-  overflow: hidden !important;
-  position: relative !important;
-  display: flex !important;
-  flex-direction: column !important;
-  padding: 0 !important;
-  margin: 0 auto !important;
-  z-index: 10000;
-  background: #000;
+  margin: auto !important;
+  position: relative;
 }
 
-/* 繝｢繝舌う繝ｫ逕ｨ繝ｬ繧､繧｢繧ｦ繝医・蠑ｷ蛻ｶ驕ｩ逕ｨ (PC荳翫・繧ｷ繝溘Η繝ｬ繝ｼ繧ｿ蜀・ */
-.is-mobile-body .pane-main, 
-.is-mobile-body .pane-status, 
-.is-mobile-body .pane-map {
-  width: 100% !important;
-  height: auto !important;
-  margin: 0 !important;
-  border: none !important;
-}
-
-.is-mobile-body .pane-main {
-  height: 390px !important;
-  max-height: 390px !important;
-  flex-shrink: 0 !important;
-  border-bottom: 2px solid #b89a42 !important;
-}
-
-.is-mobile-body .pc-log-display { display: none !important; }
-
-.is-mobile-body .mobile-log-display {
-  display: flex !important;
-  flex-direction: column !important;
-  flex: 1 !important;
-  background: #000 !important;
-  padding: 10px !important;
-  overflow-y: auto !important;
-}
-
-.is-mobile-body .mobile-btn-container {
-  display: flex !important;
-  justify-content: space-around;
-  background: #111;
-  border-bottom: 2px solid #444;
-  padding: 8px 0 !important;
-}
-
-.is-mobile-body .mobile-active-pane {
-  display: flex !important;
-  flex-direction: column !important;
-  flex: 1 !important;
-  background: #000 !important;
-}
-
-.is-mobile-body .mini-status-panel {
-  position: absolute !important;
-  top: 10px !important;
-  right: 10px !important;
-  background: rgba(0,0,0,0.8) !important;
-}
-
-.is-mobile-body .dungeon-tap-overlay {
-  position: absolute !important;
-  top: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  display: grid !important;
-  grid-template-columns: 1fr 1.5fr 1fr !important;
-  grid-template-rows: 1fr 1fr 1fr !important;
-}
-
-/* --- シミュレーターおよび実機での表示最終調整 (修正版) --- */
-
-/* タイトル位置の調整 (実機 & シミュレーター共通) */
-@media (max-width: 768px) {
-  .pane-main .window-title { top: 12px !important; }
-}
-
-.is-mobile-body .pane-main .window-title { 
-  top: 12px !important; 
-}
-
-/* シミュレーターでのパネル排他制御 */
 .is-mobile-body .pane-status,
 .is-mobile-body .pane-map {
-  display: none !important; /* 初期状態では隠す */
-  position: relative !important;
-  left: auto !important;
-  top: auto !important;
-  width: 100% !important;
+  display: none !important;
 }
 
-/* ボタン押下時に表示 */
 .is-mobile-body .mobile-active-pane {
   display: flex !important;
-  padding-top: 30px !important;
-}
-
-.is-mobile-body .dialog-overlay {
-  width: 90% !important;
-  height: 70% !important;
-  padding: 15px !important;
-  border-radius: 10px;
+  position: absolute !important;
+  top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 5000;
 }
