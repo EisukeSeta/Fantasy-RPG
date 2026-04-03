@@ -304,95 +304,129 @@ function App() {
       {/* 隊員之証 (PC: 左) */}
       <div className={`window pane-status ${showStatus ? 'mobile-active-pane' : ''}`}>
         <span className="window-title">隊員之証</span>
-        <div style={{ flex: 1, padding: '10px', overflowY: 'auto' }}>
-           {party.map((m, idx) => (
-             <div key={idx} style={{ borderBottom: '1px solid #444', padding: '10px 0', backgroundColor: (activeBattler === idx && gameState === 'BATTLE') ? '#121' : 'transparent' }}>
-               <div style={{ display: 'flex', gap: '10px' }}>
-                 <span>{m.icon}</span>
-                 <div style={{ flex: 1 }}>{m.name}<br/><small>{m.job} Lv.{m.lv}</small></div>
-                 <div style={{ color: m.status === '討死' ? '#f55' : '#5f5' }}>{m.status}</div>
+        <div style={{ flex: 1, padding: '10px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+           {/* モバイル用戻るボタン（最上部に常駐） */}
+           {(isForceMobile || showStatus) && (
+             <button className="dialog-btn" style={{ position: 'sticky', top: 0, zIndex: 10, width: '100%', marginBottom: '15px', boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }} 
+                     onClick={() => setShowStatus(false)}>
+                探索に戻る
+             </button>
+           )}
+           <div style={{ flex: 1 }}>
+             {party.map((m, idx) => (
+               <div key={idx} style={{ borderBottom: '1px solid #444', padding: '10px 0', backgroundColor: (activeBattler === idx && gameState === 'BATTLE') ? '#121' : 'transparent' }}>
+                 <div style={{ display: 'flex', gap: '10px' }}>
+                   <span style={{ fontSize: '1.5rem' }}>{m.icon}</span>
+                   <div style={{ flex: 1 }}>
+                     <div style={{ fontWeight: 'bold' }}>{m.name}</div>
+                     <div style={{ fontSize: '0.8rem', color: '#aaa' }}>{m.job} Lv.{m.lv}</div>
+                   </div>
+                   <div style={{ color: m.status === '討死' ? '#f55' : '#5f5' }}>{m.status}</div>
+                 </div>
+                 <div style={{ marginTop: '5px' }}>
+                   <div style={{ fontSize: '0.7rem' }}>体力: {m.hp}/{m.maxHp}</div>
+                   <div style={{ height: '6px', background: '#333' }}><div style={{ width: `${(m.hp/m.maxHp)*100}%`, height: '100%', background: '#f55' }} /></div>
+                 </div>
                </div>
-               <div style={{ height: '4px', background: '#333', marginTop: '5px' }}><div style={{ width: `${(m.hp/m.maxHp)*100}%`, height: '100%', background: '#f55' }} /></div>
-             </div>
-           ))}
-           {showStatus && <button className="dialog-btn" style={{ width: '100%', marginTop: '20px' }} onClick={() => setShowStatus(false)}>探索に戻る</button>}
+             ))}
+           </div>
         </div>
       </div>
 
-      {/* メイン視点窗 (PC: 中央) */}
+      {/* メイン視点窓 (PC: 中央) */}
       <div className="window pane-main">
         <span className="window-title">羅生門 闇視</span>
+        
         {gameState === 'BATTLE' && enemy && (
           <div className="window pane-enemy">
-             <div style={{ padding: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-               <span>{enemy.name} Lv.{enemy.lv}</span>
-               <div style={{ width: '100px', height: '8px', background: '#333' }}><div style={{ width: `${(enemy.hp/enemy.maxHp)*100}%`, height: '100%', background: '#f33' }} /></div>
-             </div>
+            <span className="window-title">魔物討滅</span>
+            <div style={{ padding: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div><div style={{ fontWeight: 'bold' }}>{enemy.name}</div><div style={{ fontSize: '0.8rem' }}>Lv.{enemy.lv}</div></div>
+              <div style={{ flex: 1, margin: '0 15px' }}>
+                <div style={{ height: '10px', background: '#333' }}><div style={{ width: `${(enemy.hp/enemy.maxHp)*100}%`, height: '100%', background: '#f33' }} /></div>
+              </div>
+            </div>
           </div>
         )}
-        <div className="wireframe-container" style={{ position: 'relative' }}>
+
+        <div className="wireframe-container" style={{ position: 'relative', flexShrink: 0 }}>
           <WireframeView mapData={mapData} playerPos={playerState} playerDir={playerState.dir} />
-          {/* ミニステータス・透過タッチ */}
+          
+          {/* モバイル専用：ミニステータス */}
           {(gameState === 'EXPLORING' || gameState === 'BATTLE') && (
             <div className="mini-status-panel" style={{ pointerEvents: 'none', zIndex: 1100 }}>
                {party.map((m, i) => (
                  <div key={i} className="mini-status-unit">
-                   {m.icon} {m.name.substring(0,1)}
+                   <div style={{ paddingRight: '4px' }}>{m.icon}</div>
+                   <div style={{ color: m.hp <= 0 ? '#666' : '#fff' }}>{m.name.substring(0,1)}</div>
                    <div style={{ flex: 1, height: '4px', background: '#333', marginLeft: '5px' }}><div style={{ width: `${(m.hp/m.maxHp)*100}%`, height: '100%', background: '#f55' }} /></div>
                  </div>
                ))}
             </div>
           )}
+
+          {/* タップオーバーレイ */}
           <div className="dungeon-tap-overlay" onTouchStart={e => touchStartPos.current={x:e.touches[0].clientX, y:e.touches[0].clientY}} onTouchEnd={e => {
-            const dx = e.changedTouches[0].clientX - touchStartPos.current.x; if (Math.abs(dx)>50) processMove(dx>0?'TURN_RIGHT':'TURN_LEFT');
+            const dx = e.changedTouches[0].clientX - touchStartPos.current.x;
+            if (Math.abs(dx) > 50) processMove(dx > 0 ? 'TURN_RIGHT' : 'TURN_LEFT');
           }}>
-            {gameState === 'EXPLORING' && <div className="tap-area tap-forward" onClick={() => processMove('FORWARD')} style={{ height: '100%' }}></div>}
+            {gameState === 'EXPLORING' && (
+              <div className="tap-area tap-forward" onClick={() => processMove('FORWARD')} style={{ height: '100%' }}></div>
+            )}
           </div>
         </div>
 
-        {/* モバイル操作 */}
+        {/* モバイル操作ボタン */}
         {isForceMobile && !activeDialog && (
-          <div className="mobile-btn-container" style={{ padding: '10px', display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+          <div className="mobile-btn-container">
             {gameState === 'BATTLE' ? (
-              <>
-                <button onClick={handleFight} className="battle-btn" style={{ flex: 2, padding: '12px' }}>打ちかかる</button>
+              <div style={{ display: 'flex', width: '100%', gap: '5px', flexWrap: 'wrap', padding: '0 8px' }}>
+                <button onClick={handleFight} className="battle-btn" style={{ flex: 2, padding: '15px' }}>打ちかかる</button>
                 <button onClick={() => setShowSpells(showSpells ? null : '1')} className="battle-btn" style={{ flex: 1 }}>術</button>
                 <button onClick={handleRun} className="battle-btn" style={{ flex: 1, background: '#422' }}>逃走</button>
                 {showSpells && (
-                  <div style={{ width: '100%', display: 'flex', gap: '5px', marginTop: '5px' }}>
-                    {(SPELLS[party[activeBattler].jobKey] || []).filter(s => s.lv <= party[activeBattler].lv).map((s,i) => (
-                      <button key={i} onClick={() => castSpell(s)} className="spell-btn" style={{ flex: 1, padding: '10px' }}>{s.name}</button>
+                  <div style={{ width: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px' }}>
+                    {(SPELLS[party[activeBattler].jobKey] || []).filter(s => s.lv <= party[activeBattler].lv).map((s, idx) => (
+                      <button key={idx} onClick={() => castSpell(s)} className="spell-btn" style={{ padding: '12px' }}>{s.name}</button>
                     ))}
                   </div>
                 )}
-              </>
+              </div>
             ) : (
-              <>
-                <button onClick={() => { initAudio(); setShowMap(true); }} className="map-toggle-btn" style={{ flex: 1, padding: '12px' }}>📜 地図</button>
-                <button onClick={() => { initAudio(); setShowStatus(true); }} className="map-toggle-btn" style={{ flex: 1, padding: '12px' }}>🪪 隊員</button>
-                <button onClick={handleSave} className="save-btn" style={{ flex: 1 }}>💾 記録</button>
-              </>
+              <div style={{ display: 'flex', width: '100%', gap: '10px', padding: '0 10px' }}>
+                <button className="map-toggle-btn" style={{ flex: 1 }} onClick={() => { initAudio(); setShowMap(true); }}>📜 地図</button>
+                <button className="map-toggle-btn" style={{ flex: 1 }} onClick={() => { initAudio(); setShowStatus(true); }}>🪪 隊員</button>
+                <button className="save-btn" style={{ flex: 1 }} onClick={handleSave}>💾 記録</button>
+              </div>
             )}
           </div>
         )}
+
+        {/* メッセージログ (モバイル用) */}
         {isForceMobile && !showMap && !showStatus && (
-          <div className="mobile-log-display" id="mobile-log-display" style={{ flex: 1, overflowY: 'auto', padding: '10px', background: '#000', fontSize: '0.9rem' }}>
-            {messages.map((m, i) => <div key={i} style={{ marginBottom: '4px' }}>{'>'} {m}</div>)}
+          <div className="mobile-log-display" id="mobile-log-display">
+            {messages.map((m, i) => <div key={i} style={{ color: '#eee', fontSize: '0.9rem', marginBottom: '3px' }}>{'>'} {m}</div>)}
           </div>
         )}
       </div>
 
-      {/* 絵図と絵巻 (PC: 右) */}
+      {/* 3. 地図窓 (PCでは右) */}
       <div className={`window pane-map ${showMap ? 'mobile-active-pane' : ''}`}>
         <span className="window-title">絵図と絵巻</span>
         <div style={{ flex: 1, padding: '10px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+           {/* モバイル用戻るボタン（最上部に常駐） */}
+           {(isForceMobile || showMap) && (
+             <button className="dialog-btn" style={{ position: 'sticky', top: 0, zIndex: 10, width: '100%', marginBottom: '15px', boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }} 
+                     onClick={() => setShowMap(false)}>
+                探索に戻る
+             </button>
+           )}
            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${MAP_WIDTH}, 30px)`, gap: '1px', justifyContent: 'center' }}>
              {mapData.map((row, y) => row.map((cell, x) => renderMapCell(cell, x, y)))}
            </div>
            <div className="pc-log-display" style={{ marginTop: '20px', flex: 1, overflowY: 'auto', borderTop: '1px solid #444', paddingTop: '10px' }}>
              {messages.map((m, i) => <div key={i} style={{ marginBottom: '5px' }}>{'>'} {m}</div>)}
            </div>
-           {showMap && <button className="dialog-btn" onClick={() => setShowMap(false)} style={{ marginTop: '10px' }}>戻る</button>}
         </div>
       </div>
 
@@ -421,45 +455,28 @@ function App() {
         </div>
       )}
 
-      {/* デバッグ */}
+      {/* デバッグパネル */}
       {isDebug && (
-        <div style={{ position: 'fixed', bottom: '10px', right: '10px', background: 'rgba(0,40,0,0.8)', border: '1px solid #3f3', padding: '5px', zIndex: 9999, fontSize: '0.7rem' }}>
-          ({playerState.x},{playerState.y}) 
-          <button onClick={debugHeal}>命</button>
-          <button onClick={debugKill}>滅</button>
-          <button onClick={debugEnemyKill}>弱</button>
-          <button onClick={() => debugWarp(1,1)}>還</button>
-          <input type="checkbox" checked={debugEncounter} onChange={e => setDebugEncounter(e.target.checked)} />
+        <div style={{ position: 'fixed', bottom: '10px', right: '10px', backgroundColor: 'rgba(0,50,0,0.85)', border: '2px solid #3f3', color: '#3f3', padding: '10px', zIndex: 9999, fontSize: '0.8rem', borderRadius: '8px' }}>
+          <div>座標: ({playerState.x}, {playerState.y}) 遭遇: {debugEncounter ? 'ON' : 'OFF'}</div>
+          <div style={{ display: 'flex', gap: '5px', marginTop: '5px' }}>
+            <button onClick={debugHeal} style={{ background: '#030', color: '#3f3', border: '1px solid #3f3' }}>全快</button>
+            <button onClick={debugKill} style={{ background: '#300', color: '#f33', border: '1px solid #3f3' }}>滅</button>
+            <button onClick={debugEnemyKill} style={{ background: '#030', color: '#3f3', border: '1px solid #3f3' }}>敵薄</button>
+            <input type="checkbox" checked={debugEncounter} onChange={e => setDebugEncounter(e.target.checked)} />
+          </div>
+          <div style={{ marginTop: '5px' }}>
+            <button onClick={() => debugWarp(1,1)} style={{ background: '#033', color: '#3ff', border: '1px solid #3ff' }}>帰還</button>
+          </div>
         </div>
       )}
 
-      {/* 音量 */}
+      {/* 音量コントロール */}
       <div style={{ position: 'fixed', top: '10px', right: '10px', zIndex: 9999, display: 'flex', gap: '5px', background: 'rgba(0,0,0,0.5)', padding: '5px', borderRadius: '5px' }}>
-        <button onClick={() => setIsMuted(!isMuted)} style={{ background: 'none', border: 'none', color: '#c93', cursor: 'pointer' }}>{isMuted ? 'MUTE' : 'VOL'}</button>
+        <button onClick={() => setIsMuted(!isMuted)} style={{ background: 'none', border: 'none', color: '#c93', cursor: 'pointer' }}>{isMuted ? '静音' : '音量'}</button>
         <input type="range" min="0" max="1" step="0.1" value={volume} onChange={e => setVolume(parseFloat(e.target.value))} style={{ width: '40px' }} />
       </div>
 
-      <style>{`
-        .game-container { display: flex; width: 100vw; height: 100vh; background: #000; color: #eee; font-family: 'DotGothic16', sans-serif; overflow: hidden; }
-        .window { border: 2px solid #555; display: flex; flex-direction: column; background: #080808; position: relative; }
-        .window-title { display: block; background: #222; padding: 2px 8px; font-size: 0.75rem; color: #888; border-bottom: 2px solid #555; }
-        .pane-status { width: 220px; }
-        .pane-main { flex: 1; border-left: none; border-right: none; }
-        .pane-map { width: 320px; }
-        .wireframe-container { width: 100%; aspect-ratio: 1/1; background: #000; border-bottom: 1px solid #333; }
-        .battle-btn, .dialog-btn, .map-toggle-btn, .save-btn, .spell-btn { background: #111; color: #eee; border: 1px solid #666; cursor: pointer; }
-        .mini-status-panel { position: absolute; bottom: 8px; left: 8px; right: 8px; display: flex; gap: 4px; }
-        .mini-status-unit { flex: 1; background: rgba(0,0,0,0.7); border: 1px solid #444; border-radius: 3px; padding: 3px; display: flex; align-items: center; font-size: 0.65rem; }
-        .dialog-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
-        .dialog-title { font-size: 1.1rem; color: #f0e68c; margin-bottom: 15px; }
-        .dialog-content { font-size: 1rem; line-height: 1.5; text-align: center; max-width: 500px; }
-        .dialog-btn { padding: 8px 30px; font-size: 1rem; background: #210; border: 1px solid #c93; color: #f0e68c; margin-top: 20px; }
-        @media (max-width: 768px) {
-          .pane-status, .pane-map { display: none; position: fixed; inset: 0; z-index: 2000; background: #000; }
-          .layout-mobile .mobile-active-pane { display: flex !important; }
-        }
-        .layout-mobile { flex-direction: column; }
-      `}</style>
     </div>
   );
 }
