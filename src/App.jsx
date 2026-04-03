@@ -152,17 +152,32 @@ function App() {
   }, [volume, isMuted]);
 
   // 音声の初期化（モバイルのオートプレイ制限対策を強化）
+  // 音声の初期化（モバイルのオートプレイ制限対策を強化）
   const initAudio = useCallback(() => {
     SoundEngine.init();
     SoundEngine.setVolume(isMuted ? 0 : volume);
     SoundEngine.transitionTo(gameState);
     
-    // iOS/Android向けに一度だけ無音を鳴らして完了を知らせる
     if (!isAudioInitialized) {
       addMessage('⛩️ 奏曲（サウンド）が初期化されました。');
       setAudioInitialized(true);
     }
   }, [gameState, volume, isMuted, addMessage, isAudioInitialized]);
+
+  // あらゆる初期タップで音響を解放する（iPhone Safari 対策の最終手段）
+  useEffect(() => {
+    const handleFirstTouch = () => {
+      initAudio();
+      window.removeEventListener('touchstart', handleFirstTouch);
+      window.removeEventListener('click', handleFirstTouch);
+    };
+    window.addEventListener('touchstart', handleFirstTouch);
+    window.addEventListener('click', handleFirstTouch);
+    return () => {
+      window.removeEventListener('touchstart', handleFirstTouch);
+      window.removeEventListener('click', handleFirstTouch);
+    };
+  }, [initAudio]);
 
   const checkOminousPresence = useCallback((x, y) => {
     if (bossDefeated) return;
