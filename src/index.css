@@ -135,19 +135,24 @@ body {
 .layout-mobile .mobile-btn-container {
   display: flex !important;
   flex-direction: column !important;
-  gap: 5px !important;
-  padding: 8px 5px !important;
+  gap: 8px !important;
+  padding: 12px 10px !important;
   background: #0a0a0a !important;
   flex-shrink: 0 !important;
+}
+
+.layout-mobile .mobile-btn-container button {
+  font-size: 1.1rem !important;
+  padding: 15px !important;
 }
 
 .layout-mobile .mobile-log-display {
   flex: 1 !important;
   overflow-y: auto !important;
-  padding: 5px 10px !important;
+  padding: 10px 15px !important;
   background: #000 !important;
-  font-size: 0.8rem !important;
-  line-height: 1.4 !important;
+  font-size: 0.95rem !important;
+  line-height: 1.6 !important;
   border-top: 1px solid #222 !important;
 }
 

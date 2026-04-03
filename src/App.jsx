@@ -336,9 +336,9 @@ function App() {
           <div className="mini-status-panel">
             {party.map((m, i) => (
               <div key={i} style={{ flex: 1, background: '#1c1c1c', padding: '4px', borderRadius: '4px', border: '1px solid #333' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', marginBottom: '2px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '4px' }}>
                   <span>{m.icon}{m.name.substring(0,1)}</span>
-                  <span style={{ color: m.hp <= 5 ? '#f55' : '#eee' }}>{m.hp}</span>
+                  <span style={{ color: m.hp <= 5 ? '#f55' : '#eee', fontWeight: 'bold' }}>{m.hp}</span>
                 </div>
                 <div style={{ height: '4px', background: '#000', width: '100%' }}>
                   <div style={{ width: `${Math.max(0, Math.min(100, (m.hp/m.maxHp)*100))}%`, height: '100%', background: m.hp <= 5 ? '#f55' : '#5f5' }} />
@@ -374,9 +374,9 @@ function App() {
             {messages.map((m, i) => <div key={i} style={{ color: '#aaa', marginBottom: '3px' }}>{'>'} {m}</div>)}
           </div>
 
-          <div style={{ padding: '4px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '8px' }}>
-             <button onClick={() => setIsMuted(!isMuted)} style={{ background: 'none', border: 'none', color: '#c93', fontSize: '0.7rem' }}>{isMuted ? '静音' : '音量'}</button>
-             <input type="range" min="0" max="1" step="0.1" value={volume} onChange={e => setVolume(parseFloat(e.target.value))} style={{ width: '50px' }} />
+          <div style={{ padding: '8px 10px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px' }}>
+             <button onClick={() => setIsMuted(!isMuted)} style={{ background: 'none', border: 'none', color: '#c93', fontSize: '0.85rem', fontWeight: 'bold' }}>{isMuted ? '静音' : '音・律'}</button>
+             <input type="range" min="0" max="1" step="0.1" value={volume} onChange={e => setVolume(parseFloat(e.target.value))} style={{ width: '80px', height: '20px' }} />
           </div>
         </div>
       )}
