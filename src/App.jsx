@@ -88,16 +88,6 @@ function App() {
   const [messages, setMessages] = useState(['【御神木の社】から冒険が始まった...']);
   const touchStartPos = useRef({ x: 0, y: 0 });
 
-  // ログが更新されたら自動的に最下部までスクロール（表示高さが変わるタイミングすべてに反応）
-  useEffect(() => {
-    const logEl = document.getElementById('mobile-log-display');
-    if (logEl) {
-      // 描画サイクルが終わるのをわずかに待ってからスクロール（要素高さの確定待ち）
-      requestAnimationFrame(() => {
-        logEl.scrollTop = logEl.scrollHeight;
-      });
-    }
-  }, [messages, showMap, showStatus, showSpells, gameState]);
 
 
   const showDialog = useCallback((title, contents, onConfirm = null, showChoices = false) => {
@@ -123,6 +113,17 @@ function App() {
   const [activeBattler, setActiveBattler] = useState(0); 
   const [enemy, setEnemy] = useState(null);
   const [showSpells, setShowSpells] = useState(null); 
+
+  // ログが更新されたら自動的に最下部までスクロール（表示高さが変わるタイミングすべてに反応）
+  useEffect(() => {
+    const logEl = document.getElementById('mobile-log-display');
+    if (logEl) {
+      // 描画サイクルが終わるのをわずかに待ってからスクロール（要素高さの確定待ち）
+      requestAnimationFrame(() => {
+        logEl.scrollTop = logEl.scrollHeight;
+      });
+    }
+  }, [messages, showMap, showStatus, showSpells, gameState]);
 
   const addMessage = useCallback((msg) => {
     setMessages(prev => {
