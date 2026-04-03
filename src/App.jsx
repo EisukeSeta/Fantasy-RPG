@@ -824,6 +824,13 @@ function App() {
       <div className={`window pane-status ${showStatus ? 'mobile-active-pane' : ''}`}>
         <span className="window-title">隊員之証 (Party Status)</span>
         
+        {/* モバイル用：上部にも閉じるボタンを追加 */}
+        {showStatus && (
+          <button className="dialog-btn" style={{ margin: '30px auto 10px', width: '90%' }} onClick={() => { initAudio(); setShowStatus(false); }}>
+             探索に戻る
+          </button>
+        )}
+
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '10px' }}>
           {/* ヘッダー行 (モバイル時は少し簡略化) */}
           <div className="status-grid" style={{ borderBottom: '1px solid #555', paddingBottom: '8px', marginBottom: '8px', fontWeight: 'bold' }}>
@@ -873,8 +880,8 @@ function App() {
           </div>
 
           {showStatus && (
-            <button className="dialog-btn" style={{ marginTop: '20px', width: '200px', alignSelf: 'center' }} onClick={() => setShowStatus(false)}>
-               閉じる
+            <button className="dialog-btn" style={{ margin: '10px auto 30px', width: '90%', alignSelf: 'center' }} onClick={() => { initAudio(); setShowStatus(false); }}>
+               探索に戻る
             </button>
           )}
         </div>
@@ -882,20 +889,28 @@ function App() {
 
       <div className={`window pane-map ${showMap ? 'mobile-active-pane' : ''}`}>
         <span className="window-title">絵図と絵巻 (Map & Log)</span>
-        <div className="map-view-wrapper">
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', paddingBottom: '15px', gap: '20px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${MAP_WIDTH}, 35px)`, gridTemplateRows: `repeat(${MAP_HEIGHT}, 35px)`, border: '2px solid #555', padding: '2px' }}>
+        
+        {/* モバイル用：上部にも閉じるボタンを追加 */}
+        {showMap && (
+          <button className="dialog-btn" style={{ margin: '30px auto 10px', width: '90%' }} onClick={() => { initAudio(); setShowMap(false); }}>
+             探索に戻る
+          </button>
+        )}
+
+        <div className="map-view-wrapper" style={{ overflowX: 'auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', paddingBottom: '15px', gap: '20px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${MAP_WIDTH}, 30px)`, gridTemplateRows: `repeat(${MAP_HEIGHT}, 30px)`, border: '2px solid #555', padding: '2px', backgroundColor: '#000' }}>
               {mapData.map((row, y) => row.map((cell, x) => renderMapCell(cell, x, y)))}
             </div>
-            <div style={{ fontSize: '1.2rem', color: '#aaa', border: '1px solid #444', padding: '12px', backgroundColor: '#080808', flexShrink: 0 }}>
+            <div style={{ fontSize: '1rem', color: '#aaa', border: '1px solid #444', padding: '10px', backgroundColor: '#080808', minWidth: '150px' }}>
               <div style={{ color: '#fff', borderBottom: '1px solid #333', marginBottom: '10px', textAlign: 'center' }}>凡例</div>
-              <div style={{ marginBottom: '15px', color: '#f0e68c', textAlign: 'center', borderBottom: '1px solid #444', paddingBottom: '8px' }}>
-                 現在地：[{playerState.x}, {playerState.y}]
+              <div style={{ marginBottom: '10px', color: '#f0e68c', textAlign: 'center', borderBottom: '1px solid #444' }}>
+                 [{playerState.x}, {playerState.y}]
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}><span style={{ color: '#66f', fontSize: '1.8rem' }}>⛩</span>結界</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}><span style={{ color: '#aa0', fontSize: '1.8rem' }}>🪵</span>立て札</div>
-              {bossDefeated && <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}><span style={{ color: '#f33', fontSize: '1.8rem' }}>✨</span>出口</div>}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><span style={{ color: '#3f3', fontSize: '1.4rem' }}>▲</span>現在地</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}><span style={{ color: '#66f', fontSize: '1.4rem' }}>⛩</span>結界</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}><span style={{ color: '#aa0', fontSize: '1.4rem' }}>🪵</span>立札</div>
+              {bossDefeated && <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}><span style={{ color: '#f33', fontSize: '1.4rem' }}>✨</span>出口</div>}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: '#3f3', fontSize: '1.1rem' }}>▲</span>現在地</div>
             </div>
           </div>
         </div>
@@ -942,12 +957,14 @@ function App() {
                return <div key={i} style={{ color }}>{'>'} {m}</div>;
             })}
           </div>
-          {showMap && (
-            <button className="dialog-btn" style={{ marginTop: '20px', width: '200px', alignSelf: 'center', marginBottom: '40px' }} onClick={() => setShowMap(false)}>
-               閉じる
-            </button>
-          )}
         </div>
+        
+        {/* モバイル用：下部にも戻るボタンを追加 */}
+        {showMap && (
+          <button className="dialog-btn" style={{ margin: '10px auto 40px', width: '90%' }} onClick={() => { initAudio(); setShowMap(false); }}>
+             探索に戻る
+          </button>
+        )}
       </div>
 
       <style>{`
