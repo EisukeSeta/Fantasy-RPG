@@ -657,6 +657,32 @@ function App() {
           {gameState === 'DEAD' && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(80,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ color: '#F22', fontSize: '3rem' }}>討死</div></div>}
           {gameState === 'CLEAR' && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,40,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ color: '#Ff2', fontSize: '3rem', textAlign: 'center' }}>🎉 階層突破 🎉<div style={{ fontSize: '1.5rem', marginTop: '10px' }}>都の安寧へ一歩近づいた...</div></div></div>}
           
+          {/* 戦闘中のステータス・オーバーレイ（スマホ用） */}
+          {gameState === 'BATTLE' && (
+            <div className="mobile-battle-overlay" style={{ 
+              position: 'absolute', top: '10px', left: '10px', right: '10px', 
+              display: 'flex', gap: '5px', pointerEvents: 'none', zIndex: 10
+            }}>
+              {party.map((m, idx) => (
+                <div key={m.id} style={{ 
+                  flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', border: (activeBattler === idx) ? '1px solid #3f3' : '1px solid #444', 
+                  borderRadius: '4px', padding: '4px', fontSize: '0.7rem' 
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: m.status === '討死' ? '#f33' : '#fff' }}>
+                    <span>{m.icon}{m.name.split(' ')[0]}</span>
+                    <span>Lv{m.lv}</span>
+                  </div>
+                  <div style={{ height: '4px', background: '#333', marginTop: '2px' }}>
+                    <div style={{ width: `${(m.hp/m.maxHp)*100}%`, height: '100%', background: '#f33' }} />
+                  </div>
+                  <div style={{ height: '2px', background: '#333', marginTop: '1px' }}>
+                    <div style={{ width: `${(m.maxMp?(m.mp/m.maxMp):0)*100}%`, height: '100%', background: '#33f' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* ダンジョン画面タップ移動 & フリック旋回用オーバーレイ (モバイルのみ有効) */}
           <div className="dungeon-tap-overlay"
             onTouchStart={(e) => {
@@ -782,9 +808,9 @@ function App() {
             )}
           </div>
 
-          {/* スマホ用ログ：メッセージを表示（余白十分） */}
+          {/* スマホ用ログ：メッセージを表示（余白を大幅に強化して iPhone のバーを完全に回避） */}
           {!showMap && !showStatus && (
-            <div className="mobile-log-display" id="mobile-log-display" style={{ paddingBottom: '120px' }}>
+            <div className="mobile-log-display" id="mobile-log-display" style={{ paddingBottom: 'calc(160px + env(safe-area-inset-bottom))' }}>
               {messages.map((m, i) => {
                  const attackerNames = party.map(p => p.name);
                  const isPlayerDamage = (m.includes('ダメージ') && !attackerNames.some(name => m.startsWith(name))) || m.includes('痛手') || m.includes('飲まれて');
