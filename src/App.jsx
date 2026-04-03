@@ -736,6 +736,22 @@ function App() {
       {/* --- スマホ専用：ダンジョン下の操作・情報パネル --- */}
       {(gameState === 'EXPLORING' || gameState === 'BATTLE') && !activeDialog && (
         <>
+          <div className="mobile-btn-container">
+            <button className="map-toggle-btn" 
+                    style={{ background: showMap ? '#b89a42' : '#222', color: showMap ? '#000' : '#f0e68c' }}
+                    onClick={() => { initAudio(); setShowMap(!showMap); setShowStatus(false); }}>
+               📜 {showMap ? '閉じる' : '絵図'}
+            </button>
+            <button className="map-toggle-btn" 
+                    style={{ background: showStatus ? '#b89a42' : '#222', color: showStatus ? '#000' : '#f0e68c' }}
+                    onClick={() => { initAudio(); setShowStatus(!showStatus); setShowMap(false); }}>
+               📜 {showStatus ? '閉じる' : '隊員証'}
+            </button>
+            <button className="map-toggle-btn" onClick={() => { initAudio(); setShowMap(false); setShowStatus(false); }}>
+               📜 記録
+            </button>
+          </div>
+
           {/* スマホ用ログ：マップもステータスも開いていない時に表示 */}
           {!showMap && !showStatus && (
             <div className="mobile-log-display" id="mobile-log-display">
@@ -748,22 +764,6 @@ function App() {
               })}
             </div>
           )}
-
-          <div className="mobile-btn-container">
-            <button className="map-toggle-btn" 
-                    style={{ background: showMap ? '#b89a42' : '#222', color: showMap ? '#000' : '#f0e68c' }}
-                    onClick={() => { setShowMap(!showMap); setShowStatus(false); }}>
-               📜 {showMap ? '閉じる' : '絵図'}
-            </button>
-            <button className="map-toggle-btn" 
-                    style={{ background: showStatus ? '#b89a42' : '#222', color: showStatus ? '#000' : '#f0e68c' }}
-                    onClick={() => { setShowStatus(!showStatus); setShowMap(false); }}>
-               📜 {showStatus ? '閉じる' : '隊員証'}
-            </button>
-            <button className="map-toggle-btn" onClick={() => { setShowMap(false); setShowStatus(false); }}>
-               📜 記録
-            </button>
-          </div>
         </>
       )}
 

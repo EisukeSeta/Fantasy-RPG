@@ -18,21 +18,28 @@ class HeianSoundEngine {
   /**
    * 初回のユーザー操作（クリック等）で呼び出し、AudioContextを有効化
    */
-  init() {
-    if (this.isStarted) return;
+  async init() {
     try {
-      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-      this.masterGain = this.ctx.createGain();
-      this.masterGain.gain.value = 0.5; // 初期音量
-      this.masterGain.connect(this.ctx.destination);
-      
-      this.setupSho();
-      this.setupDrone();
-      this.setupHichiriki();
-      
-      this.isStarted = true;
-      this.transitionTo('EXPLORING');
-      console.log('⛩️ 平安音響合成エンジン 起動成功');
+      if (!this.ctx) {
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        this.masterGain = this.ctx.createGain();
+        this.masterGain.gain.value = 0.5; // 初期音量
+        this.masterGain.connect(this.ctx.destination);
+        
+        this.setupSho();
+        this.setupDrone();
+        this.setupHichiriki();
+        
+        this.isStarted = true;
+        this.transitionTo('EXPLORING');
+      }
+
+      // iOS対策: suspended 状態なら resume を試みる
+      if (this.ctx && this.ctx.state === 'suspended') {
+        await this.ctx.resume();
+      }
+
+      console.log('⛩️ 平安音響合成エンジン 状態:', this.ctx ? this.ctx.state : '未起動');
     } catch (e) {
       console.error('音響エンジンの初期化に失敗しました:', e);
     }
