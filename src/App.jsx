@@ -340,10 +340,13 @@ function App() {
           
           <div className="mini-status-panel">
             {party.map((m, i) => (
-              <div key={i} style={{ flex: 1, background: '#111', padding: '6px', borderRadius: '4px', border: '1px solid #b89a42' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '4px' }}>
-                  <span style={{ color: '#f0e68c' }}>{m.icon}{m.name.substring(0,1)}</span>
-                  <span style={{ color: m.hp <= 5 ? '#f55' : '#eee', fontWeight: 'bold' }}>{m.hp}</span>
+              <div key={i} style={{ flex: 1, background: '#111', padding: '6px', borderRadius: '4px', border: '1px solid #b89a42', minWidth: 0 }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#f0e68c', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: '2px' }}>
+                  {m.icon}{m.name}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '4px' }}>
+                  <span style={{ color: m.hp <= 5 ? '#f55' : '#eee' }}>H:{m.hp}</span>
+                  <span style={{ color: '#88f' }}>M:{m.mp}</span>
                 </div>
                 {/* HP Bar (Red) */}
                 <div style={{ height: '6px', background: '#300', width: '100%', marginBottom: '3px', border: '1px solid #411' }}>
