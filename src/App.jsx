@@ -148,11 +148,15 @@ function App() {
   }, [volume, isMuted]);
 
   // ダイアログの「読み終える」または遷移時に音声を初期化（ブラウザポリシー対応）
-  const initAudio = useCallback(() => {
-    SoundEngine.init();
-    SoundEngine.setVolume(volume);
-    SoundEngine.transitionTo(gameState);
-  }, [gameState, volume]);
+  const initAudio = useCallback(async () => {
+    try {
+      await SoundEngine.init();
+      SoundEngine.setVolume(isMuted ? 0 : volume);
+      SoundEngine.transitionTo(gameState);
+    } catch (e) {
+      console.warn('Audio initialization failed, will retry on next tap.', e);
+    }
+  }, [gameState, volume, isMuted]);
 
   const checkOminousPresence = useCallback((x, y) => {
     if (bossDefeated) return;

@@ -23,7 +23,7 @@ class HeianSoundEngine {
       if (!this.ctx) {
         this.ctx = new (window.AudioContext || window.webkitAudioContext)();
         this.masterGain = this.ctx.createGain();
-        this.masterGain.gain.value = 0.5; // 初期音量
+        this.masterGain.gain.value = 0; // 最初は 0 から開始
         this.masterGain.connect(this.ctx.destination);
         
         this.setupSho();
@@ -31,15 +31,24 @@ class HeianSoundEngine {
         this.setupHichiriki();
         
         this.isStarted = true;
-        this.transitionTo('EXPLORING');
       }
 
-      // iOS対策: suspended 状態なら resume を試みる
-      if (this.ctx && this.ctx.state === 'suspended') {
+      // 常に resume を試みる（何度押しても安全）
+      if (this.ctx.state === 'suspended') {
         await this.ctx.resume();
       }
 
-      console.log('⛩️ 平安音響合成エンジン 状態:', this.ctx ? this.ctx.state : '未起動');
+      // iOS対策：短い無音を再生して「実際に音を出した」実績を作る
+      const dummyBuffer = this.ctx.createBuffer(1, 1, 22050);
+      const dummySource = this.ctx.createBufferSource();
+      dummySource.buffer = dummyBuffer;
+      dummySource.connect(this.ctx.destination);
+      dummySource.start(0);
+
+      // 明示的に EXPLORING へ遷移（フェードイン開始）
+      this.transitionTo('EXPLORING');
+
+      console.log('⛩️ 平安音響合成エンジン 覚醒:', this.ctx.state);
     } catch (e) {
       console.error('音響エンジンの初期化に失敗しました:', e);
     }
