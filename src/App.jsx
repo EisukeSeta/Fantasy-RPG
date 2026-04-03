@@ -157,7 +157,7 @@ function App() {
     SoundEngine.setVolume(isMuted ? 0 : volume);
     SoundEngine.transitionTo(gameState);
     
-    // 初回のみ通知（平安の静寂を守るため）
+    // iOS/Android向けに一度だけ無音を鳴らして完了を知らせる
     if (!isAudioInitialized) {
       addMessage('⛩️ 奏曲（サウンド）が初期化されました。');
       setAudioInitialized(true);
@@ -828,9 +828,12 @@ function App() {
             )}
           </div>
 
-          {/* スマホ用ログ：メッセージを表示（余白を大幅に強化して iPhone のバーを完全に回避） */}
+          {/* スマホ用ログ：メッセージを表示（余白をボタンの高さ分確保） */}
           {!showMap && !showStatus && (
-            <div className="mobile-log-display" id="mobile-log-display" style={{ paddingBottom: 'calc(160px + env(safe-area-inset-bottom))' }}>
+            <div className="mobile-log-display" id="mobile-log-display" style={{ 
+              flex: 1, overflowY: 'auto', paddingBottom: 'calc(160px + env(safe-area-inset-bottom))',
+              background: 'linear-gradient(to top, #000, #111 20%)'
+            }}>
               {messages.map((m, i) => {
                  const attackerNames = party.map(p => p.name);
                  const isPlayerDamage = (m.includes('ダメージ') && !attackerNames.some(name => m.startsWith(name))) || m.includes('痛手') || m.includes('飲まれて');
