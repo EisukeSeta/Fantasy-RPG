@@ -72,6 +72,7 @@ function App() {
   const [activeDialog, setActiveDialog] = useState({
     title: '平安魔道伝 羅生門編 ― 序章',
     pages: [
+      `ようこそ、平安の闇へ。\n冒険を始める前に、端末の音量を上げてください。`,
       `雨が降っていた。\n京の南端にそびえる羅生門は、かつての威容を喪失し、崩れ落ちた瓦と柱が、まるで巨大な獣の死骸のように横たわっている。`,
       `その雨だれの下、一人の下人が身を丸め、暗闇の中から現れた三つの人影を見て嘲笑を浮かべた。\n「……また、阿呆が来よったわ」`,
       `一人は, 茨木童子の腕を背負いし武者、渡辺綱。\n一人は、狐の影を纏いし陰陽師、安倍晴明。\n一人は、空虚な微笑を浮かべる比丘尼。`,
@@ -147,12 +148,14 @@ function App() {
     SoundEngine.setVolume(isMuted ? 0 : volume);
   }, [volume, isMuted]);
 
-  // ダイアログの「読み終える」または遷移時に音声を初期化（ブラウザポリシー対応）
+  // 音声の初期化（モバイルのオートプレイ制限対策を強化）
   const initAudio = useCallback(() => {
     SoundEngine.init();
     SoundEngine.setVolume(isMuted ? 0 : volume);
     SoundEngine.transitionTo(gameState);
-  }, [gameState, volume, isMuted]);
+    // iOS/Android向けに一度だけ無音を鳴らして完了を知らせる
+    addMessage('⛩️ 奏曲（サウンド）が初期化されました。');
+  }, [gameState, volume, isMuted, addMessage]);
 
   const checkOminousPresence = useCallback((x, y) => {
     if (bossDefeated) return;
@@ -709,25 +712,25 @@ function App() {
               {activeDialog.pages[activeDialog.currentPage]}
             </div>
             <div className="dialog-footer">
-              {activeDialog.currentPage < activeDialog.pages.length - 1 ? (
-                <button className="dialog-btn" onClick={() => { 
-                  initAudio(); // 最初のページ送りで音声を初期化
-                  setActiveDialog(prev => ({ ...prev, currentPage: prev.currentPage + 1 }));
-                }}>
-                  ▼ 続きを読む
-                </button>
-              ) : (
-                activeDialog.showChoices ? (
+              {activeDialog.showChoices ? (
                   <div className="dialog-choice-container">
                     <button className="dialog-btn" onClick={() => { initAudio(); activeDialog.onConfirm(); setActiveDialog(null); }}>【 はい 】</button>
                     <button className="dialog-btn" onClick={() => { initAudio(); setActiveDialog(null); }}>【 否 】</button>
                   </div>
                 ) : (
-                  <button className="dialog-btn" onClick={() => { initAudio(); if(activeDialog.onConfirm) activeDialog.onConfirm(); setActiveDialog(null); }}>
-                    （ 読み終える ）
+                  <button className="dialog-btn" onClick={() => { 
+                    initAudio(); 
+                    if (activeDialog.currentPage < activeDialog.pages.length - 1) {
+                      setActiveDialog(prev => ({ ...prev, currentPage: prev.currentPage + 1 }));
+                    } else {
+                      if(activeDialog.onConfirm) activeDialog.onConfirm();
+                      setActiveDialog(null);
+                    }
+                  }}>
+                    {activeDialog.currentPage === 0 ? '⛩ 【 羅生門を開く 】を開始 ' : '（ 続きを読む ）'}
                   </button>
                 )
-              )}
+              }
             </div>
           </div>
         )}
@@ -754,7 +757,7 @@ function App() {
 
           {/* スマホ用ログ：マップもステータスも開いていない時に表示 */}
           {!showMap && !showStatus && (
-            <div className="mobile-log-display" id="mobile-log-display">
+            <div className="mobile-log-display" id="mobile-log-display" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
               {messages.map((m, i) => {
                  const attackerNames = party.map(p => p.name);
                  const isPlayerDamage = (m.includes('ダメージ') && !attackerNames.some(name => m.startsWith(name))) || m.includes('痛手') || m.includes('飲まれて');
@@ -762,12 +765,11 @@ function App() {
                  const color = isPlayerDamage ? '#ffbbbb' : isHeal ? '#bbffbb' : '#eee';
                  return <div key={i} className="mobile-log-line" style={{ color }}>{'>'} {m}</div>;
               })}
+              <div style={{ height: '40px' }}></div>
             </div>
           )}
         </>
       )}
-
-      {/* デバッグパネルなどはそのままだが、現状維持 */}
 
       {/* デバッグパネル (isDebug = true の時のみ) */}
       {isDebug && (
@@ -821,60 +823,48 @@ function App() {
                style={{ cursor: 'pointer', width: '60px', accentColor: '#c93' }} />
       </div>
 
-      <div className={`window pane-status ${showStatus ? 'mobile-active-pane' : ''}`}>
+            <div className={`window pane-status ${showStatus ? 'mobile-active-pane' : ''}`}>
         <span className="window-title">隊員之証 (Party Status)</span>
         
-        {/* モバイル用：上部にも閉じるボタンを追加 */}
         {showStatus && (
           <button className="dialog-btn" style={{ margin: '30px auto 10px', width: '90%' }} onClick={() => { initAudio(); setShowStatus(false); }}>
              探索に戻る
           </button>
         )}
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '10px', overflowX: 'auto' }}>
-          {/* ヘッダー行 (モバイル時は少し簡略化) */}
-          <div className="status-grid" style={{ borderBottom: '1px solid #555', paddingBottom: '8px', marginBottom: '8px', fontWeight: 'bold' }}>
-            <div className="status-header">記</div>
-            <div className="status-header">職種</div>
-            <div className="status-header">氏名</div>
-            <div className="status-header">階級</div>
-            <div className="status-header">体力</div>
-            <div className="status-header">霊力</div>
-            <div className="status-header">状態</div>
-          </div>
-
-          {/* メンバー行 */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '10px' }}>
           <div style={{ flex: 1, overflowY: 'auto' }}>
             {party.map((m, idx) => (
-              <div key={m.id} className="status-grid" style={{ 
-                backgroundColor: (gameState === 'BATTLE' && activeBattler === idx) ? '#153315' : 'transparent', 
-                color: (gameState === 'BATTLE' && activeBattler === idx) ? '#3f3' : '#fff',
-                padding: '12px 0',
-                fontSize: showStatus ? '1.2rem' : '1.1rem',
-                borderBottom: '1px solid #222'
+              <div key={m.id} style={{ 
+                borderBottom: '1px solid #444', padding: '12px 5px', 
+                display: 'flex', flexDirection: 'column', gap: '8px',
+                backgroundColor: (gameState === 'BATTLE' && activeBattler === idx) ? '#102210' : 'transparent'
               }}>
-                <div style={{ fontSize: '1.4rem' }}>{m.icon}</div>
-                <div style={{ fontSize: '0.9rem', color: '#aaa' }}>{m.job}</div>
-                <div style={{ textAlign: 'left', paddingLeft: '5px', whiteSpace: 'nowrap', minWidth: '100px', fontWeight: 'bold' }}>{m.name}</div>
-                <div>Lv{m.lv}</div>
-                
-                {/* 体力バー */}
-                <div style={{ padding: '0 10px' }}>
-                  <div className="status-value-text" style={{ color: m.hp < (m.maxHp * 0.3) ? '#f33' : 'inherit' }}>{m.hp}/{m.maxHp}</div>
-                  <div className="pc-bar-container">
-                    <div className="pc-bar-hp" style={{ width: `${(m.hp / m.maxHp) * 100}%` }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                  <div style={{ fontSize: '1.8rem', width: '35px' }}>{m.icon}</div>
+                  <div style={{ flex: 1 }}>
+                     <div style={{ fontSize: '0.8rem', color: '#aaa' }}>{m.job}</div>
+                     <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#fff' }}>{m.name}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                     <div style={{ fontSize: '0.9rem', color: m.status === '討死' ? '#f44' : '#4f4' }}>{m.status}</div>
+                     <div style={{ fontSize: '0.8rem', color: '#aaa' }}>Lv.{m.lv}</div>
                   </div>
                 </div>
-
-                {/* 霊力バー */}
-                <div style={{ padding: '0 10px' }}>
-                  <div className="status-value-text">{m.mp}/{m.maxMp}</div>
-                  <div className="pc-bar-container">
-                    <div className="pc-bar-mp" style={{ width: `${(m.mp / m.maxMp) * 100}%` }} />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div>
+                     <div style={{ fontSize: '0.7rem', color: '#aaa', marginBottom: '2px' }}>体力: {m.hp}/{m.maxHp}</div>
+                     <div style={{ height: '8px', background: '#333', borderRadius: '4px' }}>
+                        <div style={{ width: `${(m.hp/m.maxHp)*100}%`, height: '100%', background: '#f55', borderRadius: '4px' }} />
+                     </div>
+                  </div>
+                  <div>
+                     <div style={{ fontSize: '0.7rem', color: '#aaa', marginBottom: '2px' }}>霊力: {m.mp}/{m.maxMp}</div>
+                     <div style={{ height: '8px', background: '#333', borderRadius: '4px' }}>
+                        <div style={{ width: `${(m.maxMp?(m.mp/m.maxMp):0)*100}%`, height: '100%', background: '#55f', borderRadius: '4px' }} />
+                     </div>
                   </div>
                 </div>
-
-                <div style={{ color: m.status === '討死' ? '#f33' : 'inherit' }}>{m.status}</div>
               </div>
             ))}
           </div>
@@ -887,7 +877,7 @@ function App() {
         </div>
       </div>
 
-      <div className={`window pane-map ${showMap ? 'mobile-active-pane' : ''}`}>
+<div className={`window pane-map ${showMap ? 'mobile-active-pane' : ''}`}>
         <span className="window-title">絵図と絵巻 (Map & Log)</span>
         
         {/* モバイル用：上部にも閉じるボタンを追加 */}

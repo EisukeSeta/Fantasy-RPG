@@ -37,20 +37,24 @@ class HeianSoundEngine {
 
       // 常に resume を試みる。同期的に呼び出して Safari の判定をパスさせる。
       if (this.ctx.state === 'suspended') {
-        this.ctx.resume().then(() => {
-          console.log('⛩️ 平安音響合成エンジン 覚醒完了:', this.ctx.state);
-        });
+        this.ctx.resume();
       }
 
-      // 明示的に状態へ遷移
+      // iOS/Android 強制解除トリック：短い正弦波を実際に再生する
+      const unlockOsc = this.ctx.createOscillator();
+      const unlockGain = this.ctx.createGain();
+      unlockOsc.type = 'sine';
+      unlockOsc.frequency.setValueAtTime(440, this.ctx.currentTime);
+      unlockGain.gain.setValueAtTime(0.001, this.ctx.currentTime); // ほぼ無音
+      unlockOsc.connect(unlockGain);
+      unlockGain.connect(this.ctx.destination);
+      unlockOsc.start();
+      unlockOsc.stop(this.ctx.currentTime + 0.05); // 0.05秒だけ鳴らす
+
+      // 状態遷移
       this.transitionTo(this.currentMode || 'EXPLORING');
 
-      // 無音実績用のダミー。同期プロセスの直後で実行。
-      const dummyBuffer = this.ctx.createBuffer(1, 1, 22050);
-      const dummySource = this.ctx.createBufferSource();
-      dummySource.buffer = dummyBuffer;
-      dummySource.connect(this.ctx.destination);
-      dummySource.start(0);
+      console.log('⛩️ 平安音響合成エンジン 覚醒完了:', this.ctx.state);
 
     } catch (e) {
       console.error('音響エンジンの初期化に失敗しました:', e);

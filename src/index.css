@@ -133,12 +133,13 @@ body {
 
   /* ログ表示エリア */
   .mobile-log-display {
-    flex: 1 1 150px !important; /* 最小高さを確保しつつ伸縮 */
+    flex: 1 1 150px !important;
     background: #000;
-    padding: 10px;
+    padding: 10px 10px 80px 10px !important; /* 下部に大きな余白を追加 */
     overflow-y: auto;
     font-size: 0.9rem;
     border-top: 1px solid #333;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* 絵図・隊員証をオーバーレイ化 */
