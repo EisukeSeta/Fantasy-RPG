@@ -289,6 +289,7 @@ function App() {
   return (
     <div className={`game-container ${isForceMobile ? 'layout-mobile' : ''}`}>
       
+      {/* PC: Side Status, Mobile: Hidden/Modal */}
       <div className={`window pane-status ${showStatus ? 'mobile-active-pane' : ''}`}>
         <span className="window-title">隊員之証</span>
         <div style={{ flex: 1, padding: '10px', overflowY: 'auto' }}>
@@ -312,6 +313,7 @@ function App() {
       <div className="window pane-main">
         <span className="window-title">羅生門 闇視</span>
         
+        {/* Enemy Overlay (Battle) */}
         {gameState === 'BATTLE' && enemy && (
           <div className="window pane-enemy" style={{ position: 'absolute', top: '25px', left: '8px', right: '8px', zIndex: 100, background: 'rgba(0,0,0,0.85)', border: '1px solid #c44', padding: '8px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', fontWeight: 'bold', color: '#fdd' }}>
@@ -324,6 +326,32 @@ function App() {
           </div>
         )}
 
+        {/* Mobile Party Status Overlay */}
+        {isForceMobile && !showMap && !showStatus && (
+          <div className="mini-status-panel mobile-overlay">
+            {party.map((m, i) => (
+              <div key={i} style={{ flex: 1, background: 'rgba(5, 5, 5, 0.7)', backdropFilter: 'blur(4px)', padding: '6px', borderRadius: '4px', border: '1px solid rgba(184, 154, 66, 0.5)', minWidth: 0 }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#f0e68c', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: '2px' }}>
+                  {m.icon}{m.name}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '4px' }}>
+                  <span style={{ color: m.hp <= m.maxHp * 0.2 ? '#f55' : '#eee' }}>H:{m.hp}</span>
+                  <span style={{ color: '#88f' }}>M:{m.mp}</span>
+                </div>
+                <div style={{ height: '5px', background: 'rgba(0,0,0,0.5)', width: '100%', marginBottom: '3px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <div style={{ width: `${Math.max(0, Math.min(100, (m.hp/m.maxHp)*100))}%`, height: '100%', background: 'linear-gradient(90deg, #800, #f33)' }} />
+                </div>
+                {m.maxMp > 0 && (
+                  <div style={{ height: '3px', background: 'rgba(0,0,0,0.5)', width: '100%', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ width: `${Math.max(0, Math.min(100, (m.mp/m.maxMp)*100))}%`, height: '100%', background: 'linear-gradient(90deg, #008, #33f)' }} />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Dungeon Display */}
         <div className="wireframe-container" style={{ flexShrink: 0, position: 'relative' }}>
           <WireframeView mapData={mapData} playerPos={playerState} playerDir={playerState.dir} />
           <div className="dungeon-tap-overlay" onTouchStart={e => touchStartPos.current={x:e.touches[0].clientX, y:e.touches[0].clientY}} onTouchEnd={e => {
@@ -335,33 +363,9 @@ function App() {
         </div>
       </div>
 
+      {/* UI Area (Mobile Only) */}
       {isForceMobile && !showMap && !showStatus && (
         <div className="mobile-ui-container">
-          
-          <div className="mini-status-panel">
-            {party.map((m, i) => (
-              <div key={i} style={{ flex: 1, background: '#111', padding: '6px', borderRadius: '4px', border: '1px solid #b89a42', minWidth: 0 }}>
-                <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#f0e68c', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: '2px' }}>
-                  {m.icon}{m.name}
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '4px' }}>
-                  <span style={{ color: m.hp <= 5 ? '#f55' : '#eee' }}>H:{m.hp}</span>
-                  <span style={{ color: '#88f' }}>M:{m.mp}</span>
-                </div>
-                {/* HP Bar (Red) */}
-                <div style={{ height: '6px', background: '#300', width: '100%', marginBottom: '3px', border: '1px solid #411' }}>
-                  <div style={{ width: `${Math.max(0, Math.min(100, (m.hp/m.maxHp)*100))}%`, height: '100%', background: 'linear-gradient(90deg, #800, #f33)' }} />
-                </div>
-                {/* MP Bar (Blue) */}
-                {m.maxMp > 0 && (
-                  <div style={{ height: '4px', background: '#003', width: '100%', border: '1px solid #114' }}>
-                    <div style={{ width: `${Math.max(0, Math.min(100, (m.mp/m.maxMp)*100))}%`, height: '100%', background: 'linear-gradient(90deg, #008, #33f)' }} />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
           <div className="mobile-btn-container">
             {gameState === 'BATTLE' ? (
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -382,10 +386,17 @@ function App() {
                 )}
               </div>
             ) : (
-              <div style={{ display: 'flex', gap: '5px' }}>
-                <button className="map-toggle-btn" style={{ flex: 1, padding: '12px' }} onClick={() => { initAudio(); setShowMap(true); }}>📜 絵図</button>
-                <button className="map-toggle-btn" style={{ flex: 1, padding: '12px' }} onClick={() => { initAudio(); setShowStatus(true); }}>🪪 隊員</button>
-                <button className="save-btn" style={{ flex: 1, padding: '12px' }} onClick={handleSave}>💾 記録</button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '5px' }}>
+                  <button className="move-btn" onClick={() => processMove('TURN_LEFT')}>左向</button>
+                  <button className="move-btn" onClick={() => processMove('FORWARD')} style={{ background: 'linear-gradient(#242, #121)', border: '1px solid #484' }}>前進</button>
+                  <button className="move-btn" onClick={() => processMove('TURN_RIGHT')}>右向</button>
+                </div>
+                <div style={{ display: 'flex', gap: '5px' }}>
+                  <button className="map-toggle-btn" style={{ flex: 1, padding: '12px' }} onClick={() => { initAudio(); setShowMap(true); }}>📜 絵図</button>
+                  <button className="map-toggle-btn" style={{ flex: 1, padding: '12px' }} onClick={() => { initAudio(); setShowStatus(true); }}>🪪 隊員</button>
+                  <button className="save-btn" style={{ flex: 1, padding: '12px' }} onClick={handleSave}>💾 記録</button>
+                </div>
               </div>
             )}
           </div>
@@ -406,6 +417,21 @@ function App() {
         </div>
       )}
 
+      {/* PC Log Display (Visible only on PC) */}
+      {!isForceMobile && (
+        <div className="window pane-log">
+          <span className="window-title">言霊の記録</span>
+          <div className="log-content">
+            {messages.map((m, i) => (
+              <div key={i} style={{ color: m.type === 'damage' ? '#ff6666' : m.type === 'heal' ? '#66ff66' : m.type === 'event' ? '#ffff88' : '#ccc' }}>
+                {'>'} {m.text || m}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Map Overlay (Mobile) */}
       <div className={`window pane-map ${showMap ? 'mobile-active-pane' : ''}`}>
         <span className="window-title">絵図と絵巻き</span>
         <div style={{ flex: 1, padding: '10px', overflowY: 'auto' }}>
@@ -418,6 +444,7 @@ function App() {
         </div>
       </div>
 
+      {/* Dialog Overlay */}
       {activeDialog && (
         <div className="dialog-overlay">
           <div className="dialog-title">{activeDialog.title}</div>
@@ -439,6 +466,7 @@ function App() {
         </div>
       )}
 
+      {/* Debug UI */}
       {isDebug && (
         <div style={{ position: 'fixed', bottom: '10px', right: '10px', background: 'rgba(0,50,0,0.8)', border: '1px solid #3f3', padding: '5px', zIndex: 9999, fontSize: '0.7rem' }}>
           ({playerState.x},{playerState.y}) <button onClick={debugHeal}>命</button> <input type="checkbox" checked={debugEncounter} onChange={e => setDebugEncounter(e.target.checked)} />

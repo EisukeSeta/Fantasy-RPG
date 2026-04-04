@@ -100,16 +100,31 @@ body {
   font-size: 0.65rem !important;
 }
 
+/* 常にダンジョンは最上段 */
 .layout-mobile .pane-main {
-  position: relative !important;
-  width: 100% !important;
+  width: 100vw !important;
   aspect-ratio: 1 / 1 !important;
   height: auto !important;
-  max-height: 100vw !important;
   flex-shrink: 0 !important;
+  position: relative !important;
+  border-bottom: 1px solid #333 !important;
+  margin: 0 !important;
   z-index: 100;
   overflow: hidden;
-  border-bottom: 2px solid #555;
+}
+
+.layout-mobile .mini-status-panel.mobile-overlay {
+  position: absolute !important;
+  bottom: 5px !important;
+  left: 5px !important;
+  right: 5px !important;
+  z-index: 101 !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  display: flex !important;
+  gap: 5px !important;
+  flex-wrap: nowrap !important;
 }
 
 .layout-mobile .mobile-ui-container {
@@ -117,8 +132,8 @@ body {
   display: flex !important;
   flex-direction: column !important;
   overflow: hidden !important;
-  background: #000;
-  padding-bottom: env(safe-area-inset-bottom);
+  background: #000 !important;
+  width: 100% !important;
 }
 
 .layout-mobile .mini-status-panel {
@@ -135,10 +150,11 @@ body {
 .layout-mobile .mobile-btn-container {
   display: flex !important;
   flex-direction: column !important;
-  gap: 8px !important;
-  padding: 12px 10px !important;
-  background: #0a0a0a !important;
+  gap: 6px !important;
+  padding: 10px 8px !important;
+  background: #080808 !important;
   flex-shrink: 0 !important;
+  border-bottom: 1px solid #222 !important;
 }
 
 .layout-mobile .mobile-btn-container button {
@@ -146,14 +162,23 @@ body {
   padding: 15px !important;
 }
 
+.layout-mobile .move-btn {
+  font-size: 1rem !important;
+  padding: 12px !important;
+  background: linear-gradient(#222, #000) !important;
+  border: 1px solid #444 !important;
+  color: #eee !important;
+  font-weight: bold !important;
+}
+
 .layout-mobile .mobile-log-display {
   flex: 1 !important;
   overflow-y: auto !important;
-  padding: 10px 15px !important;
+  padding: 12px 15px !important;
   background: #000 !important;
   font-size: 0.95rem !important;
   line-height: 1.6 !important;
-  border-top: 1px solid #222 !important;
+  border: none !important;
 }
 
 /* 地図・ステータスパネルのオーバーレイ制御 */
