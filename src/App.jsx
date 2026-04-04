@@ -402,7 +402,9 @@ function App() {
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button className="dialog-btn" style={{ flex: 1 }} onClick={handleSave}>💾 記録（セーブ）</button>
-                  <button className="dialog-btn" style={{ flex: 1 }} onClick={() => SoundEngine.toggleMute()}>{isMuted ? '🔇 静寂を切る' : '🔊 律を奏でる'}</button>
+                  <button className="dialog-btn" style={{ flex: 1 }} onClick={() => setIsMuted(prev => !prev)}>
+                    {isMuted ? '🔇 静寂を切る' : '🔊 律を奏でる'}
+                  </button>
                 </div>
               </div>
             )}
@@ -458,7 +460,9 @@ function App() {
           </div>
 
           <div style={{ padding: '8px 10px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px' }}>
-             <button onClick={() => SoundEngine.toggleMute()} style={{ background: 'none', border: 'none', color: '#c93', fontSize: '0.85rem', fontWeight: 'bold' }}>{isMuted ? '静音' : '音・律'}</button>
+             <button onClick={() => setIsMuted(prev => !prev)} style={{ background: 'none', border: 'none', color: '#c93', fontSize: '0.85rem', fontWeight: 'bold' }}>
+               {isMuted ? '静音' : '音・律'}
+             </button>
              <input type="range" min="0" max="1" step="0.1" value={volume} onChange={e => setVolume(parseFloat(e.target.value))} style={{ width: '80px', height: '20px' }} />
           </div>
         </div>
