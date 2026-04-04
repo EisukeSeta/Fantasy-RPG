@@ -30,11 +30,14 @@ function App() {
   const [volume, setVolume] = useState(0.5);
   const [isMuted, setIsMuted] = useState(false);
 
-  const addMessage = useCallback((msg) => {
-    let type = 'normal';
-    if (msg.includes('ダメージ') || msg.includes('傷') || msg.includes('討死')) type = 'damage';
-    if (msg.includes('癒えた') || msg.includes('全快') || msg.includes('昇格')) type = 'heal';
-    if (msg.includes('出現') || msg.includes('！')) type = 'event';
+  const addMessage = useCallback((msg, providedType = null) => {
+    let type = providedType;
+    if (!type) {
+      type = 'normal';
+      if (msg.includes('ダメージ') || msg.includes('傷') || msg.includes('討死')) type = 'damage_party';
+      if (msg.includes('癒えた') || msg.includes('全快') || msg.includes('昇格')) type = 'heal';
+      if (msg.includes('出現') || msg.includes('！')) type = 'event';
+    }
 
     setMessages(prev => {
       const newMsgs = [...prev, { text: msg, type }];
@@ -134,7 +137,7 @@ function App() {
   const endBattle = useCallback((won) => {
     if (won) {
         SoundEngine.playMonsterDeath();
-        addMessage(`${enemy.name} を調伏した！`);
+        addMessage(`${enemy.name} を調伏した！`, 'event');
         if (enemy.isBoss) { setBossDefeated(true); showDialog(scenarioData.opening.title, [scenarioData.events.bossDefeated]); }
         setParty(p => p.map(m => handleLevelUp({ ...m, exp: m.exp + Math.floor(enemy.exp * balanceData.rates.expShare) })));
         setGameState('EXPLORING'); setEnemy(null);
@@ -152,10 +155,10 @@ function App() {
       const res = calculateHitAndDamage(currentEnemy.ac, currentEnemy.minDmg, currentEnemy.maxDmg, target.ac);
       let nextP = [...currentParty];
       if (res.hit) {
-        addMessage(`${currentEnemy.name} の攻撃！ ${target.name} は ${res.damage} の手傷！`);
+        addMessage(`${currentEnemy.name} の攻撃！ ${target.name} は ${res.damage} の手傷！`, 'damage_party');
         const hp = Math.max(0, target.hp - res.damage);
         nextP[target.i] = { ...target, hp, status: hp === 0 ? '討死' : '平安' };
-      } else { addMessage(`${target.name} は攻撃をかわした！`); }
+      } else { addMessage(`${target.name} は攻撃をかわした！`, 'info'); }
       setParty(nextP);
       if (nextP.every(m => m.hp === 0)) endBattle(false);
       else setActiveBattler(nextP.findIndex(m => m.hp > 0));
@@ -164,10 +167,12 @@ function App() {
   // --- Helpers ---
   const getMessageColor = (m) => {
     const type = m.type || '';
-    if (type === 'damage') return '#ff6666'; // 紅
-    if (type === 'heal') return '#66ff66';   // 碧
-    if (type === 'event') return '#ffff88';  // 金
-    return '#ccc';                           // 白
+    if (type === 'damage_party' || type === 'death') return '#ff4444'; // 鮮血
+    if (type === 'damage_enemy') return '#ff8844'; // 橙赤
+    if (type === 'heal' || type === 'resurrect') return '#44ff44';   // 碧
+    if (type === 'event' || type === 'level_up') return '#ffff88';  // 金
+    if (type === 'info') return '#88ccff'; // 蒼
+    return '#ccc'; // 白
   };
 
   const handleFight = useCallback(() => {
@@ -175,8 +180,8 @@ function App() {
     const attacker = party[activeBattler];
     const res = calculateHitAndDamage(attacker.ac, attacker.minDmg, attacker.maxDmg, enemy.ac);
     let nEh = enemy.hp;
-    if (res.hit) { addMessage(`${attacker.name} の打ちかかり！ ${res.damage} の痛打！`); nEh -= res.damage; }
-    else addMessage('攻撃が空を切った！');
+    if (res.hit) { addMessage(`${attacker.name} の打ちかかり！ ${res.damage} の痛打！`, 'damage_enemy'); nEh -= res.damage; }
+    else addMessage('攻撃が空を切った！', 'info');
     if (nEh <= 0) { endBattle(true); return; }
     setEnemy({...enemy, hp: nEh});
     const nextIdx = party.findIndex((m, i) => i > activeBattler && m.hp > 0);
@@ -196,12 +201,12 @@ function App() {
     let nextE = { ...enemy };
     if (spell.type === 'ATTACK') {
       const dmg = spell.minDmg + Math.floor(Math.random()*(spell.maxDmg-spell.minDmg));
-      addMessage(`${spell.name}！ ${enemy.name} に ${dmg} のダメージ！`); nextE.hp -= dmg;
+      addMessage(`${spell.name}！ ${enemy.name} に ${dmg} のダメージ！`, 'damage_enemy'); nextE.hp -= dmg;
     } else if (spell.type === 'HEAL') {
       const target = nextP.filter(m => m.hp > 0).sort((a,b) => a.hp - b.hp)[0];
       const heal = spell.minHeal + Math.floor(Math.random()*(spell.maxHeal-spell.minHeal));
       target.hp = Math.min(target.maxHp, target.hp + heal);
-      addMessage(`${spell.name}！ ${target.name} の傷が ${heal} 癒えた。`);
+      addMessage(`${spell.name}！ ${target.name} の傷が ${heal} 癒えた。`, 'heal');
     }
     setParty(nextP); setEnemy(nextE); setShowSpells(null);
     if (nextE.hp <= 0) endBattle(true);
@@ -230,7 +235,7 @@ function App() {
         const b = ENEMY_LIST.find(e => e.id === 10); setEnemy({...b, hp: b.maxHp}); setGameState('BATTLE');
       } else if (debugEncounter && Math.random() < balanceData.rates.encounter) {
         const e = getRandomEnemy(party.reduce((s,m) => s+m.lv, 0));
-        setEnemy(e); setGameState('BATTLE'); setActiveBattler(0); addMessage(`${e.name} が出現！`);
+        setEnemy(e); setGameState('BATTLE'); setActiveBattler(0); addMessage(`${e.name} が出現！`, 'event');
       }
       if (!mapDataRef.current[nY][nX].visited) {
         setMapData(p => { const n = [...p]; n[nY] = [...n[nY]]; n[nY][nX] = {...n[nY][nX], visited: true}; return n; });
@@ -302,18 +307,27 @@ function App() {
         )}
         <div className="status-grid" style={{ padding: '20px 15px' }}>
           {party.map((m, i) => (
-            <div key={i} className="status-item" style={{ marginBottom: '25px', opacity: m.hp <= 0 ? 0.5 : 1 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', alignItems: 'baseline' }}>
-                <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#fff', textShadow: '1px 1px 2px #000' }}>{m.name}</span>
-                <span style={{ fontSize: '0.85rem', color: varGold }}>Lv {m.lv} {m.job}</span>
+            <div key={i} className="status-item" style={{ opacity: m.hp <= 0 ? 0.5 : 1 }}>
+              <div className="status-portrait">
+                {m.image ? (
+                  <img src={new URL(`./assets/allies/${m.image}`, import.meta.url).href} alt={m.name} />
+                ) : (
+                  <div style={{ width: '100%', height: '100%', background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>{m.icon}</div>
+                )}
               </div>
-              <div className="hp-bar-container" style={{ height: '22px', background: '#300', border: '1px solid #622', marginBottom: '6px', position: 'relative' }}>
-                <div style={{ width: `${(m.hp / m.maxHp) * 100}%`, height: '100%', background: 'linear-gradient(to bottom, #d22, #800)', transition: 'width 0.3s' }} />
-                <span style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.8rem', fontWeight: 'bold', textShadow: '1px 1px 2px #000' }}>HP {Math.max(0, m.hp)} / {m.maxHp}</span>
-              </div>
-              <div className="mp-bar-container" style={{ height: '18px', background: '#003', border: '1px solid #226', position: 'relative' }}>
-                <div style={{ width: `${(m.mp / m.maxMp) * 100}%`, height: '100%', background: 'linear-gradient(to bottom, #22d, #007)', transition: 'width 0.3s' }} />
-                <span style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.75rem', fontWeight: 'bold', textShadow: '1px 1px 2px #000' }}>MP {Math.max(0, m.mp)} / {m.maxMp}</span>
+              <div className="status-info">
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', alignItems: 'baseline' }}>
+                  <span className="status-name">{m.name}</span>
+                  <span style={{ fontSize: '0.75rem', color: varGold }}>Lv {m.lv}</span>
+                </div>
+                <div className="hp-bar-container" style={{ height: '16px', background: '#300', border: '1px solid #622', marginBottom: '4px', position: 'relative' }}>
+                  <div style={{ width: `${(m.hp / m.maxHp) * 100}%`, height: '100%', background: 'linear-gradient(to bottom, #d22, #800)', transition: 'width 0.3s' }} />
+                  <span style={{ position: 'absolute', right: '4px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.7rem', fontWeight: 'bold' }}>HP {Math.max(0, m.hp)}</span>
+                </div>
+                <div className="mp-bar-container" style={{ height: '12px', background: '#003', border: '1px solid #226', position: 'relative' }}>
+                  <div style={{ width: `${(m.mp / m.maxMp) * 100}%`, height: '100%', background: 'linear-gradient(to bottom, #22d, #007)', transition: 'width 0.3s' }} />
+                  <span style={{ position: 'absolute', right: '4px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.65rem', fontWeight: 'bold' }}>MP {Math.max(0, m.mp)}</span>
+                </div>
               </div>
             </div>
           ))}
@@ -361,7 +375,7 @@ function App() {
                 <div style={{ display: 'flex', gap: '5px' }}>
                   {party.map((m, i) => (
                     <div key={i} style={{ flex: 1, background: 'rgba(20,20,20,0.8)', padding: '5px', borderRadius: '4px', border: m.hp <= 0 ? '1px solid #333' : '1px solid #555' }}>
-                      <div style={{ fontSize: '0.65rem', color: '#ccc', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden' }}>{m.name.split(' ')[0]}</div>
+                      <div className="status-name" style={{ fontSize: '0.65rem', textAlign: 'center' }}>{m.name}</div>
                       <div style={{ height: '10px', background: '#300', marginTop: '2px' }}>
                         <div style={{ width: `${(m.hp / m.maxHp) * 100}%`, height: '100%', background: '#d22' }} />
                       </div>
@@ -396,13 +410,13 @@ function App() {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
-                    <button className="move-btn" style={{ color: '#eee', fontWeight: 'bold' }} onClick={() => processMove('TURN_LEFT')}>左向 [A]</button>
-                    <button className="move-btn" style={{ color: '#eee', fontWeight: 'bold', background: 'linear-gradient(#242, #121)', border: '1px solid #484' }} onClick={() => processMove('FORWARD')}>前進 [W]</button>
-                    <button className="move-btn" style={{ color: '#eee', fontWeight: 'bold' }} onClick={() => processMove('TURN_RIGHT')}>右向 [D]</button>
+                    <button className="move-btn" onClick={() => processMove('TURN_LEFT')}>左向 [A]</button>
+                    <button className="move-btn" style={{ background: 'linear-gradient(#242, #121)', border: '1px solid #484' }} onClick={() => processMove('FORWARD')}>前進 [W]</button>
+                    <button className="move-btn" onClick={() => processMove('TURN_RIGHT')}>右向 [D]</button>
                   </div>
                   <div style={{ display: 'flex', gap: '10px' }}>
-                    <button className="dialog-btn" style={{ flex: 1, color: '#fff', fontWeight: 'bold' }} onClick={handleSave}>💾 記録（セーブ）</button>
-                    <button className="dialog-btn" style={{ flex: 1, color: '#fff', fontWeight: 'bold' }} onClick={() => setIsMuted(prev => !prev)}>
+                    <button className="dialog-btn" style={{ flex: 1 }} onClick={handleSave}>💾 記録（セーブ）</button>
+                    <button className="dialog-btn" style={{ flex: 1 }} onClick={() => setIsMuted(prev => !prev)}>
                       {isMuted ? '🔇 静寂を切る' : '🔊 律を奏でる'}
                     </button>
                   </div>

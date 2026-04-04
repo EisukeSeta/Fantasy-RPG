@@ -42,21 +42,24 @@ body {
   display: flex;
   flex-direction: column;
   box-shadow: 0 0 20px rgba(184, 154, 66, 0.2);
-  overflow: hidden;
+  /* overflow: hidden; を削除し、タイトル表示を許容 */
+  margin-top: 15px; /* タイトル分の余白 */
 }
 
 .window-title {
   position: absolute;
-  top: -12px;
+  top: -14px;
   left: 20px;
   background: #000;
-  padding: 0 12px;
+  padding: 0 15px;
   color: var(--primary-gold);
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: bold;
   border-left: 2px solid var(--primary-gold);
   border-right: 2px solid var(--primary-gold);
-  z-index: 10;
+  z-index: 100;
+  white-space: nowrap;
+  box-shadow: 0 -2px 5px rgba(0,0,0,0.5);
 }
 
 .pane-status { grid-column: 1 / 2; }
@@ -92,6 +95,51 @@ body {
 }
 
 .status-header { color: var(--primary-gold); font-size: 0.75rem; margin-bottom: 2px; }
+
+.status-item {
+    display: flex;
+    gap: 12px;
+    background: rgba(20, 20, 20, 0.4);
+    border: 1px solid rgba(255, 215, 0, 0.1);
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    transition: transform 0.2s;
+}
+.status-item:hover {
+    background: rgba(40, 40, 40, 0.6);
+    border-color: rgba(255, 215, 0, 0.3);
+}
+.status-portrait {
+    width: 60px;
+    height: 60px;
+    min-width: 60px;
+    border: 2px solid #333;
+    background: #000;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+.status-portrait img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(0.5) contrast(1.2);
+}
+.status-info {
+    flex: 1;
+    overflow: hidden;
+}
+.status-name {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+}
 
 /* --- モバイル・スマートフォン用レイアウト (layout-mobile クラス適用時) --- */
 .layout-mobile {
@@ -175,12 +223,27 @@ body {
 }
 
 .layout-mobile .move-btn {
-  font-size: 1rem !important;
-  padding: 12px !important;
-  background: linear-gradient(#222, #000) !important;
-  border: 1px solid #444 !important;
-  color: #eee !important;
-  font-weight: bold !important;
+    background: linear-gradient(135deg, #1a1a1a, #0d0d0d);
+    border: 1px solid #444;
+    color: #ffd700;
+    cursor: pointer;
+    padding: 12px;
+    font-weight: bold;
+    font-family: inherit;
+    border-radius: 4px;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5), 0 2px 5px rgba(0,0,0,0.8);
+    transition: all 0.2s;
+    text-shadow: 1px 1px 2px #000;
+}
+.move-btn:hover {
+    background: linear-gradient(135deg, #333, #111);
+    border-color: #ffd700;
+    color: #fff;
+    transform: translateY(-1px);
+}
+.move-btn:active {
+    transform: translateY(1px);
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
 }
 
 .layout-mobile .mobile-log-display {
@@ -340,4 +403,32 @@ body {
 .spell-btn:hover {
   background: linear-gradient(#225, #113);
   border-color: #66f;
+}
+
+/* 記録・奏曲・汎用ダイアログボタンの意匠 */
+.dialog-btn, .save-btn, .map-toggle-btn {
+    background: linear-gradient(135deg, #222, #111);
+    border: 1px solid var(--primary-gold);
+    color: var(--soft-gold) !important;
+    cursor: pointer;
+    padding: 10px 15px;
+    font-weight: bold;
+    font-family: inherit;
+    border-radius: 4px;
+    transition: all 0.2s;
+    text-shadow: 1px 1px 2px #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.dialog-btn:hover, .save-btn:hover, .map-toggle-btn:hover {
+    background: linear-gradient(135deg, #3a3a3a, #222);
+    box-shadow: 0 0 10px rgba(184, 154, 66, 0.4);
+    transform: translateY(-1px);
+}
+
+.dialog-btn:active, .save-btn:active, .map-toggle-btn:active {
+    transform: translateY(1px);
 }
