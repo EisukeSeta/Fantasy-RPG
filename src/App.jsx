@@ -248,7 +248,7 @@ function App() {
         showDialog(event.name, [event.description]);
         if (event.isHeal) {
           setParty(p => p.map(m => m.status === '討死' ? m : { ...m, hp: m.maxHp, mp: m.maxMp }));
-          addMessage('【社】にて傷が癒やされた。', 'heal');
+          addMessage(`【${event.name}】にて霊力と生命が全快した。`, 'heal');
         }
       }
 
@@ -280,12 +280,12 @@ function App() {
     if (isAutoBattle && gameState === 'BATTLE' && enemy) {
       const t = setTimeout(() => {
         const a = party[activeBattler]; if (!a || a.hp <= 0) return;
-        // AI戦闘強化: ボス戦では惜しみなく術を使用
-        const isBoss = enemy.isBoss;
+        // AI戦闘強化: 強敵（Boss）またはHPが高い敵には惜しみなく術を使用
+        const isStrong = enemy.isBoss || enemy.hp > 50;
         const availableSpells = (SPELLS[a.jobKey] || []).filter(s => s.lv <= a.lv && a.mp >= s.mp);
         
-        if (isBoss && availableSpells.length > 0) {
-          const bestSpell = availableSpells.sort((a,b) => b.mp - a.mp)[0]; // 最大消費（最強）を優先
+        if (isStrong && availableSpells.length > 0) {
+          const bestSpell = availableSpells.sort((a,b) => b.mp - a.mp)[0]; 
           castSpell(bestSpell);
           return;
         }
@@ -568,11 +568,18 @@ function App() {
                 <button className="dialog-btn" onClick={() => { initAudio(); if(activeDialog.onConfirm) activeDialog.onConfirm(); setActiveDialog(null); }}>はい</button>
                 <button className="dialog-btn" onClick={() => { 
                   if(gameState === 'DEAD') {
-                    // 討死として終わる（タイトルへ）
+                    // 真なる始まりへ還る（すべての理を浄化）
+                    setActiveDialog(null);
                     setGameState('EXPLORING');
                     setPlayerState({ x: 1, y: 1, dir: DIRECTIONS.S });
-                    setActiveDialog({ ...scenarioData.opening, currentPage: 0 });
-                    setMessages([{ text: '都は闇に包まれた……', type: 'damage_party' }]);
+                    setParty(charactersData.map(c => ({ ...c }))); // 初期値へ
+                    const m = generateMap(); // マップの記憶も消去
+                    m[1][1].visited = true;
+                    setMapData(m);
+                    setMessages([{ text: '平安の都に、再び闇が訪れる……', type: 'damage_party' }]);
+                    setTimeout(() => {
+                      setActiveDialog({ ...scenarioData.opening, currentPage: 0 });
+                    }, 500);
                   } else {
                     setActiveDialog(null);
                   }
