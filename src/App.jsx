@@ -328,21 +328,35 @@ function App() {
         <span className="window-title">羅生門 闇視</span>
         
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-          {/* Dungeon / Battle Screen */}
           <div className="wireframe-container">
-            {gameState === 'BATTLE' && enemy ? (
-              <div key={enemy.id} className="enemy-view" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                <div style={{ fontSize: '100px', filter: 'drop-shadow(0 0 15px #f00)' }}>{enemy.icon}</div>
-                <div style={{ marginTop: '30px', textAlign: 'center', width: '70%' }}>
-                  <div style={{ color: '#fff', fontSize: '1.4rem', fontWeight: 'bold', marginBottom: '10px' }}>{enemy.name}</div>
-                  <div className="hp-bar-container" style={{ height: '24px', background: '#111', border: '2px solid #555', position: 'relative' }}>
-                    <div style={{ width: `${(enemy.hp / enemy.maxHp) * 100}%`, height: '100%', background: 'linear-gradient(to bottom, #f33, #a00)' }} />
-                    <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.9rem', fontWeight: 'bold' }}>HP {Math.max(0, enemy.hp)} / {enemy.maxHp}</span>
+            <WireframeView mapData={mapData} playerPos={playerState} playerDir={playerState.dir} />
+            
+            {gameState === 'BATTLE' && enemy && (
+              <div className="enemy-overlay" style={{
+                position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                display: 'flex', flexDirection: 'column',
+                justifyContent: 'center', alignItems: 'center',
+                background: 'rgba(0,0,0,0.1)', zIndex: 10
+              }}>
+                <div style={{
+                  width: '85%', background: 'rgba(10, 10, 10, 0.9)',
+                  border: '2px solid var(--primary-gold)', padding: '15px',
+                  boxShadow: '0 0 30px rgba(0,0,0,0.8)', textAlign: 'center'
+                }}>
+                  <div style={{ fontSize: '1.2rem', color: 'var(--primary-gold)', marginBottom: '10px', textShadow: '0 0 10px rgba(184, 154, 66, 0.5)' }}>怪異 遭遇</div>
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px', marginBottom: '15px' }}>
+                    <div style={{ fontSize: '3rem' }}>{enemy.icon}</div>
+                    <div style={{ textAlign: 'left' }}>
+                      <div style={{ fontSize: '1.3rem', fontWeight: 'bold' }}>{enemy.name}</div>
+                      <div style={{ fontSize: '0.9rem', color: '#aaa' }}>羅生門の怪異</div>
+                    </div>
+                  </div>
+                  <div style={{ width: '100%', height: '12px', background: '#300', position: 'relative', border: '1px solid #500' }}>
+                    <div style={{ width: `${Math.max(0, (enemy.hp / enemy.maxHp) * 100)}%`, height: '100%', background: 'linear-gradient(to right, #900, #f22)' }} />
+                    <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.85rem', fontWeight: 'bold', color: '#fff' }}>HP {Math.max(0, enemy.hp)} / {enemy.maxHp}</span>
                   </div>
                 </div>
               </div>
-            ) : (
-              <WireframeView mapData={mapData} playerPos={playerState} playerDir={playerState.dir} />
             )}
             
             {/* Mobile Overlay (Only on Mobile) */}
