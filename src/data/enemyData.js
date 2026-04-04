@@ -14,8 +14,9 @@ export const getRandomEnemy = (playerLvSum) => {
     // それ以降
     return enemy.id >= 5 && enemy.id <= 9;
   });
-
-  const base = availableEnemies[Math.floor(Math.random() * availableEnemies.length)];
+  
+  const finalAvailable = availableEnemies.length > 0 ? availableEnemies : [ENEMY_LIST[0]];
+  const base = finalAvailable[Math.floor(Math.random() * finalAvailable.length)];
   const hp = Math.floor(Math.random() * (base.maxHp - base.minHp + 1)) + base.minHp;
   // レベルはプレイヤーに合わせて調整
   const lv = Math.max(1, Math.floor(playerLvSum / 3) + Math.floor(Math.random() * 3) - 1);
