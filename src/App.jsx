@@ -410,6 +410,60 @@ function App() {
         )}
       </div>
 
+      {/* UI Area (Mobile Only) */}
+      {isForceMobile && !showMap && !showStatus && (
+        <div className="mobile-ui-container">
+          <div className="mobile-btn-container">
+            {gameState === 'BATTLE' ? (
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <div style={{ width: '100%', display: 'flex', gap: '8px', marginBottom: '4px' }}>
+                  <button onClick={handleFight} className="battle-btn" style={{ flex: 3, padding: '15px', background: 'linear-gradient(#822, #500)', border: '2px solid #f55' }}>打ちかかる</button>
+                  <button onClick={() => setIsAutoBattle(!isAutoBattle)} className="battle-btn" style={{ flex: 1, background: isAutoBattle ? '#600' : '#222', borderColor: isAutoBattle ? '#f55' : '#444' }}>
+                    {isAutoBattle ? '修羅(自)' : '正攻(手)'}
+                  </button>
+                </div>
+                <button onClick={() => setShowSpells(showSpells ? null : '1')} className="battle-btn" style={{ flex: 1, background: 'linear-gradient(#228, #114)', border: '1px solid #44f' }}>術</button>
+                <button onClick={handleRun} className="battle-btn" style={{ flex: 1, background: 'linear-gradient(#431, #210)', border: '1px solid #c93' }}>逃走</button>
+                {showSpells && (
+                  <div style={{ width: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px', marginTop: '5px' }}>
+                    {(SPELLS[party[activeBattler].jobKey] || []).filter(s => s.lv <= party[activeBattler].lv).map((s, idx) => (
+                      <button key={idx} onClick={() => castSpell(s)} className="spell-btn" style={{ padding: '12px' }}>{s.name}</button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '5px' }}>
+                  <button className="move-btn" onClick={() => processMove('TURN_LEFT')}>左向</button>
+                  <button className="move-btn" onClick={() => processMove('FORWARD')} style={{ background: 'linear-gradient(#242, #121)', border: '1px solid #484' }}>前進</button>
+                  <button className="move-btn" onClick={() => processMove('TURN_RIGHT')}>右向</button>
+                </div>
+                <div style={{ display: 'flex', gap: '5px' }}>
+                  <button className="map-toggle-btn" style={{ flex: 1, padding: '12px' }} onClick={() => { initAudio(); setShowMap(true); }}>📜 絵図</button>
+                  <button className="map-toggle-btn" style={{ flex: 1, padding: '12px' }} onClick={() => { initAudio(); setShowStatus(true); }}>🪪 隊員</button>
+                  <button className="save-btn" style={{ flex: 1, padding: '12px' }} onClick={handleSave}>💾 記録</button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="mobile-log-display" id="mobile-log-display">
+            {messages.map((m, i) => {
+              const color = m.type === 'damage' ? '#ff6666' : m.type === 'heal' ? '#66ff66' : m.type === 'event' ? '#ffff88' : '#ccc';
+              return <div key={i} style={{ color, marginBottom: '4px' }}>
+                {'>'} {m.text || m}
+              </div>
+            })}
+          </div>
+
+          <div style={{ padding: '8px 10px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px' }}>
+             <button onClick={() => SoundEngine.toggleMute()} style={{ background: 'none', border: 'none', color: '#c93', fontSize: '0.85rem', fontWeight: 'bold' }}>{isMuted ? '静音' : '音・律'}</button>
+             <input type="range" min="0" max="1" step="0.1" value={volume} onChange={e => setVolume(parseFloat(e.target.value))} style={{ width: '80px', height: '20px' }} />
+          </div>
+        </div>
+      )}
+
       {/* PC: Log on Right, Map also on Right (Toggle or Stack) */}
       <div className={`window pane-log ${!isForceMobile ? '' : 'mobile-active-pane'}`}>
         <span className="window-title">言霊の記録 & 絵図</span>
@@ -419,15 +473,7 @@ function App() {
           {!isForceMobile && (
             <div style={{ padding: '15px', borderBottom: '1px solid #333', background: '#111' }}>
               <div style={{ display: 'grid', gridTemplateColumns: `repeat(${MAP_WIDTH}, 15px)`, gap: '1px', justifyContent: 'center' }}>
-                {mapData.map((row, y) => row.map((cell, x) => (
-                   <div key={`${x}-${y}`} style={{ 
-                     width: 15, height: 15, background: playerState.x===x && playerState.y===y ? '#3f3' : (cell.visited ? '#333' : '#000'),
-                     borderTop: cell.n && cell.visited ? '1px solid #666' : 'none',
-                     borderRight: cell.e && cell.visited ? '1px solid #666' : 'none',
-                     borderBottom: cell.s && cell.visited ? '1px solid #666' : 'none',
-                     borderLeft: cell.w && cell.visited ? '1px solid #666' : 'none'
-                   }} />
-                )))}
+                {mapData.map((row, y) => row.map((cell, x) => renderMapCell(cell, x, y)))}
               </div>
             </div>
           )}
