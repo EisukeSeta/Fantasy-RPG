@@ -93,14 +93,19 @@ body {
   transform: translateX(5px);
 }
 
-.xp-bar-container {
-  height: 8px; 
+.hp-bar-container, .mp-bar-container, .xp-bar-container {
+  height: 8px;
   background: #110;
-  border: 1px solid #550;
+  border: 1px solid #333;
   position: relative;
   overflow: hidden;
   margin-top: 4px;
 }
+.hp-bar-container { border-color: #511; }
+.mp-bar-container { border-color: #115; }
+
+.hp-bar { height: 100%; background: linear-gradient(to bottom, #d22, #800); transition: width 0.3s; }
+.mp-bar { height: 100%; background: linear-gradient(to bottom, #22d, #007); transition: width 0.3s; }
 
 .xp-bar {
   height: 100%;
@@ -114,6 +119,19 @@ body {
   0% { background-position: 100% 0%; }
   100% { background-position: -100% 0%; }
 }
+
+.log-msg { margin-bottom: 6px; }
+.msg-normal { color: #fff; }
+.msg-damage_party { color: #ff6666; font-weight: bold; }
+.msg-heal { color: #66ff66; }
+.msg-level_up { color: #ffd700; font-weight: bold; text-shadow: 0 0 5px rgba(255,215,0,0.5); }
+.msg-event { color: var(--primary-gold); font-style: italic; }
+
+.map-cell { width: 22px; height: 22px; background: #000; border: none; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+.map-cell.visited { background: #111; border: 1px solid #222; }
+.map-cell.wall { background: #000; }
+.map-cell.player { background: #221; position: relative; border: 1px solid var(--primary-gold); }
+.player-icon { font-size: 12px; color: var(--primary-gold); transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1); display: inline-block; }
 
 .pane-log { grid-column: 3 / 4; display: flex; flex-direction: column; gap: 10px; }
 
@@ -483,4 +501,53 @@ body {
 
 .dialog-btn:active, .save-btn:active, .map-toggle-btn:active {
     transform: translateY(1px);
+}
+
+/* --- Shake Animation for Boss --- */
+.shake-anim {
+  animation: screen-shake 0.5s ease-in-out infinite;
+}
+
+@keyframes screen-shake {
+  0% { transform: translate(0,0); }
+  25% { transform: translate(5px, -5px); }
+  50% { transform: translate(-5px, 5px); }
+  75% { transform: translate(5px, 5px); }
+  100% { transform: translate(0,0); }
+}
+
+/* --- GameOver Overlay --- */
+.gameover-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle, #200, #000);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  animation: fade-in 2s forwards;
+}
+
+.gameover-splash {
+  font-size: 8rem;
+  color: #ff4444;
+  text-shadow: 0 0 50px #ff0000, 0 0 10px #000;
+  font-family: 'Sawarabi Mincho', serif;
+  letter-spacing: 20px;
+  margin-bottom: 50px;
+  animation: death-glare 3s infinite alternate;
+}
+
+@keyframes death-glare {
+  from { opacity: 0.7; transform: scale(1); filter: blur(0); }
+  to { opacity: 1; transform: scale(1.05); filter: blur(2px); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

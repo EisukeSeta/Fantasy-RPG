@@ -21,7 +21,7 @@
   },
   "ui": {
     "resurrection": "【黄泉還り】井戸から這い上がった。",
-    "levelUp": " は Lv.%LV% に昇格した！",
+    "levelUp": " は Lv.%LV% に昇格した。",
     "saveComplete": "⛩️ 冒険の記録（セーブ）は完了しました。"
   }
 }
