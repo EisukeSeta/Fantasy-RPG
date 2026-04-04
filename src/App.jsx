@@ -166,6 +166,15 @@ function App() {
       else setActiveBattler(nextP.findIndex(m => m.hp > 0));
   }, [endBattle, addMessage]);
 
+  // --- Helpers ---
+  const getMessageColor = (m) => {
+    const type = m.type || '';
+    if (type === 'damage') return '#ff6666'; // 紅
+    if (type === 'heal') return '#66ff66';   // 碧
+    if (type === 'event') return '#ffff88';  // 金
+    return '#ccc';                           // 白
+  };
+
   const handleFight = useCallback(() => {
     if (gameState !== 'BATTLE' || !enemy) return;
     const attacker = party[activeBattler];
@@ -286,130 +295,138 @@ function App() {
     );
   };
 
+  const varGold = '#f0e68c';
+
   return (
     <div className={`game-container ${isForceMobile ? 'layout-mobile' : ''}`}>
-      
       {/* PC: Side Status, Mobile: Hidden/Modal */}
       <div className={`window pane-status ${showStatus ? 'mobile-active-pane' : ''}`}>
         <span className="window-title">隊員之証</span>
-        <div style={{ flex: 1, padding: '15px', overflowY: 'auto' }}>
-           {(isForceMobile || showStatus) && (
-             <button className="dialog-btn" style={{ position: 'sticky', top: 0, zIndex: 10, width: '100%', marginBottom: '15px' }} onClick={() => setShowStatus(false)}>探索に戻る</button>
-           )}
-           {party.map((m, idx) => (
-             <div key={idx} style={{ borderBottom: '1px solid #444', padding: '15px 0' }}>
-               <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '8px' }}>
-                 <span style={{ fontSize: '1.4rem' }}>{m.icon}</span>
-                 <div style={{ flex: 1 }}>
-                   <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#f0e68c' }}>{m.name}</div>
-                   <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>Lv.{m.lv} {m.job}</div>
-                 </div>
-               </div>
-               
-               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', marginBottom: '4px' }}>
-                 <span style={{ color: m.hp <= m.maxHp * 0.2 ? '#f55' : '#eee' }}>HP: {m.hp} / {m.maxHp}</span>
-                 {m.maxMp > 0 && <span style={{ color: '#88f' }}>MP: {m.mp} / {m.maxMp}</span>}
-               </div>
-
-               <div style={{ height: '22px', background: '#200', width: '100%', marginBottom: '6px', border: '1px solid #622', boxShadow: '0 0 10px rgba(255,0,0,0.2)' }}>
-                 <div style={{ width: `${Math.max(0, Math.min(100, (m.hp/m.maxHp)*100))}%`, height: '100%', background: 'linear-gradient(90deg, #800, #f33)', transition: 'width 0.3s ease' }} />
-               </div>
-               {m.maxMp > 0 && (
-                 <div style={{ height: '12px', background: '#002', width: '100%', border: '1px solid #226' }}>
-                   <div style={{ width: `${Math.max(0, Math.min(100, (m.mp/m.maxMp)*100))}%`, height: '100%', background: 'linear-gradient(90deg, #008, #33f)', transition: 'width 0.3s ease' }} />
-                 </div>
-               )}
-             </div>
-           ))}
+        {showStatus && isForceMobile && (
+          <button className="close-btn" style={{ position:'absolute', right:10, top:10 }} onClick={()=>setShowStatus(false)}>閉じる</button>
+        )}
+        <div className="status-grid" style={{ padding: '20px 15px' }}>
+          {party.map((m, i) => (
+            <div key={i} className="status-item" style={{ marginBottom: '25px', opacity: m.hp <= 0 ? 0.5 : 1 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', alignItems: 'baseline' }}>
+                <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#fff', textShadow: '1px 1px 2px #000' }}>{m.name}</span>
+                <span style={{ fontSize: '0.85rem', color: varGold }}>Lv {m.lv} {m.job}</span>
+              </div>
+              <div className="hp-bar-container" style={{ height: '22px', background: '#300', border: '1px solid #622', marginBottom: '6px', position: 'relative' }}>
+                <div style={{ width: `${(m.hp / m.maxHp) * 100}%`, height: '100%', background: 'linear-gradient(to bottom, #d22, #800)', transition: 'width 0.3s' }} />
+                <span style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.8rem', fontWeight: 'bold', textShadow: '1px 1px 2px #000' }}>HP {Math.max(0, m.hp)} / {m.maxHp}</span>
+              </div>
+              <div className="mp-bar-container" style={{ height: '18px', background: '#003', border: '1px solid #226', position: 'relative' }}>
+                <div style={{ width: `${(m.mp / m.maxMp) * 100}%`, height: '100%', background: 'linear-gradient(to bottom, #22d, #007)', transition: 'width 0.3s' }} />
+                <span style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.75rem', fontWeight: 'bold', textShadow: '1px 1px 2px #000' }}>MP {Math.max(0, m.mp)} / {m.maxMp}</span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
-      <div className="window pane-main">
+      <div className="window pane-main" style={{ display: 'flex', flexDirection: 'column' }}>
         <span className="window-title">羅生門 闇視</span>
         
-        {/* Dungeon Display */}
-        <div className="wireframe-container" style={{ flex: 1, position: 'relative' }}>
-          <WireframeView mapData={mapData} playerPos={playerState} playerDir={playerState.dir} />
-          
-          {/* Enemy Overlay (Battle) - Now used for both PC and Mobile for drama */}
-          {gameState === 'BATTLE' && enemy && (
-            <div className="window pane-enemy" style={{ position: 'absolute', top: '25px', left: '8px', right: '8px', zIndex: 100, background: 'rgba(0,0,0,0.85)', border: '1px solid #c44', padding: '8px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', fontWeight: 'bold', color: '#fdd' }}>
-                <span>{enemy.name} Lv.{enemy.lv}</span>
-                <span>HP {Math.ceil(enemy.hp)} / {enemy.maxHp}</span>
-              </div>
-              <div style={{ height: '22px', background: '#200', marginTop: '6px', border: '1px solid #622', boxShadow: '0 0 10px rgba(255,0,0,0.3)' }}>
-                <div style={{ width: `${(enemy.hp/enemy.maxHp)*100}%`, height: '100%', background: 'linear-gradient(90deg, #600, #f22)', transition: 'width 0.3s ease' }} />
-              </div>
-            </div>
-          )}
-
-          {/* Mobile Overlay (Only on Mobile) */}
-          {isForceMobile && !showMap && !showStatus && (
-            <div className="mini-status-panel mobile-overlay">
-              {party.map((m, i) => (
-                <div key={i} style={{ flex: 1, background: 'rgba(5, 5, 5, 0.7)', backdropFilter: 'blur(4px)', padding: '6px', borderRadius: '4px', border: '1px solid rgba(184, 154, 66, 0.5)', minWidth: 0 }}>
-                  <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#f0e68c', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: '2px' }}>
-                    {m.icon}{m.name}
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '4px' }}>
-                    <span style={{ color: m.hp <= m.maxHp * 0.2 ? '#f55' : '#eee' }}>H:{m.hp}</span>
-                    <span style={{ color: '#88f' }}>M:{m.mp}</span>
-                  </div>
-                  <div style={{ height: '5px', background: 'rgba(0,0,0,0.5)', width: '100%', marginBottom: '3px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                    <div style={{ width: `${Math.max(0, Math.min(100, (m.hp/m.maxHp)*100))}%`, height: '100%', background: 'linear-gradient(90deg, #800, #f33)' }} />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+          {/* Dungeon / Battle Screen */}
+          <div className="wireframe-container">
+            {gameState === 'BATTLE' && enemy ? (
+              <div key={enemy.id} className="enemy-view" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                <div style={{ fontSize: '100px', filter: 'drop-shadow(0 0 15px #f00)' }}>{enemy.icon}</div>
+                <div style={{ marginTop: '30px', textAlign: 'center', width: '70%' }}>
+                  <div style={{ color: '#fff', fontSize: '1.4rem', fontWeight: 'bold', marginBottom: '10px' }}>{enemy.name}</div>
+                  <div className="hp-bar-container" style={{ height: '24px', background: '#111', border: '2px solid #555', position: 'relative' }}>
+                    <div style={{ width: `${(enemy.hp / enemy.maxHp) * 100}%`, height: '100%', background: 'linear-gradient(to bottom, #f33, #a00)' }} />
+                    <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.9rem', fontWeight: 'bold' }}>HP {Math.max(0, enemy.hp)} / {enemy.maxHp}</span>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-
-          <div className="dungeon-tap-overlay" onTouchStart={e => touchStartPos.current={x:e.touches[0].clientX, y:e.touches[0].clientY}} onTouchEnd={e => {
-            const dx = e.changedTouches[0].clientX - touchStartPos.current.x;
-            if (Math.abs(dx) > 50) processMove(dx > 0 ? 'TURN_RIGHT' : 'TURN_LEFT');
-          }}>
-            {gameState === 'EXPLORING' && <div className="tap-area tap-forward" onClick={() => processMove('FORWARD')} style={{ height: '100%' }}></div>}
-          </div>
-        </div>
-
-        {/* PC Controls Area */}
-        {!isForceMobile && (
-          <div style={{ padding: '15px', background: '#080808', borderTop: '1px solid #333' }}>
-            {gameState === 'BATTLE' ? (
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                <div style={{ width: '100%', display: 'flex', gap: '8px', marginBottom: '4px' }}>
-                  <button onClick={handleFight} className="battle-btn" style={{ flex: 3, padding: '15px', background: 'linear-gradient(#822, #500)', border: '2px solid #f55' }}>打ちかかる</button>
-                  <button onClick={() => setIsAutoBattle(!isAutoBattle)} className="battle-btn" style={{ flex: 1, background: isAutoBattle ? '#600' : '#222', borderColor: isAutoBattle ? '#f55' : '#444' }}>
-                    {isAutoBattle ? '修羅(自)' : '正攻(手)'}
-                  </button>
-                </div>
-                <button onClick={() => setShowSpells(showSpells ? null : '1')} className="battle-btn" style={{ flex: 1, background: 'linear-gradient(#228, #114)', border: '1px solid #44f' }}>術</button>
-                <button onClick={handleRun} className="battle-btn" style={{ flex: 1, background: 'linear-gradient(#431, #210)', border: '1px solid #c93' }}>逃走</button>
-                {showSpells && (
-                  <div style={{ width: '100%', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '5px', marginTop: '10px' }}>
-                    {(SPELLS[party[activeBattler].jobKey] || []).filter(s => s.lv <= party[activeBattler].lv).map((s, idx) => (
-                      <button key={idx} onClick={() => castSpell(s)} className="spell-btn" style={{ padding: '10px' }}>{s.name} ({s.mp})</button>
-                    ))}
-                  </div>
-                )}
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
-                  <button className="move-btn" onClick={() => processMove('TURN_LEFT')}>左向 [A]</button>
-                  <button className="move-btn" onClick={() => processMove('FORWARD')} style={{ background: 'linear-gradient(#242, #121)', border: '1px solid #484' }}>前進 [W]</button>
-                  <button className="move-btn" onClick={() => processMove('TURN_RIGHT')}>右向 [D]</button>
-                </div>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <button className="dialog-btn" style={{ flex: 1 }} onClick={handleSave}>💾 記録（セーブ）</button>
-                  <button className="dialog-btn" style={{ flex: 1 }} onClick={() => setIsMuted(prev => !prev)}>
-                    {isMuted ? '🔇 静寂を切る' : '🔊 律を奏でる'}
-                  </button>
+              <WireframeView mapData={mapData} playerPos={playerState} playerDir={playerState.dir} />
+            )}
+            
+            {/* Mobile Overlay (Only on Mobile) */}
+            {isForceMobile && !showMap && !showStatus && (
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '10px', background: 'linear-gradient(transparent, rgba(0,0,0,0.9))' }}>
+                <div style={{ display: 'flex', gap: '5px' }}>
+                  {party.map((m, i) => (
+                    <div key={i} style={{ flex: 1, background: 'rgba(20,20,20,0.8)', padding: '5px', borderRadius: '4px', border: m.hp <= 0 ? '1px solid #333' : '1px solid #555' }}>
+                      <div style={{ fontSize: '0.65rem', color: '#ccc', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden' }}>{m.name.split(' ')[0]}</div>
+                      <div style={{ height: '10px', background: '#300', marginTop: '2px' }}>
+                        <div style={{ width: `${(m.hp / m.maxHp) * 100}%`, height: '100%', background: '#d22' }} />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
           </div>
-        )}
+
+          {/* PC Controls Area (Fixed Height) */}
+          {!isForceMobile && (
+            <div style={{ padding: '15px', background: '#080808', borderTop: '1px solid #333', minHeight: '180px' }}>
+              {gameState === 'BATTLE' ? (
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <div style={{ width: '100%', display: 'flex', gap: '8px', marginBottom: '4px' }}>
+                    <button onClick={handleFight} className="battle-btn" style={{ flex: 3, padding: '15px', background: 'linear-gradient(#822, #500)', border: '2px solid #f55' }}>打ちかかる</button>
+                    <button onClick={() => setIsAutoBattle(!isAutoBattle)} className="battle-btn" style={{ flex: 1, background: isAutoBattle ? '#600' : '#222', borderColor: isAutoBattle ? '#f55' : '#444' }}>
+                      {isAutoBattle ? '修羅(自)' : '正攻(手)'}
+                    </button>
+                  </div>
+                  <button onClick={() => setShowSpells(showSpells ? null : '1')} className="battle-btn" style={{ flex: 1, background: 'linear-gradient(#228, #114)', border: '1px solid #44f' }}>術</button>
+                  <button onClick={handleRun} className="battle-btn" style={{ flex: 1, background: 'linear-gradient(#431, #210)', border: '1px solid #c93' }}>逃走</button>
+                  {showSpells && (
+                    <div style={{ width: '100%', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '5px', marginTop: '10px' }}>
+                      {(SPELLS[party[activeBattler].jobKey] || []).filter(s => s.lv <= party[activeBattler].lv).map((s, idx) => (
+                        <button key={idx} onClick={() => castSpell(s)} className="spell-btn" style={{ padding: '10px' }}>{s.name} ({s.mp})</button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+                    <button className="move-btn" onClick={() => processMove('TURN_LEFT')}>左向 [A]</button>
+                    <button className="move-btn" onClick={() => processMove('FORWARD')} style={{ background: 'linear-gradient(#242, #121)', border: '1px solid #484' }}>前進 [W]</button>
+                    <button className="move-btn" onClick={() => processMove('TURN_RIGHT')}>右向 [D]</button>
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button className="dialog-btn" style={{ flex: 1 }} onClick={handleSave}>💾 記録（セーブ）</button>
+                    <button className="dialog-btn" style={{ flex: 1 }} onClick={() => setIsMuted(prev => !prev)}>
+                      {isMuted ? '🔇 静寂を切る' : '🔊 律を奏でる'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* PC: Log on Right, Map also on Right (Toggle or Stack) */}
+      <div className={`window pane-log ${!isForceMobile ? '' : 'mobile-active-pane'}`}>
+        <span className="window-title">言霊の記録 & 絵図</span>
+        
+        {/* Toggle-able content for Right Pane on PC */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          {!isForceMobile && (
+            <div style={{ padding: '15px', borderBottom: '1px solid #333', background: '#111' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${MAP_WIDTH}, 15px)`, gap: '1px', justifyContent: 'center' }}>
+                {mapData.map((row, y) => row.map((cell, x) => renderMapCell(cell, x, y)))}
+              </div>
+            </div>
+          )}
+
+          {/* Unified Message Content rendering for PC */}
+          <div className="log-content" style={{ flex: 1, padding: '15px', overflowY: 'auto' }}>
+            {messages.map((m, i) => (
+              <div key={i} style={{ color: getMessageColor(m), marginBottom: '8px', borderLeft: '2px solid rgba(255,255,255,0.1)', paddingLeft: '10px' }}>
+                {m.text || m}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* UI Area (Mobile Only) */}
@@ -451,12 +468,11 @@ function App() {
           </div>
 
           <div className="mobile-log-display" id="mobile-log-display">
-            {messages.map((m, i) => {
-              const color = m.type === 'damage' ? '#ff6666' : m.type === 'heal' ? '#66ff66' : m.type === 'event' ? '#ffff88' : '#ccc';
-              return <div key={i} style={{ color, marginBottom: '4px' }}>
+            {messages.map((m, i) => (
+              <div key={i} style={{ color: getMessageColor(m), marginBottom: '4px' }}>
                 {'>'} {m.text || m}
               </div>
-            })}
+            ))}
           </div>
 
           <div style={{ padding: '8px 10px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px' }}>
