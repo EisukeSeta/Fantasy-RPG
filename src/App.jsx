@@ -64,7 +64,7 @@ function App() {
   const [activeDialog, setActiveDialog] = useState({
     title: '平安魔道伝 羅生門編 ― 序章',
     pages: [
-      `ようこそ、平安の闇へ。\n冒険を始める前に、端末の音量を上げてください。`,
+      `ようこそ、平安の闇へ。\n物語の調べを深く味わうため、音の芽を育てて（音量を上げて）お待ちくだされ。`,
       `雨が降っていた。\n京の南端にそびえる羅生門は、巨大な獣の死骸のように横たわっている。`,
       `茨木童子の腕を背負いし武者、渡辺綱。狐の影を纏いし陰陽師、安倍晴明。空虚な微笑を浮かべる比丘尼。`,
       `羅生門の奥には、黒煙の渦巻く奈落へと続く『穴』が開いていた……。`
@@ -482,30 +482,6 @@ function App() {
           </div>
         </div>
       )}
-
-      {/* PC: Log on Right, Map also on Right (Toggle or Stack) */}
-      <div className={`window pane-log ${!isForceMobile ? '' : 'mobile-active-pane'}`}>
-        <span className="window-title">言霊の記録 & 絵図</span>
-        
-        {/* Toggle-able content for Right Pane on PC */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          {!isForceMobile && (
-            <div style={{ padding: '15px', borderBottom: '1px solid #333', background: '#111' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${MAP_WIDTH}, 15px)`, gap: '1px', justifyContent: 'center' }}>
-                {mapData.map((row, y) => row.map((cell, x) => renderMapCell(cell, x, y)))}
-              </div>
-            </div>
-          )}
-          
-          <div className="log-content">
-            {messages.map((m, i) => (
-              <div key={i} style={{ color: m.type === 'damage' ? '#ff6666' : m.type === 'heal' ? '#66ff66' : m.type === 'event' ? '#ffff88' : '#ccc', marginBottom: '2px' }}>
-                {'>'} {m.text || m}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
 
       {/* Dialog Overlay */}
       {activeDialog && (
