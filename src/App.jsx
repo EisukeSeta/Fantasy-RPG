@@ -238,6 +238,15 @@ function App() {
         const e = getRandomEnemy(party.reduce((s,m) => s+m.lv, 0));
         setEnemy(e); setGameState('BATTLE'); setActiveBattler(0); addMessage(`${e.name} が出現！`, 'event');
       }
+      
+      // 物語の検知（イベント地点）
+      const coord = `${nX},${nY}`;
+      if (nX === 0 && nY === 0) {
+        showDialog("黄泉の井戸", [scenarioData.events.yomiWell]);
+      } else if (scenarioData.events.scrolls[coord]) {
+        showDialog("古の巻物", [scenarioData.events.scrolls[coord]]);
+      }
+
       if (!mapDataRef.current[nY][nX].visited) {
         setMapData(p => { const n = [...p]; n[nY] = [...n[nY]]; n[nY][nX] = {...n[nY][nX], visited: true}; return n; });
       }
@@ -312,7 +321,7 @@ function App() {
             <div key={i} className="status-item" style={{ opacity: m.hp <= 0 ? 0.5 : 1 }}>
               <div className="status-portrait">
                 {m.image ? (
-                  <img src={new URL(`./assets/allies/${m.image}`, import.meta.url).href} alt={m.name} />
+                  <img src={new URL(`./assets/allies/${m.image}`, import.meta.url).href} alt={m.name} onError={(e) => { e.target.style.display = 'none'; }} />
                 ) : (
                   <div style={{ width: '100%', height: '100%', background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>{m.icon}</div>
                 )}
@@ -359,7 +368,7 @@ function App() {
                   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px', marginBottom: '15px' }}>
                     <div style={{ width: enemy.image ? '180px' : 'auto', height: enemy.image ? '180px' : 'auto', overflow: 'hidden', border: enemy.image ? '2px solid #555' : 'none', borderRadius: '8px' }}>
                       {enemy.image ? (
-                        <img src={new URL(`./assets/enemies/${enemy.image}`, import.meta.url).href} alt={m.name} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(1) contrast(1.2)' }} />
+                        <img src={new URL(`./assets/enemies/${enemy.image}`, import.meta.url).href} alt={enemy.name} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(1) contrast(1.2)' }} onError={(e) => { e.target.style.display = 'none'; }} />
                       ) : (
                         <div style={{ fontSize: '3.5rem' }}>{enemy.icon}</div>
                       )}
@@ -523,8 +532,18 @@ function App() {
           <div className="dialog-footer">
             {activeDialog.showChoices ? (
               <div style={{ display: 'flex', gap: '20px' }}>
-                <button className="dialog-btn" onClick={() => { initAudio(); activeDialog.onConfirm(); setActiveDialog(null); }}>はい</button>
-                <button className="dialog-btn" onClick={() => setActiveDialog(null)}>否</button>
+                <button className="dialog-btn" onClick={() => { initAudio(); if(activeDialog.onConfirm) activeDialog.onConfirm(); setActiveDialog(null); }}>はい</button>
+                <button className="dialog-btn" onClick={() => { 
+                  if(gameState === 'DEAD') {
+                    // オープニングへ還る
+                    setGameState('EXPLORING');
+                    setPlayerState({ x: 1, y: 1, dir: DIRECTIONS.S });
+                    setActiveDialog({ ...scenarioData.opening, currentPage: 0 });
+                    setMessages([{ text: scenarioData.events.gameStart, type: 'event' }]);
+                  } else {
+                    setActiveDialog(null);
+                  }
+                }}>否</button>
               </div>
             ) : (
               <button className="dialog-btn" onClick={() => {
