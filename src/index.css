@@ -70,8 +70,8 @@ body {
   flex: 1;
   padding: 15px;
   overflow-y: auto;
-  font-size: 0.95rem;
-  line-height: 1.6;
+  font-size: 1.15rem; /* 拡大 */
+  line-height: 1.7;
   background: rgba(0, 0, 0, 0.5);
 }
 
@@ -132,7 +132,7 @@ body {
     overflow: hidden;
 }
 .status-name {
-    font-size: 1.1rem;
+    font-size: 1.25rem; /* 拡大 */
     font-weight: bold;
     color: #fff;
     white-space: nowrap;
@@ -251,7 +251,7 @@ body {
   overflow-y: auto !important;
   padding: 12px 15px !important;
   background: #000 !important;
-  font-size: 0.95rem !important;
+  font-size: 1.1rem !important; /* 拡大 */
   line-height: 1.6 !important;
   border: none !important;
 }
@@ -411,7 +411,8 @@ body {
     border: 1px solid var(--primary-gold);
     color: var(--soft-gold) !important;
     cursor: pointer;
-    padding: 10px 15px;
+    padding: 12px 20px; /* 余白拡大 */
+    font-size: 1.15rem; /* 拡大 */
     font-weight: bold;
     font-family: inherit;
     border-radius: 4px;

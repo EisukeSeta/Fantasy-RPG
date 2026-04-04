@@ -118,8 +118,9 @@ function App() {
     setPlayerState({ x: 1, y: 1, dir: DIRECTIONS.S });
     setMapData(prev => prev.map(row => row.map(cell => ({ ...cell, visited: false }))));
     setParty(p => p.map(m => ({ ...m, hp: balanceData.partyBase.resurrectHp, mp: balanceData.partyBase.resurrectMp, exp: getRequiredExp(m.lv), status: '平安' })));
+    setMessages(prev => [{ text: '……奈落の底から、冷ややかな風が吹く。', type: 'info' }, ...prev.slice(-5)]);
     setGameState('EXPLORING'); setEnemy(null);
-    addMessage(scenarioData.ui.resurrection);
+    setTimeout(() => addMessage(scenarioData.ui.resurrection, 'resurrect'), 500);
   }, [addMessage]);
 
   const handleLevelUp = useCallback((member) => {
@@ -283,14 +284,15 @@ function App() {
 
   const renderMapCell = (cell, x, y) => {
     const isP = playerState.x === x && playerState.y === y;
-    if (!cell.visited) return <div key={`${x}-${y}`} style={{ width: 35, height: 35, backgroundColor: '#000' }}></div>;
+    if (!cell.visited) return <div key={`${x}-${y}`} style={{ width: 22, height: 22, backgroundColor: '#000' }}></div>;
     return (
       <div key={`${x}-${y}`} style={{
-        width: 35, height: 35, backgroundColor: '#111', position: 'relative',
+        width: 22, height: 22, backgroundColor: '#111', position: 'relative',
         borderTop: cell.n ? '2px solid #aaa' : '1px dashed #333', borderRight: cell.e ? '2px solid #aaa' : '1px dashed #333',
-        borderBottom: cell.s ? '2px solid #aaa' : '1px dashed #333', borderLeft: cell.w ? '2px solid #aaa' : '1px dashed #333'
+        borderBottom: cell.s ? '2px solid #aaa' : '1px dashed #333', borderLeft: cell.w ? '2px solid #aaa' : '1px dashed #333',
+        boxSizing: 'border-box'
       }}>
-        {isP && <div style={{ position: 'absolute', top: '50%', left: '50%', transform: `translate(-50%, -50%) rotate(${playerState.dir*90}deg)`, color: '#3f3' }}>▲</div>}
+        {isP && <div style={{ position: 'absolute', top: '50%', left: '50%', transform: `translate(-50%, -50%) rotate(${playerState.dir*90}deg)`, color: '#3f3', fontSize: '0.8rem' }}>▲</div>}
       </div>
     );
   };
@@ -355,10 +357,16 @@ function App() {
                 }}>
                   <div style={{ fontSize: '1.2rem', color: 'var(--primary-gold)', marginBottom: '10px', textShadow: '0 0 10px rgba(184, 154, 66, 0.5)' }}>怪異 遭遇</div>
                   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px', marginBottom: '15px' }}>
-                    <div style={{ fontSize: '3rem' }}>{enemy.icon}</div>
+                    <div style={{ width: enemy.image ? '180px' : 'auto', height: enemy.image ? '180px' : 'auto', overflow: 'hidden', border: enemy.image ? '2px solid #555' : 'none', borderRadius: '8px' }}>
+                      {enemy.image ? (
+                        <img src={new URL(`./assets/enemies/${enemy.image}`, import.meta.url).href} alt={m.name} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(1) contrast(1.2)' }} />
+                      ) : (
+                        <div style={{ fontSize: '3.5rem' }}>{enemy.icon}</div>
+                      )}
+                    </div>
                     <div style={{ textAlign: 'left' }}>
-                      <div style={{ fontSize: '1.3rem', fontWeight: 'bold' }}>{enemy.name}</div>
-                      <div style={{ fontSize: '0.9rem', color: '#aaa' }}>羅生門の怪異</div>
+                      <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#fff' }}>{enemy.name}</div>
+                      <div style={{ fontSize: '1rem', color: '#aaa' }}>羅生門の怪異</div>
                     </div>
                   </div>
                   <div style={{ width: '100%', height: '12px', background: '#300', position: 'relative', border: '1px solid #500' }}>
@@ -434,8 +442,8 @@ function App() {
         {/* Toggle-able content for Right Pane on PC */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {!isForceMobile && (
-            <div style={{ padding: '15px', borderBottom: '1px solid #333', background: '#111' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${MAP_WIDTH}, 15px)`, gap: '1px', justifyContent: 'center' }}>
+            <div style={{ padding: '15px', borderBottom: '1px solid #333', background: '#111', display: 'flex', justifyContent: 'center' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${MAP_WIDTH}, 22px)`, gridTemplateRows: `repeat(${MAP_WIDTH}, 22px)`, gap: '0px', border: '1px solid #444' }}>
                 {mapData.map((row, y) => row.map((cell, x) => renderMapCell(cell, x, y)))}
               </div>
             </div>
