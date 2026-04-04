@@ -292,19 +292,33 @@ function App() {
       {/* PC: Side Status, Mobile: Hidden/Modal */}
       <div className={`window pane-status ${showStatus ? 'mobile-active-pane' : ''}`}>
         <span className="window-title">隊員之証</span>
-        <div style={{ flex: 1, padding: '10px', overflowY: 'auto' }}>
+        <div style={{ flex: 1, padding: '15px', overflowY: 'auto' }}>
            {(isForceMobile || showStatus) && (
              <button className="dialog-btn" style={{ position: 'sticky', top: 0, zIndex: 10, width: '100%', marginBottom: '15px' }} onClick={() => setShowStatus(false)}>探索に戻る</button>
            )}
            {party.map((m, idx) => (
-             <div key={idx} style={{ borderBottom: '1px solid #444', padding: '10px 0' }}>
-               <div style={{ display: 'flex', gap: '10px' }}>
-                 <span>{m.icon}</span>
-                 <div style={{ flex: 1 }}>{m.name} Lv.{m.lv}<br/><small>{m.job}</small></div>
+             <div key={idx} style={{ borderBottom: '1px solid #444', padding: '15px 0' }}>
+               <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '8px' }}>
+                 <span style={{ fontSize: '1.4rem' }}>{m.icon}</span>
+                 <div style={{ flex: 1 }}>
+                   <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#f0e68c' }}>{m.name}</div>
+                   <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>Lv.{m.lv} {m.job}</div>
+                 </div>
                </div>
-               <div style={{ height: '6px', background: '#333', marginTop: '5px' }}>
-                 <div style={{ width: `${(m.hp/m.maxHp)*100}%`, height: '100%', background: '#f55' }} />
+               
+               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', marginBottom: '4px' }}>
+                 <span style={{ color: m.hp <= m.maxHp * 0.2 ? '#f55' : '#eee' }}>HP: {m.hp} / {m.maxHp}</span>
+                 {m.maxMp > 0 && <span style={{ color: '#88f' }}>MP: {m.mp} / {m.maxMp}</span>}
                </div>
+
+               <div style={{ height: '22px', background: '#200', width: '100%', marginBottom: '6px', border: '1px solid #622', boxShadow: '0 0 10px rgba(255,0,0,0.2)' }}>
+                 <div style={{ width: `${Math.max(0, Math.min(100, (m.hp/m.maxHp)*100))}%`, height: '100%', background: 'linear-gradient(90deg, #800, #f33)', transition: 'width 0.3s ease' }} />
+               </div>
+               {m.maxMp > 0 && (
+                 <div style={{ height: '12px', background: '#002', width: '100%', border: '1px solid #226' }}>
+                   <div style={{ width: `${Math.max(0, Math.min(100, (m.mp/m.maxMp)*100))}%`, height: '100%', background: 'linear-gradient(90deg, #008, #33f)', transition: 'width 0.3s ease' }} />
+                 </div>
+               )}
              </div>
            ))}
         </div>
@@ -313,47 +327,43 @@ function App() {
       <div className="window pane-main">
         <span className="window-title">羅生門 闇視</span>
         
-        {/* Enemy Overlay (Battle) */}
-        {gameState === 'BATTLE' && enemy && (
-          <div className="window pane-enemy" style={{ position: 'absolute', top: '25px', left: '8px', right: '8px', zIndex: 100, background: 'rgba(0,0,0,0.85)', border: '1px solid #c44', padding: '8px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', fontWeight: 'bold', color: '#fdd' }}>
-              <span>{enemy.name} Lv.{enemy.lv}</span>
-              <span>HP {Math.ceil(enemy.hp)} / {enemy.maxHp}</span>
-            </div>
-            <div style={{ height: '22px', background: '#200', marginTop: '6px', border: '1px solid #622', boxShadow: '0 0 10px rgba(255,0,0,0.3)' }}>
-              <div style={{ width: `${(enemy.hp/enemy.maxHp)*100}%`, height: '100%', background: 'linear-gradient(90deg, #600, #f22)', transition: 'width 0.3s ease' }} />
-            </div>
-          </div>
-        )}
-
-        {/* Mobile Party Status Overlay */}
-        {isForceMobile && !showMap && !showStatus && (
-          <div className="mini-status-panel mobile-overlay">
-            {party.map((m, i) => (
-              <div key={i} style={{ flex: 1, background: 'rgba(5, 5, 5, 0.7)', backdropFilter: 'blur(4px)', padding: '6px', borderRadius: '4px', border: '1px solid rgba(184, 154, 66, 0.5)', minWidth: 0 }}>
-                <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#f0e68c', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: '2px' }}>
-                  {m.icon}{m.name}
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '4px' }}>
-                  <span style={{ color: m.hp <= m.maxHp * 0.2 ? '#f55' : '#eee' }}>H:{m.hp}</span>
-                  <span style={{ color: '#88f' }}>M:{m.mp}</span>
-                </div>
-                <div style={{ height: '5px', background: 'rgba(0,0,0,0.5)', width: '100%', marginBottom: '3px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                  <div style={{ width: `${Math.max(0, Math.min(100, (m.hp/m.maxHp)*100))}%`, height: '100%', background: 'linear-gradient(90deg, #800, #f33)' }} />
-                </div>
-                {m.maxMp > 0 && (
-                  <div style={{ height: '3px', background: 'rgba(0,0,0,0.5)', width: '100%', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <div style={{ width: `${Math.max(0, Math.min(100, (m.mp/m.maxMp)*100))}%`, height: '100%', background: 'linear-gradient(90deg, #008, #33f)' }} />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
         {/* Dungeon Display */}
-        <div className="wireframe-container" style={{ flexShrink: 0, position: 'relative' }}>
+        <div className="wireframe-container" style={{ flex: 1, position: 'relative' }}>
           <WireframeView mapData={mapData} playerPos={playerState} playerDir={playerState.dir} />
+          
+          {/* Enemy Overlay (Battle) - Now used for both PC and Mobile for drama */}
+          {gameState === 'BATTLE' && enemy && (
+            <div className="window pane-enemy" style={{ position: 'absolute', top: '25px', left: '8px', right: '8px', zIndex: 100, background: 'rgba(0,0,0,0.85)', border: '1px solid #c44', padding: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', fontWeight: 'bold', color: '#fdd' }}>
+                <span>{enemy.name} Lv.{enemy.lv}</span>
+                <span>HP {Math.ceil(enemy.hp)} / {enemy.maxHp}</span>
+              </div>
+              <div style={{ height: '22px', background: '#200', marginTop: '6px', border: '1px solid #622', boxShadow: '0 0 10px rgba(255,0,0,0.3)' }}>
+                <div style={{ width: `${(enemy.hp/enemy.maxHp)*100}%`, height: '100%', background: 'linear-gradient(90deg, #600, #f22)', transition: 'width 0.3s ease' }} />
+              </div>
+            </div>
+          )}
+
+          {/* Mobile Overlay (Only on Mobile) */}
+          {isForceMobile && !showMap && !showStatus && (
+            <div className="mini-status-panel mobile-overlay">
+              {party.map((m, i) => (
+                <div key={i} style={{ flex: 1, background: 'rgba(5, 5, 5, 0.7)', backdropFilter: 'blur(4px)', padding: '6px', borderRadius: '4px', border: '1px solid rgba(184, 154, 66, 0.5)', minWidth: 0 }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#f0e68c', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: '2px' }}>
+                    {m.icon}{m.name}
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '4px' }}>
+                    <span style={{ color: m.hp <= m.maxHp * 0.2 ? '#f55' : '#eee' }}>H:{m.hp}</span>
+                    <span style={{ color: '#88f' }}>M:{m.mp}</span>
+                  </div>
+                  <div style={{ height: '5px', background: 'rgba(0,0,0,0.5)', width: '100%', marginBottom: '3px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <div style={{ width: `${Math.max(0, Math.min(100, (m.hp/m.maxHp)*100))}%`, height: '100%', background: 'linear-gradient(90deg, #800, #f33)' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="dungeon-tap-overlay" onTouchStart={e => touchStartPos.current={x:e.touches[0].clientX, y:e.touches[0].clientY}} onTouchEnd={e => {
             const dx = e.changedTouches[0].clientX - touchStartPos.current.x;
             if (Math.abs(dx) > 50) processMove(dx > 0 ? 'TURN_RIGHT' : 'TURN_LEFT');
@@ -361,12 +371,10 @@ function App() {
             {gameState === 'EXPLORING' && <div className="tap-area tap-forward" onClick={() => processMove('FORWARD')} style={{ height: '100%' }}></div>}
           </div>
         </div>
-      </div>
 
-      {/* UI Area (Mobile Only) */}
-      {isForceMobile && !showMap && !showStatus && (
-        <div className="mobile-ui-container">
-          <div className="mobile-btn-container">
+        {/* PC Controls Area */}
+        {!isForceMobile && (
+          <div style={{ padding: '15px', background: '#080808', borderTop: '1px solid #333' }}>
             {gameState === 'BATTLE' ? (
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <div style={{ width: '100%', display: 'flex', gap: '8px', marginBottom: '4px' }}>
@@ -378,69 +386,59 @@ function App() {
                 <button onClick={() => setShowSpells(showSpells ? null : '1')} className="battle-btn" style={{ flex: 1, background: 'linear-gradient(#228, #114)', border: '1px solid #44f' }}>術</button>
                 <button onClick={handleRun} className="battle-btn" style={{ flex: 1, background: 'linear-gradient(#431, #210)', border: '1px solid #c93' }}>逃走</button>
                 {showSpells && (
-                  <div style={{ width: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px', marginTop: '5px' }}>
+                  <div style={{ width: '100%', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '5px', marginTop: '10px' }}>
                     {(SPELLS[party[activeBattler].jobKey] || []).filter(s => s.lv <= party[activeBattler].lv).map((s, idx) => (
-                      <button key={idx} onClick={() => castSpell(s)} className="spell-btn" style={{ padding: '12px' }}>{s.name}</button>
+                      <button key={idx} onClick={() => castSpell(s)} className="spell-btn" style={{ padding: '10px' }}>{s.name} ({s.mp})</button>
                     ))}
                   </div>
                 )}
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '5px' }}>
-                  <button className="move-btn" onClick={() => processMove('TURN_LEFT')}>左向</button>
-                  <button className="move-btn" onClick={() => processMove('FORWARD')} style={{ background: 'linear-gradient(#242, #121)', border: '1px solid #484' }}>前進</button>
-                  <button className="move-btn" onClick={() => processMove('TURN_RIGHT')}>右向</button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+                  <button className="move-btn" onClick={() => processMove('TURN_LEFT')}>左向 [A]</button>
+                  <button className="move-btn" onClick={() => processMove('FORWARD')} style={{ background: 'linear-gradient(#242, #121)', border: '1px solid #484' }}>前進 [W]</button>
+                  <button className="move-btn" onClick={() => processMove('TURN_RIGHT')}>右向 [D]</button>
                 </div>
-                <div style={{ display: 'flex', gap: '5px' }}>
-                  <button className="map-toggle-btn" style={{ flex: 1, padding: '12px' }} onClick={() => { initAudio(); setShowMap(true); }}>📜 絵図</button>
-                  <button className="map-toggle-btn" style={{ flex: 1, padding: '12px' }} onClick={() => { initAudio(); setShowStatus(true); }}>🪪 隊員</button>
-                  <button className="save-btn" style={{ flex: 1, padding: '12px' }} onClick={handleSave}>💾 記録</button>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button className="dialog-btn" style={{ flex: 1 }} onClick={handleSave}>💾 記録（セーブ）</button>
+                  <button className="dialog-btn" style={{ flex: 1 }} onClick={() => SoundEngine.toggleMute()}>{isMuted ? '🔇 静寂を切る' : '🔊 律を奏でる'}</button>
                 </div>
               </div>
             )}
           </div>
+        )}
+      </div>
 
-          <div className="mobile-log-display" id="mobile-log-display">
-            {messages.map((m, i) => {
-              const color = m.type === 'damage' ? '#ff6666' : m.type === 'heal' ? '#66ff66' : m.type === 'event' ? '#ffff88' : '#ccc';
-              return <div key={i} style={{ color, marginBottom: '4px', textShadow: m.type!=='normal' ? '0 0 5px rgba(0,0,0,0.5)' : 'none' }}>
-                {'>'} {m.text || m}
+      {/* PC: Log on Right, Map also on Right (Toggle or Stack) */}
+      <div className={`window pane-log ${!isForceMobile ? '' : 'mobile-active-pane'}`}>
+        <span className="window-title">言霊の記録 & 絵図</span>
+        
+        {/* Toggle-able content for Right Pane on PC */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          {!isForceMobile && (
+            <div style={{ padding: '15px', borderBottom: '1px solid #333', background: '#111' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${MAP_WIDTH}, 15px)`, gap: '1px', justifyContent: 'center' }}>
+                {mapData.map((row, y) => row.map((cell, x) => (
+                   <div key={`${x}-${y}`} style={{ 
+                     width: 15, height: 15, background: playerState.x===x && playerState.y===y ? '#3f3' : (cell.visited ? '#333' : '#000'),
+                     borderTop: cell.n && cell.visited ? '1px solid #666' : 'none',
+                     borderRight: cell.e && cell.visited ? '1px solid #666' : 'none',
+                     borderBottom: cell.s && cell.visited ? '1px solid #666' : 'none',
+                     borderLeft: cell.w && cell.visited ? '1px solid #666' : 'none'
+                   }} />
+                )))}
               </div>
-            })}
-          </div>
-
-          <div style={{ padding: '8px 10px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px' }}>
-             <button onClick={() => setIsMuted(!isMuted)} style={{ background: 'none', border: 'none', color: '#c93', fontSize: '0.85rem', fontWeight: 'bold' }}>{isMuted ? '静音' : '音・律'}</button>
-             <input type="range" min="0" max="1" step="0.1" value={volume} onChange={e => setVolume(parseFloat(e.target.value))} style={{ width: '80px', height: '20px' }} />
-          </div>
-        </div>
-      )}
-
-      {/* PC Log Display (Visible only on PC) */}
-      {!isForceMobile && (
-        <div className="window pane-log">
-          <span className="window-title">言霊の記録</span>
+            </div>
+          )}
+          
           <div className="log-content">
             {messages.map((m, i) => (
-              <div key={i} style={{ color: m.type === 'damage' ? '#ff6666' : m.type === 'heal' ? '#66ff66' : m.type === 'event' ? '#ffff88' : '#ccc' }}>
+              <div key={i} style={{ color: m.type === 'damage' ? '#ff6666' : m.type === 'heal' ? '#66ff66' : m.type === 'event' ? '#ffff88' : '#ccc', marginBottom: '2px' }}>
                 {'>'} {m.text || m}
               </div>
             ))}
           </div>
-        </div>
-      )}
-
-      {/* Map Overlay (Mobile) */}
-      <div className={`window pane-map ${showMap ? 'mobile-active-pane' : ''}`}>
-        <span className="window-title">絵図と絵巻き</span>
-        <div style={{ flex: 1, padding: '10px', overflowY: 'auto' }}>
-           {(isForceMobile || showMap) && (
-             <button className="dialog-btn" style={{ position: 'sticky', top: 0, zIndex: 10, width: '100%', marginBottom: '15px' }} onClick={() => setShowMap(false)}>探索に戻る</button>
-           )}
-           <div style={{ display: 'grid', gridTemplateColumns: `repeat(${MAP_WIDTH}, 30px)`, gap: '1px', justifyContent: 'center' }}>
-             {mapData.map((row, y) => row.map((cell, x) => renderMapCell(cell, x, y)))}
-           </div>
         </div>
       </div>
 
