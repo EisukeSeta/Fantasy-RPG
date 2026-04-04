@@ -9,6 +9,7 @@ import SoundEngine from './utils/SoundEngine';
 import balanceData from './data/Balance.json';
 import scenarioData from './data/Scenario.json';
 import charactersData from './data/Characters.json';
+import mapEventsData from './data/MapEvents.json';
 
 const getRequiredExp = (lv) => {
   if (lv <= 1) return 0;
@@ -35,7 +36,8 @@ function App() {
     if (!type) {
       type = 'normal';
       if (msg.includes('ダメージ') || msg.includes('傷') || msg.includes('討死')) type = 'damage_party';
-      if (msg.includes('癒えた') || msg.includes('全快') || msg.includes('昇格')) type = 'heal';
+      if (msg.includes('癒えた') || msg.includes('全快')) type = 'heal';
+      if (msg.includes('昇格') || msg.includes('レベルアップ')) type = 'level_up';
       if (msg.includes('出現') || msg.includes('！')) type = 'event';
     }
 
@@ -115,10 +117,10 @@ function App() {
   }, [addMessage]);
 
   const handleResurrect = useCallback(() => {
-    setPlayerState({ x: 1, y: 1, dir: DIRECTIONS.S });
+    setPlayerState({ x: 0, y: 0, dir: DIRECTIONS.S });
     setMapData(prev => prev.map(row => row.map(cell => ({ ...cell, visited: false }))));
     setParty(p => p.map(m => ({ ...m, hp: balanceData.partyBase.resurrectHp, mp: balanceData.partyBase.resurrectMp, exp: getRequiredExp(m.lv), status: '平安' })));
-    setMessages(prev => [{ text: '……奈落の底から、冷ややかな風が吹く。', type: 'info' }, ...prev.slice(-5)]);
+    setMessages(prev => [{ text: '……虚無の淵から、黄泉の風が吹く。', type: 'info' }, ...prev.slice(-5)]);
     setGameState('EXPLORING'); setEnemy(null);
     setTimeout(() => addMessage(scenarioData.ui.resurrection, 'resurrect'), 500);
   }, [addMessage]);
@@ -171,7 +173,8 @@ function App() {
     if (type === 'damage_party' || type === 'death') return '#ff4444'; // 鮮血
     if (type === 'damage_enemy') return '#ff8844'; // 橙赤
     if (type === 'heal' || type === 'resurrect') return '#44ff44';   // 碧
-    if (type === 'event' || type === 'level_up') return '#ffff88';  // 金
+    if (type === 'level_up') return varGold;  // 黄金
+    if (type === 'event') return '#ffff88';  // 黄
     if (type === 'info') return '#88ccff'; // 蒼
     return '#ccc'; // 白
   };
@@ -240,11 +243,13 @@ function App() {
       }
       
       // 物語の検知（イベント地点）
-      const coord = `${nX},${nY}`;
-      if (nX === 0 && nY === 0) {
-        showDialog("黄泉の井戸", [scenarioData.events.yomiWell]);
-      } else if (scenarioData.events.scrolls[coord]) {
-        showDialog("古の巻物", [scenarioData.events.scrolls[coord]]);
+      const event = mapEventsData.events.find(e => e.x === nX && e.y === nY);
+      if (event) {
+        showDialog(event.name, [event.description]);
+        if (event.isHeal) {
+          setParty(p => p.map(m => m.status === '討死' ? m : { ...m, hp: m.maxHp, mp: m.maxMp }));
+          addMessage('【社】にて傷が癒やされた。', 'heal');
+        }
       }
 
       if (!mapDataRef.current[nY][nX].visited) {
@@ -275,8 +280,19 @@ function App() {
     if (isAutoBattle && gameState === 'BATTLE' && enemy) {
       const t = setTimeout(() => {
         const a = party[activeBattler]; if (!a || a.hp <= 0) return;
+        // AI戦闘強化: ボス戦では惜しみなく術を使用
+        const isBoss = enemy.isBoss;
+        const availableSpells = (SPELLS[a.jobKey] || []).filter(s => s.lv <= a.lv && a.mp >= s.mp);
+        
+        if (isBoss && availableSpells.length > 0) {
+          const bestSpell = availableSpells.sort((a,b) => b.mp - a.mp)[0]; // 最大消費（最強）を優先
+          castSpell(bestSpell);
+          return;
+        }
+        
+        // 通常のAI（既存）
         if (a.jobKey === 'NISOU' && party.some(m => m.hp > 0 && m.hp < m.maxHp*0.7)) {
-            const s = (SPELLS.NISOU || []).find(sp => sp.type === 'HEAL' && a.mp >= sp.mp);
+            const s = availableSpells.find(sp => sp.type === 'HEAL');
             if (s) { castSpell(s); return; }
         }
         handleFight();
@@ -294,14 +310,25 @@ function App() {
   const renderMapCell = (cell, x, y) => {
     const isP = playerState.x === x && playerState.y === y;
     if (!cell.visited) return <div key={`${x}-${y}`} style={{ width: 22, height: 22, backgroundColor: '#000' }}></div>;
+    
+    // アイコンの検知
+    const event = mapEventsData.events.find(e => e.x === x && e.y === y);
+    let icon = null;
+    if (event) {
+      if (event.type === 'shrine') icon = '⛩️';
+      else if (event.type === 'well') icon = '井';
+      else if (event.type === 'scroll') icon = '📜';
+    }
+
     return (
       <div key={`${x}-${y}`} style={{
         width: 22, height: 22, backgroundColor: '#111', position: 'relative',
         borderTop: cell.n ? '2px solid #aaa' : '1px dashed #333', borderRight: cell.e ? '2px solid #aaa' : '1px dashed #333',
         borderBottom: cell.s ? '2px solid #aaa' : '1px dashed #333', borderLeft: cell.w ? '2px solid #aaa' : '1px dashed #333',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px'
       }}>
-        {isP && <div style={{ position: 'absolute', top: '50%', left: '50%', transform: `translate(-50%, -50%) rotate(${playerState.dir*90}deg)`, color: '#3f3', fontSize: '0.8rem' }}>▲</div>}
+        {icon && <span style={{ opacity: 0.6 }}>{icon}</span>}
+        {isP && <div style={{ position: 'absolute', top: '50%', left: '50%', transform: `translate(-50%, -50%) rotate(${playerState.dir*90}deg)`, color: '#3f3', fontSize: '0.8rem', zIndex: 2 }}>▲</div>}
       </div>
     );
   };
@@ -318,7 +345,7 @@ function App() {
         )}
         <div className="status-grid" style={{ padding: '20px 15px' }}>
           {party.map((m, i) => (
-            <div key={i} className="status-item" style={{ opacity: m.hp <= 0 ? 0.5 : 1 }}>
+            <div key={i} className={`status-item ${gameState === 'BATTLE' && activeBattler === i ? 'active-battler' : ''}`} style={{ opacity: m.hp <= 0 ? 0.5 : 1 }}>
               <div className="status-portrait">
                 {m.image ? (
                   <img src={new URL(`./assets/allies/${m.image}`, import.meta.url).href} alt={m.name} onError={(e) => { e.target.style.display = 'none'; }} />
@@ -331,13 +358,16 @@ function App() {
                   <span className="status-name">{m.name}</span>
                   <span style={{ fontSize: '0.75rem', color: varGold }}>Lv {m.lv}</span>
                 </div>
-                <div className="hp-bar-container" style={{ height: '16px', background: '#300', border: '1px solid #622', marginBottom: '4px', position: 'relative' }}>
+                <div className="hp-bar-container" style={{ height: '12px', background: '#300', border: '1px solid #622', marginBottom: '4px', position: 'relative' }}>
                   <div style={{ width: `${(m.hp / m.maxHp) * 100}%`, height: '100%', background: 'linear-gradient(to bottom, #d22, #800)', transition: 'width 0.3s' }} />
-                  <span style={{ position: 'absolute', right: '4px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.7rem', fontWeight: 'bold' }}>HP {Math.max(0, m.hp)}</span>
+                  <span style={{ position: 'absolute', right: '4px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.65rem', fontWeight: 'bold' }}>HP {Math.max(0, m.hp)}</span>
                 </div>
-                <div className="mp-bar-container" style={{ height: '12px', background: '#003', border: '1px solid #226', position: 'relative' }}>
+                <div className="mp-bar-container" style={{ height: '10px', background: '#003', border: '1px solid #226', marginBottom: '4px', position: 'relative' }}>
                   <div style={{ width: `${(m.mp / m.maxMp) * 100}%`, height: '100%', background: 'linear-gradient(to bottom, #22d, #007)', transition: 'width 0.3s' }} />
-                  <span style={{ position: 'absolute', right: '4px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.65rem', fontWeight: 'bold' }}>MP {Math.max(0, m.mp)}</span>
+                  <span style={{ position: 'absolute', right: '4px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.6rem', fontWeight: 'bold' }}>MP {Math.max(0, m.mp)}</span>
+                </div>
+                <div className="xp-bar-container">
+                  <div className="xp-bar" style={{ width: `${Math.min(100, ((m.exp - getRequiredExp(m.lv)) / (getRequiredExp(m.lv + 1) - getRequiredExp(m.lv))) * 100)}%` }} />
                 </div>
               </div>
             </div>
@@ -450,13 +480,16 @@ function App() {
         
         {/* Toggle-able content for Right Pane on PC */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          {!isForceMobile && (
-            <div style={{ padding: '15px', borderBottom: '1px solid #333', background: '#111', display: 'flex', justifyContent: 'center' }}>
+            <div style={{ padding: '15px', borderBottom: '1px solid #333', background: '#111', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <div style={{ display: 'grid', gridTemplateColumns: `repeat(${MAP_WIDTH}, 22px)`, gridTemplateRows: `repeat(${MAP_WIDTH}, 22px)`, gap: '0px', border: '1px solid #444' }}>
                 {mapData.map((row, y) => row.map((cell, x) => renderMapCell(cell, x, y)))}
               </div>
+              <div className="map-legend">
+                {mapEventsData.legend.map((l, idx) => (
+                  <div key={idx} className="legend-item"><span>{l.icon}</span> {l.name}</div>
+                ))}
+              </div>
             </div>
-          )}
 
           {/* Unified Message Content rendering for PC */}
           <div className="log-content" style={{ flex: 1, padding: '15px', overflowY: 'auto' }}>
@@ -535,11 +568,11 @@ function App() {
                 <button className="dialog-btn" onClick={() => { initAudio(); if(activeDialog.onConfirm) activeDialog.onConfirm(); setActiveDialog(null); }}>はい</button>
                 <button className="dialog-btn" onClick={() => { 
                   if(gameState === 'DEAD') {
-                    // オープニングへ還る
+                    // 討死として終わる（タイトルへ）
                     setGameState('EXPLORING');
                     setPlayerState({ x: 1, y: 1, dir: DIRECTIONS.S });
                     setActiveDialog({ ...scenarioData.opening, currentPage: 0 });
-                    setMessages([{ text: scenarioData.events.gameStart, type: 'event' }]);
+                    setMessages([{ text: '都は闇に包まれた……', type: 'damage_party' }]);
                   } else {
                     setActiveDialog(null);
                   }
