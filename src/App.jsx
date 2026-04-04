@@ -23,7 +23,7 @@ function App() {
   const [gameState, setGameState] = useState('EXPLORING'); 
   const [messages, setMessages] = useState([{ text: '【御神木の社】から冒険が始まった...', type: 'event' }]);
   const [isAudioInitialized, setAudioInitialized] = useState(false);
-  const [volume, setVolume] = useState(0.3);
+  const [volume, setVolume] = useState(0.5);
   const [isMuted, setIsMuted] = useState(false);
 
   const addMessage = useCallback((msg) => {
