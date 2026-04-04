@@ -375,8 +375,8 @@ function App() {
                     {isAutoBattle ? '修羅(自)' : '正攻(手)'}
                   </button>
                 </div>
-                <button onClick={() => setShowSpells(showSpells ? null : '1')} className="battle-btn" style={{ flex: 1 }}>術</button>
-                <button onClick={handleRun} className="battle-btn" style={{ flex: 1, background: '#333' }}>逃走</button>
+                <button onClick={() => setShowSpells(showSpells ? null : '1')} className="battle-btn" style={{ flex: 1, background: 'linear-gradient(#228, #114)', border: '1px solid #44f' }}>術</button>
+                <button onClick={handleRun} className="battle-btn" style={{ flex: 1, background: 'linear-gradient(#431, #210)', border: '1px solid #c93' }}>逃走</button>
                 {showSpells && (
                   <div style={{ width: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px', marginTop: '5px' }}>
                     {(SPELLS[party[activeBattler].jobKey] || []).filter(s => s.lv <= party[activeBattler].lv).map((s, idx) => (
