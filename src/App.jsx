@@ -1,27 +1,31 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { generateMap, MAP_WIDTH, MAP_HEIGHT, DIRECTIONS, DIR_DELTAS } from './data/mapData';
+import { generateMap, DIRECTIONS, DIR_DELTAS, MAP_WIDTH } from './data/mapData';
 import { WireframeView } from './components/WireframeView';
 import { ENEMY_LIST, getRandomEnemy, calculateHitAndDamage } from './data/enemyData';
 import { SPELLS } from './data/magicData';
 import SoundEngine from './utils/SoundEngine';
 
+// JSON データのインポート（魂の外部化）
+import balanceData from './data/Balance.json';
+import scenarioData from './data/Scenario.json';
+import charactersData from './data/Characters.json';
+
 const getRequiredExp = (lv) => {
   if (lv <= 1) return 0;
-  if (lv === 2) return 100;
-  if (lv === 3) return 250;
-  if (lv === 4) return 500;
-  if (lv === 5) return 900;
-  if (lv >= 50) return 9999999;
+  if (lv <= balanceData.experience.baseTable.length) {
+    return balanceData.experience.baseTable[lv - 1];
+  }
+  const { sigmoidScale, sigmoidCenter, sigmoidSlope } = balanceData.experience;
   const x = (lv - 1) / 49;
-  const sigmoid = 1 / (1 + Math.exp(-6 * (x - 0.5)));
-  return Math.floor(20000 * sigmoid);
+  const sigmoid = 1 / (1 + Math.exp(-sigmoidSlope * (x - sigmoidCenter)));
+  return Math.floor(sigmoidScale * sigmoid);
 };
 
-const BOSS_POS = { x: 8, y: 6 };
+const BOSS_POS = balanceData.map.bossPos;
 
 function App() {
   const [gameState, setGameState] = useState('EXPLORING'); 
-  const [messages, setMessages] = useState([{ text: '【御神木の社】から冒険が始まった...', type: 'event' }]);
+  const [messages, setMessages] = useState([{ text: scenarioData.events.gameStart, type: 'event' }]);
   const [isAudioInitialized, setAudioInitialized] = useState(false);
   const [volume, setVolume] = useState(0.5);
   const [isMuted, setIsMuted] = useState(false);
@@ -49,7 +53,7 @@ function App() {
   }, [gameState, volume, isMuted, addMessage, isAudioInitialized]);
 
   const handleSave = useCallback(() => {
-    addMessage('⛩️ 冒険の記録（セーブ）は完了しました。');
+    addMessage(scenarioData.ui.saveComplete);
   }, [addMessage]);
 
   const [playerState, setPlayerState] = useState({ x: 1, y: 1, dir: DIRECTIONS.S });
@@ -62,13 +66,7 @@ function App() {
   const [showSpells, setShowSpells] = useState(null);
 
   const [activeDialog, setActiveDialog] = useState({
-    title: '平安魔道伝 羅生門編 ― 序章',
-    pages: [
-      `ようこそ、平安の闇へ。\n物語の調べを深く味わうため、音の芽を育てて（音量を上げて）お待ちくだされ。`,
-      `雨が降っていた。\n京の南端にそびえる羅生門は、巨大な獣の死骸のように横たわっている。`,
-      `茨木童子の腕を背負いし武者、渡辺綱。狐の影を纏いし陰陽師、安倍晴明。空虚な微笑を浮かべる比丘尼。`,
-      `羅生門の奥には、黒煙の渦巻く奈落へと続く『穴』が開いていた……。`
-    ],
+    ...scenarioData.opening,
     currentPage: 0
   });
 
@@ -78,11 +76,7 @@ function App() {
     return m;
   });
 
-  const [party, setParty] = useState([
-    { id: 'Tsu', name: '渡辺 綱', job: '武者', jobKey: 'SAMURAI', expName: '武者の魂', lv: 1, exp: 0, icon: '⚔️', hp: 30, maxHp: 30, mp: 0, maxMp: 0, ac: 4, minDmg: 8, maxDmg: 15, status: '平安' },
-    { id: 'Sei', name: '安倍 晴明', job: '陰陽師', jobKey: 'ONMYOJI', expName: '式神', lv: 1, exp: 0, icon: '☯️', hp: 15, maxHp: 15, mp: 10, maxMp: 10, ac: 10, minDmg: 1, maxDmg: 4, status: '平安' },
-    { id: 'Bik', name: '八百比丘尼', job: '尼僧', jobKey: 'NISOU', expName: '法力', lv: 1, exp: 0, icon: '📿', hp: 20, maxHp: 20, mp: 8, maxMp: 8, ac: 8, minDmg: 2, maxDmg: 6, status: '平安' }
-  ]);
+  const [party, setParty] = useState(charactersData);
 
   const isForceMobile = (typeof window !== 'undefined' && (window.innerWidth <= 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent))) || new URLSearchParams(window.location.search).get('mobile') === '1';
   const isDebug = new URLSearchParams(window.location.search).get('debug') === '1';
@@ -118,19 +112,21 @@ function App() {
   }, [addMessage]);
 
   const handleResurrect = useCallback(() => {
-    setPlayerState({ x: 0, y: 0, dir: DIRECTIONS.E });
+    setPlayerState({ x: 1, y: 1, dir: DIRECTIONS.S });
     setMapData(prev => prev.map(row => row.map(cell => ({ ...cell, visited: false }))));
-    setParty(p => p.map(m => ({ ...m, hp: 5, mp: 2, exp: getRequiredExp(m.lv), status: '平安' })));
+    setParty(p => p.map(m => ({ ...m, hp: balanceData.partyBase.resurrectHp, mp: balanceData.partyBase.resurrectMp, exp: getRequiredExp(m.lv), status: '平安' })));
     setGameState('EXPLORING'); setEnemy(null);
-    addMessage('【黄泉還り】井戸から這い上がった。');
+    addMessage(scenarioData.ui.resurrection);
   }, [addMessage]);
 
   const handleLevelUp = useCallback((member) => {
     let m = { ...member };
-    while (m.lv < 50 && m.exp >= getRequiredExp(m.lv + 1)) {
+    while (m.lv < balanceData.experience.maxLevel && m.exp >= getRequiredExp(m.lv + 1)) {
       m.lv += 1;
-      m.maxHp += 5; m.maxMp += 3; m.hp = m.maxHp; m.mp = m.maxMp;
-      addMessage(`${m.name} は Lv.${m.lv} に昇格した！`);
+      m.maxHp += balanceData.partyBase.hpPerLevel;
+      m.maxMp += balanceData.partyBase.mpPerLevel;
+      m.hp = m.maxHp; m.mp = m.maxMp;
+      addMessage(`${m.name}${scenarioData.ui.levelUp.replace('%LV%', m.lv)}`);
     }
     return m;
   }, [addMessage]);
@@ -139,12 +135,12 @@ function App() {
     if (won) {
         SoundEngine.playMonsterDeath();
         addMessage(`${enemy.name} を調伏した！`);
-        if (enemy.isBoss) { setBossDefeated(true); showDialog('都の安寧', ['鵺を倒し、都に光が戻った。']); }
-        setParty(p => p.map(m => handleLevelUp({ ...m, exp: m.exp + Math.floor(enemy.exp * 0.3) })));
+        if (enemy.isBoss) { setBossDefeated(true); showDialog(scenarioData.opening.title, [scenarioData.events.bossDefeated]); }
+        setParty(p => p.map(m => handleLevelUp({ ...m, exp: m.exp + Math.floor(enemy.exp * balanceData.rates.expShare) })));
         setGameState('EXPLORING'); setEnemy(null);
     } else {
         setGameState('DEAD');
-        showDialog('黄泉への誘い', ['「もう一度挑むか？」'], () => handleResurrect(), true);
+        showDialog(scenarioData.opening.title, [scenarioData.events.gameOver], () => handleResurrect(), true);
     }
     setActiveBattler(0); setShowSpells(null);
   }, [enemy, addMessage, showDialog, handleLevelUp, handleResurrect]);
@@ -232,7 +228,7 @@ function App() {
     if (moved) {
       if (!bossDefeated && nX===BOSS_POS.x && nY===BOSS_POS.y) {
         const b = ENEMY_LIST.find(e => e.id === 10); setEnemy({...b, hp: b.maxHp}); setGameState('BATTLE');
-      } else if (debugEncounter && Math.random() < 0.15) {
+      } else if (debugEncounter && Math.random() < balanceData.rates.encounter) {
         const e = getRandomEnemy(party.reduce((s,m) => s+m.lv, 0));
         setEnemy(e); setGameState('BATTLE'); setActiveBattler(0); addMessage(`${e.name} が出現！`);
       }

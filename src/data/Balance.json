@@ -1,0 +1,25 @@
+{
+  "map": {
+    "width": 10,
+    "height": 8,
+    "bossPos": { "x": 8, "y": 6 }
+  },
+  "rates": {
+    "encounter": 0.1,
+    "messageSpeed": 800,
+    "expShare": 0.33
+  },
+  "experience": {
+    "maxLevel": 50,
+    "baseTable": [0, 100, 250, 500, 900],
+    "sigmoidScale": 20000,
+    "sigmoidCenter": 0.5,
+    "sigmoidSlope": 6
+  },
+  "partyBase": {
+    "hpPerLevel": 5,
+    "mpPerLevel": 3,
+    "resurrectHp": 5,
+    "resurrectMp": 2
+  }
+}

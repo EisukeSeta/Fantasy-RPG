@@ -1,4 +1,5 @@
 // C:\Win_tools\Antigravity\Fantasy-RPG\src\data\mapData.js
+import balanceData from './Balance.json';
 
 // 10x10 ダンジョンのアスキーアート表現
 // +: 柱/角
@@ -25,8 +26,8 @@ const asciiMap = [
   "+-+-+-+-+-+-+-+-+-+-+"
 ];
 
-export const MAP_WIDTH = 10;
-export const MAP_HEIGHT = 8; // 上のAAは高さ8マス
+export const MAP_WIDTH = balanceData.map.width;
+export const MAP_HEIGHT = balanceData.map.height; // 上のAAは高さ8マス
 
 // マップデータを解析してオブジェクトの2次元配列に変換する関数
 export function generateMap() {

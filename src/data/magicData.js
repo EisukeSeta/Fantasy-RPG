@@ -1,21 +1,3 @@
-export const SPELLS = {
-  SAMURAI: [ // 武将・渡辺 綱（物理奥義・MPを精神力として消費）
-    { id: 'T1', lv: 2, name: '鬼の金剛', type: 'BUFF', mp: 1, acBonus: 2, target: 'SELF', desc: '精神を研ぎ澄ませ防御を高める' },
-    { id: 'T2', lv: 4, name: '蜘蛛切り', type: 'ATTACK', mp: 2, minDmg: 15, maxDmg: 25, target: 'SINGLE', desc: '膝丸の異名、土蜘蛛を斬った一撃' },
-    { id: 'T3', lv: 8, name: '鬼の腕斬り', type: 'ATTACK', mp: 5, minDmg: 40, maxDmg: 70, target: 'SINGLE', desc: '羅生門の鬼の腕を切り落とした伝説の剣技' }
-  ],
-  ONMYOJI: [ // 陰陽師・安倍晴明（式神・陰陽の道）
-    { id: 'S1', lv: 1, name: '泰山府君', type: 'HEAL', mp: 2, minHeal: 10, maxHeal: 25, target: 'SINGLE', desc: '魂の寿命を司る神に祈り命を繋ぐ' },
-    { id: 'S2', lv: 2, name: '式神・玄武', type: 'STATUS', mp: 2, target: 'SINGLE', desc: '北の守護獣が敵の動きを封じる' },
-    { id: 'S3', lv: 4, name: '五芒星の結界', type: 'ATTACK', mp: 4, minDmg: 20, maxDmg: 40, target: 'ALL', desc: '強力な呪印で敵全体を掃滅する' },
-    { id: 'S4', lv: 6, name: '占辞・凶', type: 'ATTACK', mp: 3, minDmg: 30, maxDmg: 50, target: 'SINGLE', desc: '敵に不吉な運命を強制し深い痛手を与える' },
-    { id: 'S5', lv: 10, name: '急急如律令', type: 'ATTACK', mp: 8, minDmg: 60, maxDmg: 120, target: 'ALL', desc: '森羅万象の理を以て邪悪を滅ぼす' }
-  ],
-  NISOU: [ // 尼僧・八百比丘尼（不老長生・慈悲の祈り）
-    { id: 'N1', lv: 1, name: '甘露の雨', type: 'HEAL', mp: 1, minHeal: 5, maxHeal: 15, target: 'SINGLE', desc: '慈悲の雨が傷を癒やす' },
-    { id: 'N2', lv: 3, name: '不動明王の加護', type: 'BUFF', mp: 2, acBonus: 4, target: 'ALL', desc: '揺るぎなき守護を全員に与える' },
-    { id: 'N3', lv: 5, name: '人魚の肉', type: 'HEAL', mp: 6, minHeal: 60, maxHeal: 100, target: 'SINGLE', desc: '不老の伝説の力を分け与え、致命傷を癒やす' },
-    { id: 'N4', lv: 7, name: '光明真言', type: 'FIELD', mp: 2, target: 'NONE', desc: '真言の光が暗闇を払い、真実の姿を照らす' },
-    { id: 'N5', lv: 12, name: '成仏の鐘', type: 'ATTACK', mp: 5, minDmg: 40, maxDmg: 80, target: 'SINGLE', desc: '怨霊を冥府へと導き消失させる' }
-  ]
-};
+import Spells from './Spells.json';
+
+export const SPELLS = Spells;
