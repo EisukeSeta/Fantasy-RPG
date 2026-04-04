@@ -400,13 +400,13 @@ function App() {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
-                    <button className="move-btn" onClick={() => processMove('TURN_LEFT')}>左向 [A]</button>
-                    <button className="move-btn" onClick={() => processMove('FORWARD')} style={{ background: 'linear-gradient(#242, #121)', border: '1px solid #484' }}>前進 [W]</button>
-                    <button className="move-btn" onClick={() => processMove('TURN_RIGHT')}>右向 [D]</button>
+                    <button className="move-btn" style={{ color: '#eee', fontWeight: 'bold' }} onClick={() => processMove('TURN_LEFT')}>左向 [A]</button>
+                    <button className="move-btn" style={{ color: '#eee', fontWeight: 'bold', background: 'linear-gradient(#242, #121)', border: '1px solid #484' }} onClick={() => processMove('FORWARD')}>前進 [W]</button>
+                    <button className="move-btn" style={{ color: '#eee', fontWeight: 'bold' }} onClick={() => processMove('TURN_RIGHT')}>右向 [D]</button>
                   </div>
                   <div style={{ display: 'flex', gap: '10px' }}>
-                    <button className="dialog-btn" style={{ flex: 1 }} onClick={handleSave}>💾 記録（セーブ）</button>
-                    <button className="dialog-btn" style={{ flex: 1 }} onClick={() => setIsMuted(prev => !prev)}>
+                    <button className="dialog-btn" style={{ flex: 1, color: '#fff', fontWeight: 'bold' }} onClick={handleSave}>💾 記録（セーブ）</button>
+                    <button className="dialog-btn" style={{ flex: 1, color: '#fff', fontWeight: 'bold' }} onClick={() => setIsMuted(prev => !prev)}>
                       {isMuted ? '🔇 静寂を切る' : '🔊 律を奏でる'}
                     </button>
                   </div>

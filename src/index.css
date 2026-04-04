@@ -312,3 +312,32 @@ body {
   max-width: 390px !important;
   max-height: 844px !important;
 }
+.battle-btn {
+  color: #fff !important;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8), 0 0 5px rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  font-family: 'Sawarabi Mincho', serif;
+  transition: all 0.2s;
+}
+
+.battle-btn:hover {
+  filter: brightness(1.2);
+  transform: scale(1.02);
+}
+
+.spell-btn {
+  background: linear-gradient(#113, #001);
+  border: 1px solid #44a;
+  color: #f5e6ab !important; /* 術は淡き黄金色 */
+  font-weight: bold;
+  cursor: pointer;
+  font-family: 'Sawarabi Mincho', serif;
+  text-shadow: 1px 1px 2px #000;
+  transition: all 0.2s;
+}
+
+.spell-btn:hover {
+  background: linear-gradient(#225, #113);
+  border-color: #66f;
+}
