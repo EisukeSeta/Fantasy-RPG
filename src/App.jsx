@@ -92,7 +92,6 @@ function App() {
   useEffect(() => { playerStateRef.current = playerState; }, [playerState]);
   const mapDataRef = useRef(mapData);
   useEffect(() => { mapDataRef.current = mapData; }, [mapData]);
-  const touchStartPos = useRef({ x: 0, y: 0 });
 
   const showDialog = useCallback((title, contents, onConfirm = null, showChoices = false) => {
     const pages = Array.isArray(contents) ? contents : [contents];
