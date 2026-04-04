@@ -62,7 +62,12 @@ function App() {
   const [activeDialog, setActiveDialog] = useState({ ...scenarioData.opening, currentPage: 0 });
 
   const [mapData, setMapData] = useState(() => {
-    const m = generateMap(); m[1][1].visited = true; return m;
+    const m = generateMap(); 
+    // 初期地点周辺を視認
+    for(let dy=-1; dy<=1; dy++) for(let dx=-1; dx<=1; dx++){
+      const tx=1+dx, ty=1+dy; if(tx>=0&&tx<MAP_WIDTH&&ty>=0&&ty<MAP_HEIGHT) m[ty][tx].visited=true;
+    }
+    return m;
   });
 
   const isForceMobile = (typeof window !== 'undefined' && (window.innerWidth <= 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent))) || new URLSearchParams(window.location.search).get('mobile') === '1';
@@ -116,7 +121,8 @@ function App() {
             setPlayerState({ x: 0, y: 0, dir: DIRECTIONS.S });
             setParty(p => p.map(m => ({ ...m, hp: Math.floor(m.maxHp * 0.5), mp: Math.floor(m.maxMp * 0.5), status: 'alive' })));
             addMessage(scenarioData.ui.resurrection, 'heal'); setGameState('EXPLORING');
-          }
+          },
+          onCancel: () => { setGameState('GAMEOVER'); SoundEngine.stop(); }
         });
     }
     setActiveBattler(0); setShowSpells(null);
@@ -198,7 +204,17 @@ function App() {
           const lSum = party.reduce((s, m) => s + m.lv, 0); const e = getRandomEnemy(lSum);
           setEnemy({ ...e, hp: e.maxHp }); setGameState('BATTLE'); addMessage(`闇から【${e.name}】が這い出た。`, 'event');
         }
-        setMapData(p => { const n=[...p]; n[nY][nX]={...n[nY][nX], visited:true}; return n; });
+        
+        // 周辺8マスを視認化
+        setMapData(p => {
+          const n=[...p.map(row => [...row])];
+          for(let dy2=-1; dy2<=1; dy2++) for(let dx2=-1; dx2<=1; dx2++) {
+            const tx = nX + dx2, ty = nY + dy2;
+            if(tx>=0 && tx<MAP_WIDTH && ty>=0 && ty<MAP_HEIGHT) n[ty][tx].visited = true;
+          }
+          return n;
+        });
+
         const event = mapEventsData.events.find(e => e.x === nX && e.y === nY);
         if (event) {
           setActiveDialog({ title: event.name, pages: [event.description], currentPage: 0 });
@@ -269,10 +285,10 @@ function App() {
           <span className="window-title">都の景色</span>
           <WireframeView mapData={mapData} playerPos={playerState} playerDir={playerState.dir} />
           {gameState === 'BATTLE' && enemy && (
-            <div className="pane-enemy" style={{ position: 'absolute', inset: '5px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', background: 'rgba(0,0,0,0.85)', border: '1px solid #722', zIndex: 1000, pointerEvents: 'none' }}>
-              <div style={{ fontSize: '1.2rem', color: varGold, marginBottom: '5px' }}>{enemy.name}</div>
+            <div className={`pane-enemy ${enemy.isBoss ? 'boss-aura' : ''}`} style={{ position: 'absolute', inset: '5px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', background: 'rgba(0,0,0,0.85)', zIndex: 1000, pointerEvents: 'none' }}>
+              <div className={enemy.isBoss ? 'boss-name' : ''} style={{ fontSize: '1.2rem', color: varGold, marginBottom: '5px' }}>{enemy.name}</div>
               <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', width: '100%' }}>
-                <img src={ENEMY_IMAGES[enemy.image]} alt={enemy.name} style={{ maxWidth: '85%', maxHeight: '85%', objectFit: 'contain', filter: 'drop-shadow(0 0 15px rgba(184, 154, 66, 0.4))' }} />
+                <img src={ENEMY_IMAGES[enemy.image]} alt={enemy.name} style={{ maxWidth: '85%', maxHeight: '85%', objectFit: 'contain', filter: enemy.isBoss ? 'drop-shadow(0 0 20px rgba(255, 215, 0, 0.6))' : 'drop-shadow(0 0 15px rgba(184, 154, 66, 0.4))' }} />
               </div>
               <div className="hp-bar-container" style={{ width: '70%', margin: '10px 0' }}><div className="hp-bar" style={{ width: `${(enemy.hp/enemy.maxHp)*100}%` }} /></div>
             </div>
@@ -353,7 +369,8 @@ function App() {
           <div className="dialog-content">{activeDialog.pages[activeDialog.currentPage]}</div>
           <div className="dialog-footer">
             {activeDialog.showChoices ? (
-              <><button className="dialog-btn" onClick={() => { initAudio(); if(activeDialog.onConfirm) activeDialog.onConfirm(); setActiveDialog(null); }}>はい</button><button className="dialog-btn" onClick={() => { if (gameState === 'DEAD') { SoundEngine.stop(); setGameState('GAMEOVER'); } setActiveDialog(null); }}>否</button></>
+              <><button className="dialog-btn" onClick={() => { initAudio(); if(activeDialog.onConfirm) activeDialog.onConfirm(); setActiveDialog(null); }}>はい</button>
+                <button className="dialog-btn" onClick={() => { if(activeDialog.onCancel) activeDialog.onCancel(); setActiveDialog(null); }}>否</button></>
             ) : (
               <button className="dialog-btn" onClick={() => { if (activeDialog.currentPage < activeDialog.pages.length - 1) setActiveDialog({...activeDialog, currentPage: activeDialog.currentPage + 1}); else setActiveDialog(null); }}>次へ</button>
             )}
