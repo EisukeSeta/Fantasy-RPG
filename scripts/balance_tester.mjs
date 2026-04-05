@@ -1,62 +1,49 @@
 /**
  * 平安魔道伝 - バランステスター (Node.js用シミュレーター)
- * ゲームロジックを期待値ベースで実行し、バランスKPIを算出します。
+ * ゲームロジックを期待値ベースで高速実行し、バランスKPIを算出します。
  */
 
 import { ENEMY_LIST, getRandomEnemy, calculateHitAndDamage } from '../src/data/enemyData.js';
 import { SPELLS } from '../src/data/magicData.js';
+import balanceData from '../src/data/Balance.json' with { type: 'json' };
+import charactersData from '../src/data/Characters.json' with { type: 'json' };
+import enemiesData from '../src/data/Enemies.json' with { type: 'json' };
 
 // --- Emulator Settings ---
 const SIM_RUNS = 1000; // 試行回数
-const STEPS_TO_BOSS = 120; // ボスに到達するまでのおよその歩数（探索含む）
-const ENCOUNTER_CHANCE = 0.15;
+const STEPS_TO_BOSS = 100; // ボスに到達するまでのおよその探索歩数
+const ENCOUNTER_CHANCE = balanceData.rates.encounter;
 
-// --- EXP Table (Copied from App.jsx) ---
+// --- EXP Table (Sync with App.jsx) ---
 const getRequiredExp = (lv) => {
   if (lv <= 1) return 0;
-  if (lv === 2) return 100;
-  if (lv === 3) return 250;
-  if (lv === 4) return 500;
-  if (lv === 5) return 900;
-  if (lv >= 50) return 9999999;
+  if (lv <= balanceData.experience.baseTable.length) return balanceData.experience.baseTable[lv - 1];
+  const { sigmoidScale, sigmoidCenter, sigmoidSlope } = balanceData.experience;
   const x = (lv - 1) / 49;
-  const sigmoid = 1 / (1 + Math.exp(-6 * (x - 0.5)));
-  return Math.floor(20000 * sigmoid);
+  const sigmoid = 1 / (1 + Math.exp(-sigmoidSlope * (x - sigmoidCenter)));
+  return Math.floor(sigmoidScale * sigmoid);
 };
 
-// --- Player Initial Stats ---
-const createInitialParty = () => [
-  { id: 'Tsu', name: '渡辺 綱', jobKey: 'SAMURAI', lv: 1, exp: 0, hp: 30, maxHp: 30, mp: 0, maxMp: 0, ac: 4, minDmg: 8, maxDmg: 15 },
-  { id: 'Sei', name: '安倍 晴明', jobKey: 'ONMYOJI', lv: 1, exp: 0, hp: 15, maxHp: 15, mp: 10, maxMp: 10, ac: 10, minDmg: 1, maxDmg: 4 },
-  { id: 'Bik', name: '八百比丘尼', jobKey: 'NISOU', lv: 1, exp: 0, hp: 20, maxHp: 20, mp: 8, maxMp: 8, ac: 8, minDmg: 2, maxDmg: 6 }
-];
-
-// --- Simulation Logic ---
+// --- Player Stats & Job Logic ---
+const createInitialParty = () => JSON.parse(JSON.stringify(charactersData));
 
 function handleLevelUp(member) {
   let m = { ...member };
-  while (m.exp >= getRequiredExp(m.lv + 1) && m.lv < 50) {
+  while (m.lv < balanceData.experience.maxLevel && m.exp >= getRequiredExp(m.lv + 1)) {
     m.lv += 1;
-    const hpGain = (m.jobKey === 'SAMURAI' ? 8 : m.jobKey === 'NISOU' ? 5 : 3) + 2; // 平均値
-    const mpGain = (m.jobKey === 'ONMYOJI' ? 6 : m.jobKey === 'NISOU' ? 4 : 2) + 1;
-    m.maxHp += hpGain;
-    m.maxMp += mpGain;
-    if (m.jobKey === 'SAMURAI') {
-        m.minDmg += 2; m.maxDmg += 4;
-        m.ac -= 1;
-    } else if (m.jobKey === 'ONMYOJI') {
-        m.minDmg += 1; m.maxDmg += 2;
-        if (m.lv % 2 === 0) m.ac -= 1;
-    } else if (m.jobKey === 'NISOU') {
-        m.minDmg += 1; m.maxDmg += 1;
-        if (m.lv % 3 === 0) m.ac -= 1;
-    }
+    m.maxHp += balanceData.partyBase.hpPerLevel;
+    m.maxMp += balanceData.partyBase.mpPerLevel;
+    m.hp = m.maxHp;
+    m.mp = m.maxMp;
+    // 攻撃力の伸び（App.jsxに準拠または期待値）
+    if (m.name.includes('綱')) { m.minDmg += 2; m.maxDmg += 3; m.ac -= 0.5; }
+    else if (m.name.includes('晴明')) { m.minDmg += 1; m.maxDmg += 2; m.ac -= 0.2; }
+    else { m.minDmg += 1; m.maxDmg += 1; m.ac -= 0.3; }
   }
-  m.hp = m.maxHp;
-  m.mp = m.maxMp;
   return m;
 }
 
+// --- Combat Logic ---
 function simulateBattle(party, enemy) {
   let p = party.map(m => ({ ...m }));
   let e = { ...enemy };
@@ -64,117 +51,125 @@ function simulateBattle(party, enemy) {
 
   while (e.hp > 0 && p.some(m => m.hp > 0)) {
     rounds++;
-    if (rounds > 50) break; // 無限ループ防止
+    if (rounds > 100) break; 
 
     // Player Turn
     for (let i = 0; i < p.length; i++) {
       if (p[i].hp <= 0) continue;
       
-      // Simple AI
       let action = 'ATTACK';
       let spellToUse = null;
 
-      // 比丘尼の回復優先
-      if (p[i].jobKey === 'NISOU' && p[i].mp >= 1) {
-        const injured = p.find(m => m.hp > 0 && m.hp < m.maxHp * 0.5);
-        if (injured) {
-            action = 'HEAL';
-            spellToUse = SPELLS.NISOU[0]; // 甘露の雨
-        }
+      // 比丘尼の回復優先 (簡易AI)
+      if (p[i].name.includes('比丘尼') && p[i].mp >= 2) {
+        const injured = p.find(m => m.hp > 0 && m.hp < m.maxHp * 0.6);
+        if (injured) { action = 'HEAL'; spellToUse = SPELLS.NISOU.find(s => s.name === '甘露の雨'); }
       }
       
       if (action === 'HEAL' && spellToUse) {
         const heal = Math.floor((spellToUse.minHeal + spellToUse.maxHeal) / 2);
-        const targetIndices = p.map((m, idx) => ({hpRatio: m.hp/m.maxHp, idx})).filter(o => p[o.idx].hp > 0).sort((a,b) => a.hpRatio - b.hpRatio);
-        if (targetIndices.length > 0) {
-            const target = p[targetIndices[0].idx];
-            target.hp = Math.min(target.maxHp, target.hp + heal);
-            p[i].mp -= spellToUse.mp;
-        }
+        const target = p.filter(m => m.hp > 0).sort((a,b) => (a.hp/a.maxHp) - (b.hp/b.maxHp))[0];
+        target.hp = Math.min(target.maxHp, target.hp + heal);
+        p[i].mp -= spellToUse.mp;
       } else {
         const result = calculateHitAndDamage(p[i].ac, p[i].minDmg, p[i].maxDmg, e.ac);
         if (result.hit) e.hp -= result.damage;
       }
       if (e.hp <= 0) break;
     }
-
     if (e.hp <= 0) break;
 
     // Enemy Turn
-    const aliveMembers = p.filter(m => m.hp > 0);
-    const target = aliveMembers[Math.floor(Math.random() * aliveMembers.length)];
-    const result = calculateHitAndDamage(e.ac, e.minDmg, e.maxDmg, target.ac);
-    if (result.hit) {
-      target.hp = Math.max(0, target.hp - result.damage);
-    }
+    const aliveTargets = p.filter(m => m.hp > 0);
+    const target = aliveTargets[Math.floor(Math.random() * aliveTargets.length)];
+    const res = calculateHitAndDamage(e.ac, e.minDmg, e.maxDmg, target.ac);
+    if (res.hit) target.hp = Math.max(0, target.hp - res.damage);
   }
 
-  const won = e.hp <= 0;
-  return { won, party: p, rounds };
+  return { won: e.hp <= 0, party: p, rounds };
 }
 
-function runOneSimulation() {
+// --- Full Game Simulation ---
+function runOneGame() {
   let party = createInitialParty();
   let totalBattles = 0;
-  let dead = false;
+  let totalWipeouts = 0;
+  let bossDefeated = false;
+  let totalHumanTime = 0; // 分換算
 
-  for (let s = 0; s < STEPS_TO_BOSS; s++) {
-    if (Math.random() < ENCOUNTER_CHANCE) {
-      totalBattles++;
-      const playerLvSum = party.reduce((sum, m) => sum + m.lv, 0);
-      const enemy = getRandomEnemy(playerLvSum);
-      const result = simulateBattle(party, enemy);
-      
-      if (!result.won) {
-        dead = true;
-        break;
+  while (!bossDefeated && totalWipeouts < 20) { // 最大20回まで転生
+    // 探索フェーズ
+    for (let s = 0; s < STEPS_TO_BOSS; s++) {
+      totalHumanTime += 0.05; // 1歩 3秒換算 (分)
+      if (Math.random() < ENCOUNTER_CHANCE) {
+        totalBattles++;
+        totalHumanTime += 0.3; // 戦闘思考時間 20秒換算
+        const lvSum = party.reduce((sum, m) => sum + m.lv, 0);
+        const enemy = getRandomEnemy(lvSum);
+        const res = simulateBattle(party, enemy);
+        
+        if (!res.won) {
+          totalWipeouts++;
+          totalHumanTime += 2.0; // 全滅から復帰して歩き直す時間
+          // 転生の理: HP/MP 1 で井戸に戻り、社で全快(1,1に歩くのを想定)
+          party = party.map(m => ({ ...m, hp: m.maxHp, mp: m.maxMp })); 
+          break; // 探索やり直し
+        }
+        
+        // 勝利: 経験値獲得
+        party = res.party.map(m => {
+          const gain = Math.floor(enemy.exp * balanceData.rates.expShare);
+          return handleLevelUp({ ...m, exp: m.exp + gain });
+        });
       }
-      
-      // Gain EXP
-      party = result.party.map(m => {
-        const gain = Math.floor(enemy.exp * (enemy.expShare[m.jobKey.toLowerCase()] || 0.33));
-        let nextM = { ...m, exp: m.exp + gain };
-        return handleLevelUp(nextM);
-      });
+    }
+
+    // ボス戦フェーズ
+    const nueBase = enemiesData.find(e => e.id === 10);
+    const nue = { ...nueBase, hp: (nueBase.minHp + nueBase.maxHp)/2 };
+    totalHumanTime += 1.0; // ボス演出時間
+    const bossRes = simulateBattle(party, nue);
+    if (bossRes.won) {
+      bossDefeated = true;
+    } else {
+      totalWipeouts++;
+      totalHumanTime += 2.0;
+      party = party.map(m => ({ ...m, hp: m.maxHp, mp: m.maxMp }));
     }
   }
 
-  if (dead) return { result: 'DEAD_IN_EXPLORATION', lv: party[0].lv, battles: totalBattles, partyStatus: party.map(m => `${m.name}(Lv${m.lv})`).join(', ') };
-
-  // Boss Fight
-  const nue = ENEMY_LIST.find(e => e.id === 10);
-  const bossResult = simulateBattle(party, { ...nue, hp: (nue.minHp + nue.maxHp)/2 });
-
-  if (bossResult.won) {
-    return { result: 'WIN', lv: party[0].lv, battles: totalBattles, partyStatus: party.map(m => `${m.name}(Lv${m.lv})`).join(', ') };
-  } else {
-    return { result: 'DEAD_AT_BOSS', lv: party[0].lv, battles: totalBattles, partyStatus: party.map(m => `${m.name}(Lv${m.lv})`).join(', ') };
-  }
+  return { won: bossDefeated, wipeouts: totalWipeouts, lv: party[0].lv, battles: totalBattles, time: totalHumanTime };
 }
 
-// --- Run Main Loop ---
-console.log(`\n--- 平安魔道伝 バランステスト実行中 (${SIM_RUNS} 試行) ---`);
-let stats = { WIN: 0, DEAD_IN_EXPLORATION: 0, DEAD_AT_BOSS: 0, totalLv: 0, totalBattles: 0 };
+// --- Run Simulation Loop ---
+console.log(`\n--- 平安魔道伝 真・自動バランステスト (${SIM_RUNS} 試行) ---`);
+let stats = { won: 0, totalWipeouts: 0, totalLv: 0, totalBattles: 0, totalTime: 0 };
 
 for (let i = 0; i < SIM_RUNS; i++) {
-  const r = runOneSimulation();
-  stats[r.result]++;
+  const r = runOneGame();
+  if (r.won) stats.won++;
+  stats.totalWipeouts += r.wipeouts;
   stats.totalLv += r.lv;
   stats.totalBattles += r.battles;
+  stats.totalTime += r.time;
 }
 
-const winRate = (stats.WIN / SIM_RUNS * 100).toFixed(1);
-const explorationDeathRate = (stats.DEAD_IN_EXPLORATION / SIM_RUNS * 100).toFixed(1);
-const bossDeathRate = (stats.DEAD_AT_BOSS / SIM_RUNS * 100).toFixed(1);
+const winRate = (stats.won / SIM_RUNS * 100).toFixed(1);
+const avgWipeouts = (stats.totalWipeouts / SIM_RUNS).toFixed(1);
 const avgLv = (stats.totalLv / SIM_RUNS).toFixed(1);
 const avgBattles = (stats.totalBattles / SIM_RUNS).toFixed(1);
-const estTime = (avgBattles * 0.4 + STEPS_TO_BOSS * 0.03).toFixed(1); // 分単位。1戦25秒, 1歩2秒弱換算
+const avgTime = (stats.totalTime / SIM_RUNS).toFixed(1);
 
-console.log(`\n[バランスKPI結果]`);
-console.log(`● クリア成功率: ${winRate}%`);
-console.log(`● 道中死亡率:   ${explorationDeathRate}%`);
-console.log(`● ボス敗北率:   ${bossDeathRate}%`);
-console.log(`● 到達平均Lv:   ${avgLv}`);
-console.log(`● 平均エンカウント数: ${avgBattles}回`);
-console.log(`● 推定プレイ時間: ${estTime}分`);
+let verdict = '雅 (Normal)';
+if (winRate < 50) verdict = '修羅 (Hard)';
+if (winRate < 10) verdict = '奈落 (Brutal)';
+if (winRate > 90 && avgWipeouts < 1) verdict = '緩 (Easy)';
+
+console.log(`\n[バランスKPI結果報告]`);
+console.log(`● ボス討伐成功率: ${winRate}%`);
+console.log(`● 平均転生(全滅)回数: ${avgWipeouts}回`);
+console.log(`● ボス到達平均Lv: ${avgLv}`);
+console.log(`● 総遭遇戦闘数: ${avgBattles}回`);
+console.log(`● 推定平均プレイ時間: ${avgTime}分`);
+console.log(`● 均衡判決: 【${verdict}】`);
 console.log(`\n--------------------------------------------`);

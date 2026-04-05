@@ -1,5 +1,4 @@
-// C:\Win_tools\Antigravity\Fantasy-RPG\src\data\enemyData.js
-import Enemies from './Enemies.json';
+import Enemies from './Enemies.json' with { type: 'json' };
 
 export const ENEMY_LIST = Enemies;
 
