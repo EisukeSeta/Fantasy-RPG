@@ -414,12 +414,27 @@ body {
 }
 
 .mini-member-card {
-  background: rgba(0, 0, 0, 0.6) !important;
+  background: rgba(0, 0, 0, 0.7) !important;
   border-left: 2px solid var(--primary-gold) !important;
   padding: 4px 8px !important;
   border-radius: 0 4px 4px 0 !important;
   min-width: 80px !important;
   box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+  transition: all 0.3s ease;
+}
+
+.mini-member-card.active-member {
+  border: 1px solid var(--primary-gold) !important;
+  border-left: 4px solid var(--primary-gold) !important;
+  background: rgba(184, 154, 66, 0.3) !important;
+  box-shadow: 0 0 10px var(--primary-gold);
+  animation: cardPulse 1.5s infinite ease-in-out;
+}
+
+@keyframes cardPulse {
+  0% { box-shadow: 0 0 5px var(--primary-gold); }
+  50% { box-shadow: 0 0 15px var(--primary-gold); }
+  100% { box-shadow: 0 0 5px var(--primary-gold); }
 }
 
 .card-top {
@@ -531,24 +546,23 @@ body {
   pointer-events: auto !important;
 }
 
-/* 戦闘コマンド操作パネル */
+/* 戦闘コマンド操作パネル：高さを節約 */
 .mobile-battle-commands {
   display: grid !important;
   grid-template-columns: repeat(2, 1fr) !important;
-  gap: 8px !important;
-  padding: 10px !important;
-  background: rgba(0, 0, 0, 0.4) !important;
+  gap: 5px !important;
+  padding: 6px 10px !important;
+  background: rgba(0, 0, 0, 0.6) !important;
   border-bottom: 1px solid #333 !important;
 }
 
 .battle-cmd-btn {
-  padding: 12px 5px !important;
+  padding: 8px 5px !important;
   background: var(--ancient-black) !important;
   border: 1px solid #444 !important;
   color: #fff !important;
-  font-size: 0.9rem !important;
+  font-size: 0.8rem !important;
   border-radius: 4px !important;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 
 .battle-cmd-btn.primary {

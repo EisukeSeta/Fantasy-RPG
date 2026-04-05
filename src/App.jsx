@@ -345,7 +345,7 @@ function App() {
             {isForceMobile && (
               <div className="mobile-status-dashboard">
                 {party.map((m, i) => (
-                  <div key={i} className="mini-member-card">
+                  <div key={i} className={`mini-member-card ${gameState === 'BATTLE' && activeBattler === i ? 'active-member' : ''}`}>
                     <div className="card-top">
                       <span className="card-name">{m.name.slice(0,2)}</span>
                       <span className="card-lv">L{m.lv}</span>
@@ -377,11 +377,11 @@ function App() {
 
         {isForceMobile ? (
           <div className="mobile-ui-container">
-            <div className="mobile-utility-btns" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '5px', padding: '10px', background: '#111', borderBottom: '1px solid #333' }}>
-              <button className="dialog-btn" style={{ fontSize: '0.8rem', padding: '8px 4px' }} onClick={()=>setShowMap(true)}>🗺️ 迷宮図</button>
-              <button className="dialog-btn" style={{ fontSize: '0.8rem', padding: '8px 4px' }} onClick={()=>setShowStatus(true)}>👥 隊員証</button>
-              <button className="dialog-btn" style={{ fontSize: '0.8rem', padding: '8px 4px' }} onClick={()=>addMessage(scenarioData.ui.saveComplete, 'level_up')}>💾 記録</button>
-              <button className="dialog-btn" style={{ fontSize: '0.8rem', padding: '8px 4px' }} onClick={()=>setIsMuted(!isMuted)}>{isMuted?'🔇':'🔊'}</button>
+            <div className="mobile-utility-btns" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '5px', padding: '6px 5px', background: '#111', borderBottom: '1px solid #333' }}>
+              <button className="dialog-btn" style={{ fontSize: '0.8rem', padding: '6px 2px' }} onClick={()=>setShowMap(true)}>🗺️ 迷宮図</button>
+              <button className="dialog-btn" style={{ fontSize: '0.8rem', padding: '6px 2px' }} onClick={()=>setShowStatus(true)}>👥 隊員証</button>
+              <button className="dialog-btn" style={{ fontSize: '0.8rem', padding: '6px 2px' }} onClick={()=>addMessage(scenarioData.ui.saveComplete, 'level_up')}>💾 記録</button>
+              <button className="dialog-btn" style={{ fontSize: '0.8rem', padding: '6px 2px' }} onClick={()=>setIsMuted(!isMuted)}>{isMuted?'🔇':'🔊'}</button>
             </div>
 
             {gameState === 'BATTLE' && (
@@ -395,12 +395,6 @@ function App() {
             
             <div className="mobile-log-display">
               {messages.map((m, i) => <div key={i} className={`log-msg msg-${m.type}`}>{m.text}</div>)}
-            </div>
-
-            <div className="mini-status-panel mobile-overlay" style={{ height: '4px', gap: '2px', position: 'relative', bottom: 0, left: 0, right: 0 }}>
-               {party.map((m, i) => <div key={i} style={{ flex: 1, height: '100%', background: '#300', position: 'relative', overflow: 'hidden' }}>
-                 <div style={{ width: `${(m.hp/m.maxHp)*100}%`, height: '100%', background: m.hp === 1 ? '#f11' : '#d22' }} />
-               </div>)}
             </div>
           </div>
         ) : (
