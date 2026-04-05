@@ -425,10 +425,9 @@ function App() {
       <div className={`pane-log window ${showMap ? 'mobile-active-pane' : ''}`}>
         <span className="window-title">{scenarioData.ui.labyrinthMap} <span style={{ color: 'var(--soft-gold)', marginLeft: '15px', textShadow: '0 0 10px rgba(184, 154, 66, 0.8)' }}>〔 {playerState.x}, {playerState.y} 〕</span></span>
         {isForceMobile && <button className="dialog-btn" onClick={() => setShowMap(false)} style={{ margin: '15px' }}>閉じる</button>}
-        <div className="log-content">
-          {messages.map((m, i) => <div key={i} className={`log-msg msg-${m.type}`}>{m.text}</div>)}
-        </div>
-        <div style={{ height: '230px', borderTop: '1px solid #333', padding: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', background: '#000' }}>
+        
+        {/* Map view First */}
+        <div style={{ height: '230px', borderBottom: '1px solid #333', padding: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', background: '#000' }}>
           <div style={{ display: 'grid', gridTemplateColumns: `repeat(${MAP_WIDTH}, 22px)`, gap: 0, border: '1px solid #111' }}>
             {mapData.map((row, y) => row.map((cell, x) => {
               const ev = mapEventsData.events.find(e => e.x === x && e.y === y);
@@ -444,8 +443,14 @@ function App() {
           <div style={{ display: 'flex', gap: '10px', marginTop: '8px', fontSize: '0.7rem', color: '#888' }}>
             {mapEventsData.legend.map((l, idx) => <span key={idx}>{l.icon}:{l.name}</span>)}
           </div>
-          {isForceMobile && <button className="dialog-btn" onClick={() => setShowMap(false)} style={{ marginTop: '10px' }}>閉じる</button>}
         </div>
+
+        {/* Log content Second */}
+        <div className="log-content">
+          {messages.map((m, i) => <div key={i} className={`log-msg msg-${m.type}`}>{m.text}</div>)}
+        </div>
+
+        {isForceMobile && <button className="dialog-btn" onClick={() => setShowMap(false)} style={{ marginTop: '10px' }}>閉じる</button>}
       </div>
 
       {activeDialog && (
