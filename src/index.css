@@ -265,8 +265,11 @@ body {
   width: 100vw !important;
   height: 100vw !important; 
   aspect-ratio: 1 / 1 !important;
-  flex-shrink: 0 !important;
+  flex: 0 0 100vw !important; /* 強制的に幅=高さ固定 */
   position: relative !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 .layout-mobile .view-window {
@@ -275,7 +278,8 @@ body {
   margin: 0 !important;
   padding: 0 !important;
   border: none !important;
-  background: #000;
+  background: #000 !important;
+  flex: none !important; /* 縦伸び防止 */
 }
 
 .layout-mobile .view-window .window-title {
