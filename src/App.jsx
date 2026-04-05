@@ -41,6 +41,7 @@ const getRequiredExp = (lv) => {
 };
 
 const BOSS_POS = balanceData.map.bossPos;
+const isDebug = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debug') === 'true';
 
 function App() {
   const [gameState, setGameState] = useState('EXPLORING'); 
@@ -118,11 +119,28 @@ function App() {
         setActiveDialog({ 
           title: "全滅", pages: [scenarioData.events.gameOver], currentPage: 0, showChoices: true,
           onConfirm: () => {
-            setPlayerState({ x: 0, y: 0, dir: DIRECTIONS.S });
-            setParty(p => p.map(m => ({ ...m, hp: Math.floor(m.maxHp * 0.5), mp: Math.floor(m.maxMp * 0.5), status: 'alive' })));
-            addMessage(scenarioData.ui.resurrection, 'heal'); setGameState('EXPLORING');
+            setActiveDialog({
+              title: "「転生」", pages: ["黄泉の理を書き換え、肉体を再構築する……。生命と記憶の代償は極大なり。"], currentPage: 0,
+              onConfirm: () => {
+                setPlayerState({ x: 0, y: 0, dir: DIRECTIONS.S });
+                setParty(p => p.map(m => ({ ...m, hp: 1, mp: 1, exp: getRequiredExp(m.lv), status: 'alive' })));
+                setMapData(() => {
+                    const m = generateMap(); 
+                    for(let dy=-1; dy<=1; dy++) for(let dx=-1; dx<=1; dx++){
+                      const tx=0+dx, ty=0+dy; if(tx>=0&&tx<MAP_WIDTH&&ty>=0&&ty<MAP_HEIGHT) m[ty][tx].visited=true;
+                    }
+                    return m;
+                });
+                addMessage(scenarioData.ui.resurrection, 'heal'); setGameState('EXPLORING'); setActiveDialog(null);
+              }
+            });
           },
-          onCancel: () => { setGameState('GAMEOVER'); SoundEngine.stop(); }
+          onCancel: () => {
+            setActiveDialog({
+              title: "「終焉」", pages: ["都は漆黒の闇に飲まれ、記憶も魂も、全ては虚無へと消えた……。"], currentPage: 0,
+              onConfirm: () => { setGameState('GAMEOVER'); SoundEngine.stop(); setActiveDialog(null); }
+            });
+          }
         });
     }
     setActiveBattler(0); setShowSpells(null);
@@ -218,7 +236,7 @@ function App() {
         const event = mapEventsData.events.find(e => e.x === nX && e.y === nY);
         if (event) {
           setActiveDialog({ title: event.name, pages: [event.description], currentPage: 0 });
-          if (event.isHeal) { setParty(p => p.map(m => ({ ...m, hp: m.maxHp, mp: m.maxMp, status: '平安' }))); addMessage(`【${event.name}】にて霊力と生命が全快した。`, 'heal'); }
+          if (event.isHeal) { setParty(p => p.map(m => ({ ...m, hp: m.maxHp, mp: m.maxMp, status: '平安' }))); addMessage(`【${event.name}】にて心身が癒やされ、生命と霊力が満ちた。`, 'heal'); }
         }
       }
     }
@@ -237,12 +255,18 @@ function App() {
 
   useEffect(() => {
     if (isAutoBattle && gameState === 'BATTLE' && enemy) {
+      const a = party[activeBattler];
+      if (!a || a.hp <= 0) {
+        const nextIdx = party.findIndex(m => m.hp > 0);
+        if (nextIdx !== -1) setActiveBattler(nextIdx);
+        return;
+      }
       const t = setTimeout(() => {
-        const a = party[activeBattler]; if (!a || a.hp <= 0) return;
         const isStrong = enemy.isBoss || enemy.hp > 50;
         const spells = (SPELLS[a.jobKey] || []).filter(s => s.lv <= a.lv && a.mp >= s.mp);
-        if (isStrong && spells.length > 0) castSpell(spells[spells.length - 1]); else handleFight();
-      }, 1000);
+        if (isStrong && spells.length > 0) castSpell(spells[spells.length - 1]);
+        else handleFight();
+      }, 800);
       return () => clearTimeout(t);
     }
   }, [isAutoBattle, gameState, enemy, party, activeBattler, handleFight, castSpell]);
@@ -281,16 +305,20 @@ function App() {
       </div>
 
       <div className="pane-main">
-        <div className="view-window window" style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+        <div className="view-window window" style={{ flex: 1, position: 'relative', overflow: 'visible' }}>
           <span className="window-title">都の景色</span>
-          <WireframeView mapData={mapData} playerPos={playerState} playerDir={playerState.dir} />
+          <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+            <WireframeView mapData={mapData} playerPos={playerState} playerDir={playerState.dir} />
+          </div>
           {gameState === 'BATTLE' && enemy && (
-            <div className={`pane-enemy ${enemy.isBoss ? 'boss-aura' : ''}`} style={{ position: 'absolute', inset: '5px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', background: 'rgba(0,0,0,0.85)', zIndex: 1000, pointerEvents: 'none' }}>
-              <div className={enemy.isBoss ? 'boss-name' : ''} style={{ fontSize: '1.2rem', color: varGold, marginBottom: '5px' }}>{enemy.name}</div>
-              <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', width: '100%' }}>
-                <img src={ENEMY_IMAGES[enemy.image]} alt={enemy.name} style={{ maxWidth: '85%', maxHeight: '85%', objectFit: 'contain', filter: enemy.isBoss ? 'drop-shadow(0 0 20px rgba(255, 215, 0, 0.6))' : 'drop-shadow(0 0 15px rgba(184, 154, 66, 0.4))' }} />
+            <div className={`pane-enemy ${enemy.isBoss ? 'boss-aura' : ''}`}>
+              <div className={enemy.isBoss ? 'boss-name' : 'enemy-name'}>
+                {enemy.isBoss ? `＊＊＊ ${enemy.name} ＊＊＊` : enemy.name}
               </div>
-              <div className="hp-bar-container" style={{ width: '70%', margin: '10px 0' }}><div className="hp-bar" style={{ width: `${(enemy.hp/enemy.maxHp)*100}%` }} /></div>
+              <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', width: '100%' }}>
+                <img src={ENEMY_IMAGES[enemy.image]} alt={enemy.name} style={{ maxWidth: '85%', maxHeight: '85%', objectFit: 'contain', filter: enemy.isBoss ? 'drop-shadow(0 0 20px rgba(255, 215, 0, 0.8))' : 'drop-shadow(0 0 15px rgba(184, 154, 66, 0.4))' }} />
+              </div>
+              <div className="hp-bar-container" style={{ width: '70%', margin: '15px 0' }}><div className="hp-bar" style={{ width: `${(enemy.hp/enemy.maxHp)*100}%` }} /></div>
             </div>
           )}
         </div>
@@ -375,6 +403,15 @@ function App() {
               <button className="dialog-btn" onClick={() => { if (activeDialog.currentPage < activeDialog.pages.length - 1) setActiveDialog({...activeDialog, currentPage: activeDialog.currentPage + 1}); else setActiveDialog(null); }}>次へ</button>
             )}
           </div>
+        </div>
+      )}
+
+      {isDebug && (
+        <div className="debug-panel" style={{ position: 'fixed', bottom: '10px', left: '10px', zIndex: 10000, display: 'flex', gap: '5px', background: 'rgba(0,0,0,0.7)', padding: '5px', borderRadius: '5px', border: '1px solid #f1c40f' }}>
+          <button className="debug-btn" onClick={() => setParty(p => p.map(m => ({ ...m, hp: m.maxHp, mp: m.maxMp, status: '平安' })))} style={{ fontSize: '0.6rem', padding: '2px 5px' }}>全快</button>
+          <button className="debug-btn" onClick={() => setEnemy(e => e ? { ...e, hp: 1 } : null)} style={{ fontSize: '0.6rem', padding: '2px 5px' }}>一撃</button>
+          <button className="debug-btn" onClick={() => { setEnemy(null); setGameState('EXPLORING'); }} style={{ fontSize: '0.6rem', padding: '2px 5px' }}>消滅</button>
+          <button className="debug-btn" onClick={() => setParty(p => p.map(m => ({ ...m, exp: m.exp + 1000 })))} style={{ fontSize: '0.6rem', padding: '2px 5px' }}>功徳</button>
         </div>
       )}
     </div>
