@@ -578,3 +578,61 @@ body {
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+/* --- Debug Panel --- */
+.debug-panel {
+  position: fixed;
+  bottom: 15px;
+  left: 15px;
+  z-index: 10000;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.9);
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid var(--primary-gold);
+  max-width: 350px;
+  box-shadow: 0 0 25px rgba(0,0,0,1);
+}
+
+.debug-btn {
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  background: #1a1a1a;
+  border: 1px solid #444;
+  color: #ccc;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Sawarabi Mincho', serif;
+}
+
+.debug-btn:hover {
+  background: #333;
+  color: #fff;
+  border-color: var(--primary-gold);
+}
+
+/* --- Custom Scrollbar (Premium) --- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #333 var(--ancient-black);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--ancient-black);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+  border: 2px solid var(--ancient-black);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-gold);
+}

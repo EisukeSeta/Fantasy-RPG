@@ -107,10 +107,10 @@ function App() {
 
   const endBattle = useCallback((won) => {
     if (won) {
-        addMessage(`${enemy.name} を調伏した。`, 'level_up');
+        addMessage(`${enemy.name}${scenarioData.battle.defeat}`, 'level_up');
         if (enemy.isBoss) { 
           setBossDefeated(true); 
-          setTimeout(() => setActiveDialog({ title: '怪異調伏', pages: ['都を覆っていた漆黒の霧が晴れていく……。', 'ついに主を討ち果たした。'], currentPage: 0 }), 500);
+          setTimeout(() => setActiveDialog({ title: '怪異調伏', pages: [scenarioData.events.bossDefeated], currentPage: 0 }), 500);
         }
         setParty(p => p.map(m => handleLevelUp({ ...m, exp: m.exp + Math.floor(enemy.exp * balanceData.rates.expShare) })));
         setGameState('EXPLORING'); setEnemy(null);
@@ -151,8 +151,8 @@ function App() {
     const attacker = party[activeBattler];
     const res = calculateHitAndDamage(attacker.ac, attacker.minDmg, attacker.maxDmg, enemy.ac);
     let nEh = enemy.hp;
-    if (res.hit) { addMessage(`${attacker.name} の打ちかかり。 ${res.damage} の痛打。`); nEh -= res.damage; }
-    else addMessage(`${attacker.name} の打ちかかりは空を切った。`);
+    if (res.hit) { addMessage(`${attacker.name}${scenarioData.battle.attack} ${res.damage}${scenarioData.battle.damage}`); nEh -= res.damage; }
+    else addMessage(`${attacker.name}${scenarioData.battle.miss}`);
     
     if (nEh <= 0) { endBattle(true); return; }
     setEnemy({...enemy, hp: nEh});
@@ -166,11 +166,11 @@ function App() {
         const target = alive[Math.floor(Math.random() * alive.length)];
         const eRes = calculateHitAndDamage(enemy.ac, enemy.minDmg, enemy.maxDmg, target.ac);
         if (eRes.hit) {
-          addMessage(`${enemy.name} の反撃。 ${target.name} は ${eRes.damage} の傷を負った。`, 'damage_party');
+          addMessage(`${enemy.name}${scenarioData.battle.counter} ${scenarioData.battle.wound.replace('%DMG%', eRes.damage)}`, 'damage_party');
           const nextHP = Math.max(0, target.hp - eRes.damage);
           setParty(p => p.map(m => m.name === target.name ? { ...m, hp: nextHP, status: nextHP === 0 ? '討死' : '平安' } : m));
           if (party.every(m => (m.name === target.name ? nextHP : m.hp) <= 0)) endBattle(false);
-        } else addMessage(`${target.name} は攻撃をかわした。`);
+        } else addMessage(`${target.name}${scenarioData.battle.evade}`);
         setActiveBattler(party.findIndex(m => m.hp > 0));
       }, 500);
     }
@@ -179,17 +179,17 @@ function App() {
   const castSpell = useCallback((spell) => {
     if (gameState !== 'BATTLE' || !enemy) return;
     const attacker = party[activeBattler];
-    if (attacker.mp < spell.mp) { addMessage('霊力が足りぬ。'); return; }
+    if (attacker.mp < spell.mp) { addMessage(scenarioData.battle.noMana); return; }
     let nextP = [...party]; nextP[activeBattler].mp -= spell.mp;
     let nextE = { ...enemy };
     if (spell.type === 'ATTACK') {
       const dmg = spell.minDmg + Math.floor(Math.random()*(spell.maxDmg-spell.minDmg));
-      addMessage(`${spell.name}。 ${enemy.name} に ${dmg} の霊的痛打。`); nextE.hp -= dmg;
+      addMessage(`${spell.name}${scenarioData.battle.spellAttack.replace('%ENEMY%', enemy.name).replace('%DMG%', dmg)}`); nextE.hp -= dmg;
     } else if (spell.type === 'HEAL') {
       const target = nextP.filter(m => m.hp > 0).sort((a,b) => a.hp - b.hp)[0];
       const heal = spell.minHeal + Math.floor(Math.random()*(spell.maxHeal-spell.minHeal));
       target.hp = Math.min(target.maxHp, target.hp + heal);
-      addMessage(`${spell.name}。 ${target.name} の傷が ${heal} 癒えた。`, 'heal');
+      addMessage(`${spell.name}${scenarioData.battle.spellHeal.replace('%TARGET%', target.name).replace('%HEAL%', heal)}`, 'heal');
     }
     setParty(nextP); setEnemy(nextE); setShowSpells(null);
     if (nextE.hp <= 0) endBattle(true);
@@ -214,13 +214,13 @@ function App() {
       setPlayerState({ x: nX, y: nY, dir: nD });
       if (nX !== playerState.x || nY !== playerState.y) {
         if (!bossDefeated && nX === BOSS_POS.x && nY === BOSS_POS.y) {
-          setIsShake(true); setIsBossIntro(true); addMessage('強大なる怪異の気配を検知……。', 'event');
-          setTimeout(() => { setIsShake(false); setIsBossIntro(false); const b = ENEMY_LIST.find(e => e.id === 10); setEnemy({...b, hp: b.maxHp}); setGameState('BATTLE'); addMessage('都を震撼させる古の怪異【鵺】が立ちはだかった。', 'event'); }, 2000);
+          setIsShake(true); setIsBossIntro(true); addMessage(scenarioData.events.nueAura, 'event');
+          setTimeout(() => { setIsShake(false); setIsBossIntro(false); const b = ENEMY_LIST.find(e => e.id === 10); setEnemy({...b, hp: b.maxHp}); setGameState('BATTLE'); addMessage(scenarioData.events.nueAppear, 'event'); }, 2000);
           return;
         }
         if (Math.random() < 0.15) {
           const lSum = party.reduce((s, m) => s + m.lv, 0); const e = getRandomEnemy(lSum);
-          setEnemy({ ...e, hp: e.maxHp }); setGameState('BATTLE'); addMessage(`闇から【${e.name}】が這い出た。`, 'event');
+          setEnemy({ ...e, hp: e.maxHp }); setGameState('BATTLE'); addMessage(scenarioData.events.encounter.replace('%ENEMY%', e.name), 'event');
         }
         
         // 周辺8マスを視認化
@@ -281,7 +281,7 @@ function App() {
       {gameState === 'GAMEOVER' && (
         <div className="gameover-overlay">
           <div className="gameover-splash">討死</div>
-          <button className="dialog-btn" onClick={() => window.location.reload()}>再び都へ（再起動）</button>
+          <button className="dialog-btn" onClick={() => window.location.reload()}>{scenarioData.ui.returnToCity}</button>
         </div>
       )}
 
@@ -344,14 +344,14 @@ function App() {
             <div style={{ display: 'flex', height: '100%', padding: '15px' }}>
               <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
                 {gameState === 'BATTLE' ? (
-                  <><button className="dialog-btn" style={{ gridColumn: 'span 2' }} onClick={handleFight}>🗡️ 打ちかかる</button><button className="dialog-btn" onClick={() => setIsAutoBattle(!isAutoBattle)}>{isAutoBattle ? '🤖 修羅(自)' : '✋ 手動(手)'}</button><button className="dialog-btn" onClick={() => setShowSpells(!showSpells)}>✨ 術法</button><button className="dialog-btn" onClick={() => { if(Math.random()<0.5){ addMessage('逃走に成功。'); setEnemy(null); setGameState('EXPLORING'); } else addMessage('退路を断たれた。'); }}>🏃 逃走</button></>
+                  <><button className="dialog-btn" style={{ gridColumn: 'span 2' }} onClick={handleFight}>{scenarioData.ui.fight}</button><button className="dialog-btn" onClick={() => setIsAutoBattle(!isAutoBattle)}>{isAutoBattle ? scenarioData.ui.shuraAuto : scenarioData.ui.manual}</button><button className="dialog-btn" onClick={() => setShowSpells(!showSpells)}>{scenarioData.ui.spells}</button><button className="dialog-btn" onClick={() => { if(Math.random()<0.5){ addMessage(scenarioData.battle.fleeSuccess); setEnemy(null); setGameState('EXPLORING'); } else addMessage(scenarioData.battle.fleeFail); }}>{scenarioData.ui.flee}</button></>
                 ) : (
                   <><div /><button className="dialog-btn" onClick={() => processMove('FORWARD')}>⬆️ 前進</button><div /><button className="dialog-btn" onClick={() => processMove('TURN_LEFT')}>↩️ 左向</button><button className="dialog-btn" onClick={() => processMove('BACKWARD')}>⬇️ 後退</button><button className="dialog-btn" onClick={() => processMove('TURN_RIGHT')}>↪️ 右向</button></>
                 )}
               </div>
               <div style={{ width: '120px', display: 'flex', flexDirection: 'column', gap: '5px', marginLeft: '10px' }}>
-                 <button className="save-btn" style={{flex:1}} onClick={() => addMessage('功徳を記録しました（自動記録中）。', 'level_up')}>📜 記録</button>
-                 <button className="save-btn" style={{flex:1}} onClick={() => setIsMuted(!isMuted)}>{isMuted ? '🎵 奏曲：停' : '🎵 奏曲：流'}</button>
+                 <button className="save-btn" style={{flex:1}} onClick={() => addMessage(scenarioData.ui.saveComplete, 'level_up')}>{scenarioData.ui.save}</button>
+                 <button className="save-btn" style={{flex:1}} onClick={() => setIsMuted(!isMuted)}>{isMuted ? scenarioData.ui.bgmOff : scenarioData.ui.bgmOn}</button>
               </div>
               {showSpells && gameState === 'BATTLE' && (
                 <div style={{ flex: 1, marginLeft: '10px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px', overflowY: 'auto' }}>
@@ -407,17 +407,29 @@ function App() {
       )}
 
       {isDebug && (
-        <div className="debug-panel" style={{ position: 'fixed', bottom: '10px', left: '10px', zIndex: 10000, display: 'flex', flexWrap: 'wrap', gap: '5px', background: 'rgba(0,0,0,0.85)', padding: '8px', borderRadius: '5px', border: '1px solid #f1c40f', maxWidth: '300px' }}>
-          <button className="debug-btn" onClick={() => setParty(p => p.map(m => ({ ...m, hp: m.maxHp, mp: m.maxMp, status: '平安' })))} style={{ fontSize: '0.6rem', padding: '2px 5px' }}>全快</button>
-          <button className="debug-btn" onClick={() => setEnemy(e => e ? { ...e, hp: 1 } : null)} style={{ fontSize: '0.6rem', padding: '2px 5px' }}>一撃</button>
-          <button className="debug-btn" onClick={() => { setEnemy(null); setGameState('EXPLORING'); }} style={{ fontSize: '0.6rem', padding: '2px 5px' }}>消滅</button>
-          <button className="debug-btn" onClick={() => setParty(p => p.map(m => ({ ...m, exp: m.exp + 1000 })))} style={{ fontSize: '0.6rem', padding: '2px 5px' }}>功徳</button>
-          <button className="debug-btn" onClick={() => { setPlayerState({ x: BOSS_POS.x, y: BOSS_POS.y, dir: DIRECTIONS.S }); addMessage('神速の跳躍……。', 'event'); }} style={{ fontSize: '0.6rem', padding: '2px 5px', color: '#f1c40f' }}>鵺門</button>
-          <button className="debug-btn" onClick={() => { setPlayerState({ x: 1, y: 1, dir: DIRECTIONS.S }); addMessage('社へ帰還。', 'event'); }} style={{ fontSize: '0.6rem', padding: '2px 5px' }}>社帰</button>
-          <button className="debug-btn" onClick={() => { setMapData(p => p.map(r => r.map(c => ({...c, visited: true})))); addMessage('霧が晴れた。', 'event'); }} style={{ fontSize: '0.6rem', padding: '2px 5px' }}>霧払</button>
+        <div className="debug-panel">
+          <button className="debug-btn" onClick={() => setParty(p => p.map(m => ({ ...m, hp: m.maxHp, mp: m.maxMp, status: '平安' })))}>全快</button>
+          <button className="debug-btn" onClick={() => setEnemy(e => e ? { ...e, hp: 1 } : null)}>一撃</button>
+          <button className="debug-btn" onClick={() => { setEnemy(null); setGameState('EXPLORING'); }}>消滅</button>
+          <button className="debug-btn" onClick={() => setParty(p => p.map(m => ({ ...m, exp: m.exp + 1000 })))}>功徳</button>
           <button className="debug-btn" onClick={() => {
-            const e = getRandomEnemy(1); setEnemy({ ...e, hp: e.maxHp }); setGameState('BATTLE'); addMessage(`【${e.name}】を召喚。`, 'event');
-          }} style={{ fontSize: '0.6rem', padding: '2px 5px' }}>召喚</button>
+            const input = prompt("跳躍先の座標(x,y)を入力せよ (例: 9,1)", `${playerState.x},${playerState.y}`);
+            if (input) {
+              const [nx, ny] = input.split(',').map(Number);
+              if (!isNaN(nx) && !isNaN(ny)) {
+                setPlayerState({ x: nx, y: ny, dir: DIRECTIONS.S });
+                addMessage(`(x:${nx}, y:${ny}) への神速の跳躍。`, 'event');
+              }
+            }
+          }} style={{ color: '#f1c40f' }}>跳躍</button>
+          <button className="debug-btn" onClick={() => { setPlayerState({ x: 1, y: 1, dir: DIRECTIONS.S }); addMessage('社へ帰還。', 'event'); }}>社帰</button>
+          <button className="debug-btn" onClick={() => { setMapData(p => p.map(r => r.map(c => ({...c, visited: true})))); addMessage('霧が晴れた。', 'event'); }}>霧払</button>
+          <button className="debug-btn" onClick={() => {
+            const eid = prompt("怪異の番付(0-10)を入力せよ (10:鵺)", "10");
+            const e = ENEMY_LIST[Number(eid)] || getRandomEnemy(1);
+            setEnemy({ ...e, hp: e.maxHp }); setGameState('BATTLE'); addMessage(`【${e.name}】を召喚。`, 'event');
+          }}>召喚</button>
+          <button className="debug-btn" onClick={() => { setBossDefeated(!bossDefeated); addMessage(`因縁の変転：ボス討伐状態を ${!bossDefeated} へ。`, 'event'); }}>因縁</button>
         </div>
       )}
     </div>
