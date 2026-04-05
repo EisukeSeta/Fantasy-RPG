@@ -48,7 +48,7 @@ function App() {
   const [messages, setMessages] = useState([{ text: scenarioData.events.gameStart, type: 'event' }]);
   const [isAudioInitialized, setAudioInitialized] = useState(false);
   const [volume, setVolume] = useState(0.5);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(isDebug);
   const [isShake, setIsShake] = useState(false);
   const [isBossIntro, setIsBossIntro] = useState(false);
   const [party, setParty] = useState(charactersData.map(c => ({ ...c })));
@@ -123,7 +123,7 @@ function App() {
               title: "「転生」", pages: ["黄泉の理を書き換え、肉体を再構築する……。生命と記憶の代償は極大なり。"], currentPage: 0,
               onConfirm: () => {
                 setPlayerState({ x: 0, y: 0, dir: DIRECTIONS.S });
-                setParty(p => p.map(m => ({ ...m, hp: 1, mp: 1, exp: getRequiredExp(m.lv), status: 'alive' })));
+                setParty(p => p.map(m => ({ ...m, hp: m.maxHp, mp: m.maxMp, exp: getRequiredExp(m.lv), status: 'alive' })));
                 setMapData(() => {
                     const m = generateMap(); 
                     for(let dy=-1; dy<=1; dy++) for(let dx=-1; dx<=1; dx++){
