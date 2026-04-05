@@ -263,6 +263,7 @@ body {
 
 .layout-mobile .pane-main {
   width: 100vw !important;
+  height: 100vw !important; /* 完全な正方形を維持 */
   aspect-ratio: 1 / 1 !important;
   flex-shrink: 0 !important;
   position: relative !important;
@@ -530,19 +531,21 @@ body {
   pointer-events: auto !important;
 }
 
-/* 敵ウィンドウを最上部に配置（ダンジョン内にオーバーレイ） */
+/* 敵遭遇時：ダンジョンの景色の上に怪異をオーバーレイ */
 .layout-mobile .pane-enemy {
   position: absolute !important;
-  top: 5px !important; 
-  left: 8px;
-  right: 8px;
-  background: rgba(0, 0, 0, 0.9) !important;
-  border: 1px solid #722 !important;
-  border-top: 2px solid #f33 !important;
-  padding: 8px !important;
+  inset: 0 !important; /* 画面いっぱいに広げる */
+  background: transparent !important; /* 背景を透明にしてダンジョンを見せる */
+  border: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
   z-index: 1000 !important;
   pointer-events: none;
-  animation: enemyAppear 0.2s ease-out;
+  animation: enemyAppear 0.5s ease-out;
+  padding: 10% !important;
+  text-shadow: 2px 2px 4px #000, -2px -2px 4px #000 !important; /* 文字の視認性確保 */
 }
 
 @keyframes enemyAppear {
