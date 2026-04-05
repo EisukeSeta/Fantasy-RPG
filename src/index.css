@@ -483,17 +483,7 @@ body {
 .mp-mini .fill { background: #36d !important; }
 .xp-mini .fill { background: #d92 !important; }
 
-.layout-mobile .mobile-log-display {
-  flex: 1 !important; /* 残りスペースをログに */
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch !important;
-  padding: 10px 15px !important;
-  background: rgba(0, 0, 0, 0.2) !important;
-  font-size: 1.0rem !important;
-  line-height: 1.5 !important;
-  border-top: 1px solid #222 !important;
-  pointer-events: auto;
-}
+
 
 /* 地図・ステータスパネルのオーバーレイ制御 (アニメーション対応) */
 .layout-mobile .pane-status,
@@ -926,4 +916,46 @@ body {
 @keyframes mobileSpellSlide {
   from { transform: translateY(-30px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
+}
+
+.mobile-log-display {
+  flex: 1;
+  background: linear-gradient(to bottom, rgba(10, 8, 5, 0.96), rgba(20, 15, 10, 0.92));
+  background-image: 
+    radial-gradient(circle at 50% 50%, rgba(184, 154, 66, 0.04) 0%, transparent 80%),
+    url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noiseFilter)" opacity="0.06"/></svg>');
+  overflow-y: auto;
+  padding: 18px 14px;
+  font-family: 'Sawarabi Mincho', 'YuMincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: 0.92rem;
+  color: #ddd;
+  border-top: 1.5px solid var(--primary-gold);
+  line-height: 1.7;
+  letter-spacing: 0.02em;
+  box-shadow: inset 0 10px 25px rgba(0,0,0,0.9);
+  
+  /* 上下端を霞のようにフェードさせる */
+  mask-image: linear-gradient(to bottom, transparent, black 25px, black calc(100% - 25px), transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 25px, black calc(100% - 25px), transparent);
+}
+
+.mobile-log-display .log-msg {
+  margin-bottom: 10px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+  border-left: 2px solid transparent;
+  padding-left: 6px;
+  transition: all 0.3s;
+}
+
+.mobile-log-display .log-msg.active-msg {
+  border-left-color: var(--primary-gold);
+  color: #fff;
+}
+
+.mobile-log-display::-webkit-scrollbar {
+  width: 4px;
+}
+.mobile-log-display::-webkit-scrollbar-thumb {
+  background: rgba(184, 154, 66, 0.3);
+  border-radius: 2px;
 }

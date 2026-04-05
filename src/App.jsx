@@ -60,6 +60,7 @@ function App() {
   const [showDebug, setShowDebug] = useState(isDebug);
   const [enemy, setEnemy] = useState(null);
   const [activeBattler, setActiveBattler] = useState(0);
+  const [battleTurn, setBattleTurn] = useState(0);
   const [showSpells, setShowSpells] = useState(null);
   const [mapZoom, setMapZoom] = useState(1.0);
   const [lastDist, setLastDist] = useState(0);
@@ -147,7 +148,7 @@ function App() {
           }
         });
     }
-    setActiveBattler(0); setShowSpells(null);
+    setActiveBattler(0); setBattleTurn(0); setShowSpells(null);
   }, [enemy, addMessage, handleLevelUp]);
 
   const handleFight = useCallback(() => {
@@ -162,8 +163,10 @@ function App() {
     setEnemy({...enemy, hp: nEh});
     
     const nextIdx = party.findIndex((m, i) => i > activeBattler && m.hp > 0);
-    if (nextIdx !== -1) setActiveBattler(nextIdx);
-    else {
+    if (nextIdx !== -1) {
+      setActiveBattler(nextIdx);
+      setBattleTurn(prev => prev + 1);
+    } else {
       setTimeout(() => {
         const alive = party.filter(m => m.hp > 0);
         if (alive.length === 0) return;
@@ -174,8 +177,11 @@ function App() {
           const nextHP = Math.max(0, target.hp - eRes.damage);
           setParty(p => p.map(m => m.name === target.name ? { ...m, hp: nextHP, status: nextHP === 0 ? '討死' : '平安' } : m));
           if (party.every(m => (m.name === target.name ? nextHP : m.hp) <= 0)) endBattle(false);
-        } else addMessage(`${target.name}${scenarioData.battle.evade}`);
+        } else {
+          addMessage(`${target.name}${scenarioData.battle.evade}`);
+        }
         setActiveBattler(party.findIndex(m => m.hp > 0));
+        setBattleTurn(prev => prev + 1);
       }, 500);
     }
   }, [gameState, party, activeBattler, enemy, addMessage, endBattle]);
@@ -197,7 +203,13 @@ function App() {
     }
     setParty(nextP); setEnemy(nextE); setShowSpells(null);
     if (nextE.hp <= 0) endBattle(true);
-    else { const nextIdx = nextP.findIndex((m, i) => i > activeBattler && m.hp > 0); if (nextIdx !== -1) setActiveBattler(nextIdx); else handleFight(); }
+      else {
+        const nextIdx = nextP.findIndex((m, i) => i > activeBattler && m.hp > 0);
+        if (nextIdx !== -1) {
+          setActiveBattler(nextIdx);
+          setBattleTurn(prev => prev + 1);
+        } else handleFight();
+      }
   }, [party, activeBattler, enemy, addMessage, endBattle, gameState, handleFight]);
 
   const processMove = useCallback((type) => {
@@ -240,7 +252,7 @@ function App() {
         const event = mapEventsData.events.find(e => e.x === nX && e.y === nY);
         if (event) {
           setActiveDialog({ title: event.name, pages: [event.description], currentPage: 0 });
-          if (event.isHeal) { setParty(p => p.map(m => ({ ...m, hp: m.maxHp, mp: m.maxMp, status: '平安' }))); addMessage(`【${event.name}】にて心身が癒やされ、生命と霊力が満ちた。`, 'heal'); }
+          if (event.isHeal) { setParty(p => p.map(m => ({ ...m, hp: m.maxHp, mp: m.maxMp, status: '平安' }))); addMessage(`【${event.name}】の静寂にて隊員の心身が癒やされ、生命と霊力が再び漲った。`, 'heal'); }
         }
       }
     }
@@ -273,7 +285,7 @@ function App() {
       }, 800);
       return () => clearTimeout(t);
     }
-  }, [isAutoBattle, gameState, enemy, party, activeBattler, handleFight, castSpell]);
+  }, [isAutoBattle, gameState, enemy, party, activeBattler, handleFight, castSpell, battleTurn]);
 
   const partyInDanger = party.some(m => m.hp > 0 && (m.hp <= m.maxHp * 0.2 || m.hp === 1));
 
@@ -342,69 +354,39 @@ function App() {
             </div>
           )}
           
-            {isForceMobile && (
-              <div className="mobile-status-dashboard">
-                {party.map((m, i) => (
-                  <div key={i} className={`mini-member-card ${gameState === 'BATTLE' && activeBattler === i ? 'active-member' : ''}`}>
-                    <div className="card-top">
-                      <span className="card-name">{m.name.slice(0,2)}</span>
-                      <span className="card-lv">L{m.lv}</span>
-                    </div>
-                    <div className="card-bars">
-                      <div className="mini-bar hp-mini"><div className="fill" style={{ width: `${(m.hp/m.maxHp)*100}%` }} /></div>
-                      <div className="mini-bar mp-mini"><div className="fill" style={{ width: `${(m.mp/m.maxMp)*100}%` }} /></div>
-                      <div className="mini-bar xp-mini"><div className="fill" style={{ width: `${Math.min(100, ((m.exp - getRequiredExp(m.lv)) / (getRequiredExp(m.lv + 1) - getRequiredExp(m.lv))) * 100)}%` }} /></div>
-                    </div>
+          {isForceMobile && (
+            <div className="mobile-status-dashboard">
+              {party.map((m, i) => (
+                <div key={i} className={`mini-member-card ${gameState === 'BATTLE' && activeBattler === i ? 'active-member' : ''}`}>
+                  <div className="card-top">
+                    <span className="card-name">{m.name.slice(0,2)}</span>
+                    <span className="card-lv">L{m.lv}</span>
                   </div>
-                ))}
-              </div>
-            )}
-            
-            {isForceMobile && gameState !== 'BATTLE' && (
-              <div className="mobile-btn-container overlay-dpad">
-                 <>
-                   <div />
-                   <button className="move-btn dpad-btn" onClick={() => processMove('FORWARD')}>⬆️</button>
-                   <div />
-                   <button className="move-btn dpad-btn" onClick={() => processMove('TURN_LEFT')}>⬅️</button>
-                   <button className="move-btn dpad-btn" onClick={() => processMove('BACKWARD')}>⬇️</button>
-                   <button className="move-btn dpad-btn" onClick={() => processMove('TURN_RIGHT')}>➡️</button>
-                 </>
-              </div>
-            )}
-          </div>
-        {isForceMobile ? (
-          <div className="mobile-ui-container">
-            <div className="mobile-utility-btns" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '5px', padding: '6px 5px', background: '#111', borderBottom: '1px solid #333' }}>
-              <button className="dialog-btn" style={{ fontSize: '0.8rem', padding: '6px 2px' }} onClick={()=>setShowMap(true)}>🗺️ 迷宮図</button>
-              <button className="dialog-btn" style={{ fontSize: '0.8rem', padding: '6px 2px' }} onClick={()=>setShowStatus(true)}>👥 隊員証</button>
-              <button className="dialog-btn" style={{ fontSize: '0.8rem', padding: '6px 2px' }} onClick={()=>addMessage(scenarioData.ui.saveComplete, 'level_up')}>💾 記録</button>
-              <button className="dialog-btn" style={{ fontSize: '0.8rem', padding: '6px 2px' }} onClick={()=>setIsMuted(!isMuted)}>{isMuted?'🔇':'🔊'}</button>
+                  <div className="card-bars">
+                    <div className="mini-bar hp-mini"><div className="fill" style={{ width: `${(m.hp/m.maxHp)*100}%` }} /></div>
+                    <div className="mini-bar mp-mini"><div className="fill" style={{ width: `${(m.mp/m.maxMp)*100}%` }} /></div>
+                    <div className="mini-bar xp-mini"><div className="fill" style={{ width: `${Math.min(100, ((m.exp - getRequiredExp(m.lv)) / (getRequiredExp(m.lv + 1) - getRequiredExp(m.lv))) * 100)}%` }} /></div>
+                  </div>
+                </div>
+              ))}
             </div>
-
-            {gameState === 'BATTLE' && (
-              <div className="mobile-battle-commands">
-                <button className="battle-cmd-btn primary" onClick={handleFight}>🗡️ 打ちかかる</button>
-                <button className="battle-cmd-btn" onClick={() => setShowSpells(!showSpells)} style={{ background: showSpells ? 'var(--primary-gold)' : '', color: showSpells ? '#000' : '' }}>📜 術式</button>
-                <button className="battle-cmd-btn" onClick={() => setShowStatus(true)}>👥 隊員</button>
-                <button className="battle-cmd-btn" onClick={() => setIsAutoBattle(!isAutoBattle)}>{isAutoBattle ? '修羅(自)' : '手動'}</button>
-              </div>
-            )}
-
-            {showSpells && gameState === 'BATTLE' && isForceMobile && (
-              <div className="mobile-spells-overlay">
-                {(SPELLS[party[activeBattler].jobKey] || []).filter(s => s.lv <= party[activeBattler].lv).map((s, idx) => (
-                  <button key={idx} className="spell-btn-mobile" onClick={() => { castSpell(s); setShowSpells(false); }}>{s.name}({s.mp})</button>
-                ))}
-                <button className="spell-btn-mobile cancel" onClick={() => setShowSpells(false)}>✖ キャンセル</button>
-              </div>
-            )}
-            
-            <div className="mobile-log-display">
-              {messages.map((m, i) => <div key={i} className={`log-msg msg-${m.type}`}>{m.text}</div>)}
+          )}
+          
+          {isForceMobile && gameState !== 'BATTLE' && (
+            <div className="mobile-btn-container overlay-dpad">
+               <>
+                 <div />
+                 <button className="move-btn dpad-btn" onClick={() => processMove('FORWARD')}>⬆️</button>
+                 <div />
+                 <button className="move-btn dpad-btn" onClick={() => processMove('TURN_LEFT')}>⬅️</button>
+                 <button className="move-btn dpad-btn" onClick={() => processMove('BACKWARD')}>⬇️</button>
+                 <button className="move-btn dpad-btn" onClick={() => processMove('TURN_RIGHT')}>➡️</button>
+               </>
             </div>
-          </div>
-        ) : (
+          )}
+        </div>
+
+        {!isForceMobile && (
           <div className="controls-window window" style={{ height: '180px', marginTop: '15px' }}>
             <div style={{ display: 'flex', height: '100%', padding: '15px' }}>
               <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
@@ -429,6 +411,43 @@ function App() {
           </div>
         )}
       </div>
+
+      {isForceMobile && (
+        <div className="mobile-ui-container">
+          <div className="mobile-utility-btns" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '5px', padding: '6px 5px', background: '#111', borderBottom: '1px solid #333' }}>
+            <button className="dialog-btn" style={{ fontSize: '0.8rem', padding: '6px 2px' }} onClick={()=>setShowMap(true)}>🗺️ 迷宮図</button>
+            <button className="dialog-btn" style={{ fontSize: '0.8rem', padding: '6px 2px' }} onClick={()=>setShowStatus(true)}>👥 隊員証</button>
+            <button className="dialog-btn" style={{ fontSize: '0.8rem', padding: '6px 2px' }} onClick={()=>addMessage(scenarioData.ui.saveComplete, 'level_up')}>💾 記録</button>
+            <button className="dialog-btn" style={{ fontSize: '0.8rem', padding: '6px 2px' }} onClick={()=>setIsMuted(!isMuted)}>{isMuted?'🔇':'🔊'}</button>
+          </div>
+
+          {gameState === 'BATTLE' && (
+            <div className="mobile-battle-commands">
+              <button className="battle-cmd-btn primary" onClick={handleFight}>🗡️ 打ちかかる</button>
+              <button className="battle-cmd-btn" onClick={() => setShowSpells(!showSpells)} style={{ background: showSpells ? 'var(--primary-gold)' : '', color: showSpells ? '#000' : '' }}>📜 術式</button>
+              <button className="battle-cmd-btn" onClick={() => setShowStatus(true)}>👥 隊員</button>
+              <button className="battle-cmd-btn" onClick={() => setIsAutoBattle(!isAutoBattle)}>{isAutoBattle ? '⚔️ 合戦' : '采配'}</button>
+            </div>
+          )}
+
+          {showSpells && gameState === 'BATTLE' && isForceMobile && (
+            <div className="mobile-spells-overlay">
+              {(SPELLS[party[activeBattler].jobKey] || []).filter(s => s.lv <= party[activeBattler].lv).map((s, idx) => (
+                <button key={idx} className="spell-btn-mobile" onClick={() => { castSpell(s); setShowSpells(false); }}>{s.name}({s.mp})</button>
+              ))}
+              <button className="spell-btn-mobile cancel" onClick={() => setShowSpells(false)}>✖ キャンセル</button>
+            </div>
+          )}
+          
+          <div className="mobile-log-display">
+            {messages.map((m, i) => (
+              <div key={i} className={`log-msg msg-${m.type} ${i === messages.length - 1 ? 'active-msg' : ''}`}>
+                {m.text}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Log & Map Pane */}
       <div className={`pane-log window ${showMap ? 'mobile-active-pane' : ''}`}>
