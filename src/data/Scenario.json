@@ -52,7 +52,7 @@
     "noMana": "霊力が枯渇し、術を放てぬ。",
     "fleeSuccess": "戦場を離脱し、撤退に成功した。",
     "fleeFail": "敵の包囲に阻まれ、撤退に失敗した。",
-    "spellAttack": "。 %ENEMY% に %DMG% の霊的痛打を与えた。",
-    "spellHeal": "。 %TARGET% の傷が %HEAL% ほど癒やされた。"
+    "spellAttack": "。 %ENEMY% を霊的に討ち、 %DMG% の痛打を与えた。",
+    "spellHeal": "。 %TARGET% の生命が満ち、 %HEAL% ほど傷が癒えた。"
   }
 }

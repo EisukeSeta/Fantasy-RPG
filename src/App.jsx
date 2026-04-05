@@ -426,7 +426,7 @@ function App() {
               <button className="battle-cmd-btn primary" onClick={handleFight}>🗡️ 打ちかかる</button>
               <button className="battle-cmd-btn" onClick={() => setShowSpells(!showSpells)} style={{ background: showSpells ? 'var(--primary-gold)' : '', color: showSpells ? '#000' : '' }}>📜 術式</button>
               <button className="battle-cmd-btn" onClick={() => setShowStatus(true)}>👥 隊員</button>
-              <button className="battle-cmd-btn" onClick={() => setIsAutoBattle(!isAutoBattle)}>{isAutoBattle ? '⚔️ 合戦' : '采配'}</button>
+              <button className="battle-cmd-btn" onClick={() => setIsAutoBattle(!isAutoBattle)}>{isAutoBattle ? scenarioData.ui.shuraAuto : scenarioData.ui.manual}</button>
             </div>
           )}
 
