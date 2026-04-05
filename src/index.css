@@ -531,6 +531,34 @@ body {
   pointer-events: auto !important;
 }
 
+/* 戦闘コマンド操作パネル */
+.mobile-battle-commands {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 8px !important;
+  padding: 10px !important;
+  background: rgba(0, 0, 0, 0.4) !important;
+  border-bottom: 1px solid #333 !important;
+}
+
+.battle-cmd-btn {
+  padding: 12px 5px !important;
+  background: var(--ancient-black) !important;
+  border: 1px solid #444 !important;
+  color: #fff !important;
+  font-size: 0.9rem !important;
+  border-radius: 4px !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.battle-cmd-btn.primary {
+  background: linear-gradient(to bottom, #422, #200) !important;
+  border: 1px solid #722 !important;
+  border-bottom: 2px solid #f33 !important;
+  color: #fdd !important;
+  font-weight: bold !important;
+}
+
 /* 敵遭遇時：ダンジョンの景色の上に怪異をオーバーレイ */
 .layout-mobile .pane-enemy {
   position: absolute !important;

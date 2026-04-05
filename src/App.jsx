@@ -360,17 +360,8 @@ function App() {
               </div>
             )}
             
-            {isForceMobile && (
+            {isForceMobile && gameState !== 'BATTLE' && (
               <div className="mobile-btn-container overlay-dpad">
-               {gameState==='BATTLE' ? (
-                 <>
-                   <button className="move-btn" style={{ gridColumn: 'span 2' }} onClick={handleFight}>🗡️ 打ちかかる</button>
-                   <button className="move-btn" onClick={() => setShowStatus(true)}>👥 隊員</button>
-                   <div />
-                   <button className="move-btn" onClick={() => setShowSpells(!showSpells)}>📜 術式</button>
-                   <div />
-                 </>
-               ) : (
                  <>
                    <div />
                    <button className="move-btn dpad-btn" onClick={() => processMove('FORWARD')}>⬆️</button>
@@ -379,9 +370,9 @@ function App() {
                    <button className="move-btn dpad-btn" onClick={() => processMove('BACKWARD')}>⬇️</button>
                    <button className="move-btn dpad-btn" onClick={() => processMove('TURN_RIGHT')}>➡️</button>
                  </>
-               )}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
 
         {isForceMobile ? (
@@ -392,6 +383,15 @@ function App() {
               <button className="dialog-btn" style={{ fontSize: '0.8rem', padding: '8px 4px' }} onClick={()=>addMessage(scenarioData.ui.saveComplete, 'level_up')}>💾 記録</button>
               <button className="dialog-btn" style={{ fontSize: '0.8rem', padding: '8px 4px' }} onClick={()=>setIsMuted(!isMuted)}>{isMuted?'🔇':'🔊'}</button>
             </div>
+
+            {gameState === 'BATTLE' && (
+              <div className="mobile-battle-commands">
+                <button className="battle-cmd-btn primary" onClick={handleFight}>🗡️ 打ちかかる</button>
+                <button className="battle-cmd-btn" onClick={() => setShowSpells(!showSpells)}>📜 術式</button>
+                <button className="battle-cmd-btn" onClick={() => setShowStatus(true)}>👥 隊員</button>
+                <button className="battle-cmd-btn" onClick={() => setIsAutoBattle(!isAutoBattle)}>{isAutoBattle ? '修羅(自)' : '手動'}</button>
+              </div>
+            )}
             
             <div className="mobile-log-display">
               {messages.map((m, i) => <div key={i} className={`log-msg msg-${m.type}`}>{m.text}</div>)}
@@ -427,7 +427,6 @@ function App() {
             </div>
           </div>
         )}
-      </div>
 
       {/* Log & Map Pane */}
       <div className={`pane-log window ${showMap ? 'mobile-active-pane' : ''}`}>
