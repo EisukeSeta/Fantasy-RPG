@@ -38,6 +38,7 @@ body {
   flex-direction: column;
   padding: 0;
   height: 100dvh;
+  overflow-y: auto !important; /* コンテンツが多い場合にスクロールを許可 */
 }
 
 .pane-status { flex: 1.2; }
@@ -307,12 +308,14 @@ body {
 }
 
 .layout-mobile .mobile-ui-container {
-  flex: 1 !important;
+  flex: 1 0 auto !important; /* 縮小させず、中身に応じて高さを確保 */
+  min-height: 350px !important;
   display: flex !important;
   flex-direction: column !important;
-  background: linear-gradient(to bottom, #000, #111) !important;
-  overflow: hidden !important;
+  background: #000 !important; /* 確実に不透明にする */
+  border-top: 1px solid #333 !important;
   z-index: 20;
+  position: relative;
 }
 
 .layout-mobile .mini-status-panel {
@@ -927,6 +930,11 @@ body {
   overflow-y: auto;
   padding: 18px 14px;
   font-family: 'Sawarabi Mincho', 'YuMincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  background: rgba(0,0,0,0.85);
+  min-height: 180px !important;
+  position: relative;
+  z-index: 10;
+  overflow-y: auto;
   font-size: 0.92rem;
   color: #ddd;
   border-top: 1.5px solid var(--primary-gold);
@@ -935,8 +943,8 @@ body {
   box-shadow: inset 0 10px 25px rgba(0,0,0,0.9);
   
   /* 上下端を霞のようにフェードさせる */
-  mask-image: linear-gradient(to bottom, transparent, black 25px, black calc(100% - 25px), transparent);
-  -webkit-mask-image: linear-gradient(to bottom, transparent, black 25px, black calc(100% - 25px), transparent);
+  mask-image: linear-gradient(to bottom, transparent, black 40px, black calc(100% - 40px), transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 40px, black calc(100% - 40px), transparent);
 }
 
 .mobile-log-display .log-msg {
