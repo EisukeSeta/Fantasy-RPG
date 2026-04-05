@@ -263,20 +263,19 @@ body {
 
 .layout-mobile .pane-main {
   width: 100vw !important;
-  height: 100vw !important; /* 完全な正方形を維持 */
+  height: 100vw !important; 
   aspect-ratio: 1 / 1 !important;
   flex-shrink: 0 !important;
   position: relative !important;
-  border-bottom: 2px solid var(--primary-gold) !important;
-  background: #000;
-  z-index: 10;
 }
 
 .layout-mobile .view-window {
   width: 100% !important;
   height: 100% !important;
   margin: 0 !important;
+  padding: 0 !important;
   border: none !important;
+  background: #000;
 }
 
 .layout-mobile .view-window .window-title {
@@ -885,4 +884,38 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--primary-gold);
+}
+
+/* モバイル専用：術式選択オーバーレイ */
+.mobile-spells-overlay {
+  background: rgba(0, 0, 0, 0.9) !important;
+  padding: 10px !important;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+  border-bottom: 2px solid var(--primary-gold) !important;
+  animation: mobileSpellSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  flex-shrink: 0 !important;
+}
+
+.spell-btn-mobile {
+  padding: 12px 5px !important;
+  background: #222 !important;
+  border: 1px solid #444 !important;
+  color: var(--primary-gold) !important;
+  font-size: 0.85rem !important;
+  border-radius: 4px !important;
+  cursor: pointer;
+}
+
+.spell-btn-mobile.cancel {
+  grid-column: span 2 !important;
+  background: #311 !important;
+  color: #fff !important;
+  border-color: #522 !important;
+}
+
+@keyframes mobileSpellSlide {
+  from { transform: translateY(-30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }

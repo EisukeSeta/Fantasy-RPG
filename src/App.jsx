@@ -319,7 +319,7 @@ function App() {
 
       <div className="pane-main">
         <div className="view-window window" style={{ flex: 1, position: 'relative', overflow: 'visible', margin: 0 }}>
-          <span className="window-title">都の景色</span>
+          {!isForceMobile && <span className="window-title">都の景色</span>}
           <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
             <WireframeView mapData={mapData} playerPos={playerState} playerDir={playerState.dir} />
           </div>
@@ -387,9 +387,18 @@ function App() {
             {gameState === 'BATTLE' && (
               <div className="mobile-battle-commands">
                 <button className="battle-cmd-btn primary" onClick={handleFight}>🗡️ 打ちかかる</button>
-                <button className="battle-cmd-btn" onClick={() => setShowSpells(!showSpells)}>📜 術式</button>
+                <button className="battle-cmd-btn" onClick={() => setShowSpells(!showSpells)} style={{ background: showSpells ? 'var(--primary-gold)' : '', color: showSpells ? '#000' : '' }}>📜 術式</button>
                 <button className="battle-cmd-btn" onClick={() => setShowStatus(true)}>👥 隊員</button>
                 <button className="battle-cmd-btn" onClick={() => setIsAutoBattle(!isAutoBattle)}>{isAutoBattle ? '修羅(自)' : '手動'}</button>
+              </div>
+            )}
+
+            {showSpells && gameState === 'BATTLE' && isForceMobile && (
+              <div className="mobile-spells-overlay">
+                {(SPELLS[party[activeBattler].jobKey] || []).filter(s => s.lv <= party[activeBattler].lv).map((s, idx) => (
+                  <button key={idx} className="spell-btn-mobile" onClick={() => { castSpell(s); setShowSpells(false); }}>{s.name} ({s.mp})</button>
+                ))}
+                <button className="spell-btn-mobile cancel" onClick={() => setShowSpells(false)}>✖ キャンセル</button>
               </div>
             )}
             
