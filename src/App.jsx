@@ -407,11 +407,17 @@ function App() {
       )}
 
       {isDebug && (
-        <div className="debug-panel" style={{ position: 'fixed', bottom: '10px', left: '10px', zIndex: 10000, display: 'flex', gap: '5px', background: 'rgba(0,0,0,0.7)', padding: '5px', borderRadius: '5px', border: '1px solid #f1c40f' }}>
+        <div className="debug-panel" style={{ position: 'fixed', bottom: '10px', left: '10px', zIndex: 10000, display: 'flex', flexWrap: 'wrap', gap: '5px', background: 'rgba(0,0,0,0.85)', padding: '8px', borderRadius: '5px', border: '1px solid #f1c40f', maxWidth: '300px' }}>
           <button className="debug-btn" onClick={() => setParty(p => p.map(m => ({ ...m, hp: m.maxHp, mp: m.maxMp, status: '平安' })))} style={{ fontSize: '0.6rem', padding: '2px 5px' }}>全快</button>
           <button className="debug-btn" onClick={() => setEnemy(e => e ? { ...e, hp: 1 } : null)} style={{ fontSize: '0.6rem', padding: '2px 5px' }}>一撃</button>
           <button className="debug-btn" onClick={() => { setEnemy(null); setGameState('EXPLORING'); }} style={{ fontSize: '0.6rem', padding: '2px 5px' }}>消滅</button>
           <button className="debug-btn" onClick={() => setParty(p => p.map(m => ({ ...m, exp: m.exp + 1000 })))} style={{ fontSize: '0.6rem', padding: '2px 5px' }}>功徳</button>
+          <button className="debug-btn" onClick={() => { setPlayerState({ x: BOSS_POS.x, y: BOSS_POS.y, dir: DIRECTIONS.S }); addMessage('神速の跳躍……。', 'event'); }} style={{ fontSize: '0.6rem', padding: '2px 5px', color: '#f1c40f' }}>鵺門</button>
+          <button className="debug-btn" onClick={() => { setPlayerState({ x: 1, y: 1, dir: DIRECTIONS.S }); addMessage('社へ帰還。', 'event'); }} style={{ fontSize: '0.6rem', padding: '2px 5px' }}>社帰</button>
+          <button className="debug-btn" onClick={() => { setMapData(p => p.map(r => r.map(c => ({...c, visited: true})))); addMessage('霧が晴れた。', 'event'); }} style={{ fontSize: '0.6rem', padding: '2px 5px' }}>霧払</button>
+          <button className="debug-btn" onClick={() => {
+            const e = getRandomEnemy(1); setEnemy({ ...e, hp: e.maxHp }); setGameState('BATTLE'); addMessage(`【${e.name}】を召喚。`, 'event');
+          }} style={{ fontSize: '0.6rem', padding: '2px 5px' }}>召喚</button>
         </div>
       )}
     </div>
