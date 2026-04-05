@@ -292,7 +292,13 @@ function App() {
       {/* Pane: Status */}
       <div className={`pane-status window ${showStatus ? 'mobile-active-pane' : ''}`}>
         <span className="window-title">隊員之証</span>
-        {isForceMobile && <button className="dialog-btn" onClick={() => setShowStatus(false)} style={{ margin: '15px' }}>閉じる</button>}
+        {isForceMobile && (
+          <div className="mobile-nav-tabs">
+            <button className="nav-tab-btn" onClick={() => { setShowStatus(false); setShowMap(false); }}>🏰 迷宮</button>
+            <button className="nav-tab-btn" onClick={() => { setShowStatus(false); setShowMap(true); }}>🗺️ 迷宮図</button>
+            <button className="nav-tab-btn active">👥 隊員証</button>
+          </div>
+        )}
         <div className="status-grid">
           {party.map((m, i) => (
             <div key={i} className={`status-item ${gameState === 'BATTLE' && activeBattler === i ? 'active-battler' : ''}`} style={{ opacity: m.hp <= 0 ? 0.4 : 1 }}>
@@ -424,10 +430,16 @@ function App() {
       {/* Log & Map Pane */}
       <div className={`pane-log window ${showMap ? 'mobile-active-pane' : ''}`}>
         <span className="window-title">{scenarioData.ui.labyrinthMap} <span style={{ color: 'var(--soft-gold)', marginLeft: '15px', textShadow: '0 0 10px rgba(184, 154, 66, 0.8)' }}>〔 {playerState.x}, {playerState.y} 〕</span></span>
-        {isForceMobile && <button className="dialog-btn" onClick={() => setShowMap(false)} style={{ margin: '15px' }}>閉じる</button>}
+        {isForceMobile && (
+          <div className="mobile-nav-tabs">
+            <button className="nav-tab-btn" onClick={() => { setShowStatus(false); setShowMap(false); }}>🏰 迷宮</button>
+            <button className="nav-tab-btn active">🗺️ 迷宮図</button>
+            <button className="nav-tab-btn" onClick={() => { setShowStatus(true); setShowMap(false); }}>👥 隊員証</button>
+          </div>
+        )}
         
-        {/* Map view First */}
-        <div style={{ height: '230px', borderBottom: '1px solid #333', padding: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', background: '#000' }}>
+        {/* Map view (Unified focus) */}
+        <div style={{ flex: 1, padding: '20px 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', background: '#000', overflowY: 'auto' }}>
           <div style={{ display: 'grid', gridTemplateColumns: `repeat(${MAP_WIDTH}, 22px)`, gap: 0, border: '1px solid #111' }}>
             {mapData.map((row, y) => row.map((cell, x) => {
               const ev = mapEventsData.events.find(e => e.x === x && e.y === y);
@@ -440,17 +452,11 @@ function App() {
               );
             }))}
           </div>
-          <div style={{ display: 'flex', gap: '10px', marginTop: '8px', fontSize: '0.7rem', color: '#888' }}>
-            {mapEventsData.legend.map((l, idx) => <span key={idx}>{l.icon}:{l.name}</span>)}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginTop: '15px', fontSize: '0.75rem', color: '#aaa' }}>
+            {mapEventsData.legend.map((l, idx) => <span key={idx} style={{ textAlign: 'center' }}>{l.icon}:{l.name}</span>)}
           </div>
+          {isForceMobile && <button className="dialog-btn" onClick={() => setShowMap(false)} style={{ marginTop: '30px', width: '80%' }}>閉じる</button>}
         </div>
-
-        {/* Log content Second */}
-        <div className="log-content">
-          {messages.map((m, i) => <div key={i} className={`log-msg msg-${m.type}`}>{m.text}</div>)}
-        </div>
-
-        {isForceMobile && <button className="dialog-btn" onClick={() => setShowMap(false)} style={{ marginTop: '10px' }}>閉じる</button>}
       </div>
 
       {activeDialog && (

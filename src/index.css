@@ -489,6 +489,34 @@ body {
   overflow-y: auto !important; /* スクロール可能に */
 }
 
+/* スマホ用タブナビゲーション */
+.mobile-nav-tabs {
+  display: flex !important;
+  width: 100% !important;
+  background: #111 !important;
+  border-bottom: 2px solid #333 !important;
+  margin-bottom: 10px !important;
+  flex-shrink: 0 !important;
+}
+
+.nav-tab-btn {
+  flex: 1 !important;
+  padding: 12px 5px !important;
+  background: transparent !important;
+  border: none !important;
+  color: #888 !important;
+  font-size: 0.8rem !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+  border-bottom: 3px solid transparent !important;
+}
+
+.nav-tab-btn.active {
+  color: var(--primary-gold) !important;
+  border-bottom: 3px solid var(--primary-gold) !important;
+  background: rgba(184, 154, 66, 0.1) !important;
+}
+
 .layout-mobile .mobile-active-pane {
   display: flex !important;
 }
