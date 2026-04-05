@@ -139,7 +139,7 @@ function App() {
           onCancel: () => {
             setActiveDialog({
               title: "「終焉」", pages: ["都は漆黒の闇に飲まれ、記憶も魂も、全ては虚無へと消えた……。"], currentPage: 0,
-              onConfirm: () => { setGameState('GAMEOVER'); SoundEngine.stop(); setActiveDialog(null); }
+              onConfirm: () => { setActiveDialog(null); setGameState('GAMEOVER'); SoundEngine.stop(); }
             });
           }
         });

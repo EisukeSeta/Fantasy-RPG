@@ -396,15 +396,15 @@ body {
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
-  background-color: rgba(0, 0, 0, 0.95) !important;
-  z-index: 10000 !important; 
+  background-color: rgba(0, 0, 0, 0.98) !important;
+  z-index: 20000 !important; 
   display: flex;
   flex-direction: column;
   padding: 40px;
   box-sizing: border-box;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(12px);
 }
 
 .dialog-title {
