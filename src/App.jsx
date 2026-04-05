@@ -57,6 +57,7 @@ function App() {
   const [isAutoBattle, setIsAutoBattle] = useState(true);
   const [showMap, setShowMap] = useState(false);
   const [showStatus, setShowStatus] = useState(false);
+  const [showDebug, setShowDebug] = useState(isDebug);
   const [enemy, setEnemy] = useState(null);
   const [activeBattler, setActiveBattler] = useState(0);
   const [showSpells, setShowSpells] = useState(null);
@@ -272,8 +273,10 @@ function App() {
     }
   }, [isAutoBattle, gameState, enemy, party, activeBattler, handleFight, castSpell]);
 
+  const partyInDanger = party.some(m => m.hp > 0 && (m.hp <= m.maxHp * 0.2 || m.hp === 1));
+
   return (
-    <div className={`game-container ${isForceMobile ? 'layout-mobile' : ''} ${isShake ? 'shake-anim' : ''}`}>
+    <div className={`game-container ${isForceMobile ? 'layout-mobile' : ''} ${isShake ? 'shake-anim' : ''} ${partyInDanger ? 'danger-state' : ''}`}>
       {isBossIntro && (
         <div className="gameover-overlay" style={{ background: 'rgba(0,0,0,0.85)', animation: 'none' }}>
           <div className="gameover-splash" style={{ fontSize: '3rem', letterSpacing: '10px' }}>強大な怪異の気配……</div>
@@ -294,8 +297,8 @@ function App() {
             <div key={i} className={`status-item ${gameState === 'BATTLE' && activeBattler === i ? 'active-battler' : ''}`} style={{ opacity: m.hp <= 0 ? 0.4 : 1 }}>
               <div className="status-portrait"><img src={CHAR_IMAGES[m.image]} alt={m.name} /></div>
               <div className="status-info">
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span className="status-name">{m.name}</span><span style={{ color: varGold, fontSize: '0.8rem' }}>Lv {m.lv}</span></div>
-                <div className="hp-bar-container"><div className="hp-bar" style={{ width: `${(m.hp/m.maxHp)*100}%` }} /></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span className="status-name" style={{ color: m.hp === 1 ? '#f66' : '#fff' }}>{m.name}</span><span style={{ color: varGold, fontSize: '0.8rem' }}>Lv {m.lv}</span></div>
+                <div className={`hp-bar-container ${m.hp === 1 ? 'danger-blink' : ''}`}><div className="hp-bar" style={{ width: `${(m.hp/m.maxHp)*100}%` }} /></div>
                 <div className="mp-bar-container"><div className="mp-bar" style={{ width: `${(m.mp/m.maxMp)*100}%` }} /></div>
                 <div className="xp-bar-container"><div className="xp-bar" style={{ width: `${Math.min(100, ((m.exp - getRequiredExp(m.lv)) / (getRequiredExp(m.lv + 1) - getRequiredExp(m.lv))) * 100)}%` }} /></div>
               </div>
@@ -306,11 +309,18 @@ function App() {
       </div>
 
       <div className="pane-main">
-        <div className="view-window window" style={{ flex: 1, position: 'relative', overflow: 'visible' }}>
+        <div className="view-window window" style={{ flex: 1, position: 'relative', overflow: 'visible', margin: 0 }}>
           <span className="window-title">都の景色</span>
           <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
             <WireframeView mapData={mapData} playerPos={playerState} playerDir={playerState.dir} />
           </div>
+          {isForceMobile && (
+            <div 
+              style={{ position: 'absolute', inset: 0, zIndex: 5, cursor: 'pointer' }} 
+              onClick={() => processMove('FORWARD')} 
+              title="前進"
+            />
+          )}
           {gameState === 'BATTLE' && enemy && (
             <div className={`pane-enemy ${enemy.isBoss ? 'boss-aura' : ''}`}>
               <div className={enemy.isBoss ? 'boss-name' : 'enemy-name'}>
@@ -322,22 +332,66 @@ function App() {
               <div className="hp-bar-container" style={{ width: '70%', margin: '15px 0' }}><div className="hp-bar" style={{ width: `${(enemy.hp/enemy.maxHp)*100}%` }} /></div>
             </div>
           )}
+          
+            {isForceMobile && (
+              <div className="mobile-status-dashboard">
+                {party.map((m, i) => (
+                  <div key={i} className="mini-member-card">
+                    <div className="card-top">
+                      <span className="card-name">{m.name.slice(0,2)}</span>
+                      <span className="card-lv">L{m.lv}</span>
+                    </div>
+                    <div className="card-bars">
+                      <div className="mini-bar hp-mini"><div className="fill" style={{ width: `${(m.hp/m.maxHp)*100}%` }} /></div>
+                      <div className="mini-bar mp-mini"><div className="fill" style={{ width: `${(m.mp/m.maxMp)*100}%` }} /></div>
+                      <div className="mini-bar xp-mini"><div className="fill" style={{ width: `${Math.min(100, ((m.exp - getRequiredExp(m.lv)) / (getRequiredExp(m.lv + 1) - getRequiredExp(m.lv))) * 100)}%` }} /></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {isForceMobile && (
+              <div className="mobile-btn-container overlay-dpad">
+               {gameState==='BATTLE' ? (
+                 <>
+                   <button className="move-btn" style={{ gridColumn: 'span 2' }} onClick={handleFight}>🗡️ 打ちかかる</button>
+                   <button className="move-btn" onClick={() => setShowStatus(true)}>👥 隊員</button>
+                   <div />
+                   <button className="move-btn" onClick={() => setShowSpells(!showSpells)}>📜 術式</button>
+                   <div />
+                 </>
+               ) : (
+                 <>
+                   <div />
+                   <button className="move-btn dpad-btn" onClick={() => processMove('FORWARD')}>⬆️</button>
+                   <div />
+                   <button className="move-btn dpad-btn" onClick={() => processMove('TURN_LEFT')}>⬅️</button>
+                   <button className="move-btn dpad-btn" onClick={() => processMove('BACKWARD')}>⬇️</button>
+                   <button className="move-btn dpad-btn" onClick={() => processMove('TURN_RIGHT')}>➡️</button>
+                 </>
+               )}
+            </div>
+          )}
         </div>
 
         {isForceMobile ? (
           <div className="mobile-ui-container">
-            <div className="mini-status-panel mobile-overlay" style={{ height: '5px', gap: '2px' }}>
-              {party.map((m, i) => <div key={i} style={{ flex: 1, height: '100%', background: '#300' }}><div style={{ width: `${(m.hp/m.maxHp)*100}%`, height: '100%', background: '#d22' }} /></div>)}
+            <div className="mobile-utility-btns" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '5px', padding: '10px', background: '#111', borderBottom: '1px solid #333' }}>
+              <button className="dialog-btn" style={{ fontSize: '0.8rem', padding: '8px 4px' }} onClick={()=>setShowMap(true)}>🗺️ 迷宮図</button>
+              <button className="dialog-btn" style={{ fontSize: '0.8rem', padding: '8px 4px' }} onClick={()=>setShowStatus(true)}>👥 隊員証</button>
+              <button className="dialog-btn" style={{ fontSize: '0.8rem', padding: '8px 4px' }} onClick={()=>addMessage(scenarioData.ui.saveComplete, 'level_up')}>💾 記録</button>
+              <button className="dialog-btn" style={{ fontSize: '0.8rem', padding: '8px 4px' }} onClick={()=>setIsMuted(!isMuted)}>{isMuted?'🔇':'🔊'}</button>
             </div>
-            <div className="mobile-btn-container" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '5px' }}>
-               {gameState==='BATTLE'?(<><button className="move-btn" style={{gridColumn:'span 2'}} onClick={handleFight}>🗡️ 打ちかかる</button><button className="move-btn" onClick={()=>setShowStatus(true)}>👥 隊員</button></>):(<><div/><button className="move-btn" onClick={()=>processMove('FORWARD')}>⬆️ 前進</button><div/><button className="move-btn" onClick={()=>processMove('TURN_LEFT')}>↩️ 左向</button><button className="move-btn" onClick={()=>processMove('BACKWARD')}>⬇️ 後退</button><button className="move-btn" onClick={()=>processMove('TURN_RIGHT')}>↪️ 右向</button></>)}
-            </div>
+            
             <div className="mobile-log-display">
               {messages.map((m, i) => <div key={i} className={`log-msg msg-${m.type}`}>{m.text}</div>)}
             </div>
-            <div style={{ display: 'flex', gap: '5px', padding: '5px' }}>
-              <button className="dialog-btn" style={{ flex: 1 }} onClick={()=>setShowMap(true)}>🗺️ 迷宮図</button>
-              <button className="dialog-btn" onClick={()=>setIsMuted(!isMuted)}>{isMuted?'🔇':'🔊'}</button>
+
+            <div className="mini-status-panel mobile-overlay" style={{ height: '4px', gap: '2px', position: 'relative', bottom: 0, left: 0, right: 0 }}>
+               {party.map((m, i) => <div key={i} style={{ flex: 1, height: '100%', background: '#300', position: 'relative', overflow: 'hidden' }}>
+                 <div style={{ width: `${(m.hp/m.maxHp)*100}%`, height: '100%', background: m.hp === 1 ? '#f11' : '#d22' }} />
+               </div>)}
             </div>
           </div>
         ) : (
@@ -412,30 +466,43 @@ function App() {
       )}
 
       {isDebug && (
-        <div className="debug-panel">
-          <button className="debug-btn" onClick={() => setParty(p => p.map(m => ({ ...m, hp: m.maxHp, mp: m.maxMp, status: '平安' })))}>全快</button>
-          <button className="debug-btn" onClick={() => setEnemy(e => e ? { ...e, hp: 1 } : null)}>一撃</button>
-          <button className="debug-btn" onClick={() => { setEnemy(null); setGameState('EXPLORING'); }}>消滅</button>
-          <button className="debug-btn" onClick={() => setParty(p => p.map(m => ({ ...m, exp: m.exp + 1000 })))}>功徳</button>
-          <button className="debug-btn" onClick={() => {
-            const input = prompt("跳躍先の座標(x,y)を入力せよ (例: 9,1)", `${playerState.x},${playerState.y}`);
-            if (input) {
-              const [nx, ny] = input.split(',').map(Number);
-              if (!isNaN(nx) && !isNaN(ny)) {
-                setPlayerState({ x: nx, y: ny, dir: DIRECTIONS.S });
-                addMessage(`(x:${nx}, y:${ny}) への神速の跳躍。`, 'event');
-              }
-            }
-          }} style={{ color: '#f1c40f' }}>跳躍</button>
-          <button className="debug-btn" onClick={() => { setPlayerState({ x: 1, y: 1, dir: DIRECTIONS.S }); addMessage('社へ帰還。', 'event'); }}>社帰</button>
-          <button className="debug-btn" onClick={() => { setMapData(p => p.map(r => r.map(c => ({...c, visited: true})))); addMessage('霧が晴れた。', 'event'); }}>霧払</button>
-          <button className="debug-btn" onClick={() => {
-            const eid = prompt("怪異の番付(0-10)を入力せよ (10:鵺)", "10");
-            const e = ENEMY_LIST[Number(eid)] || getRandomEnemy(1);
-            setEnemy({ ...e, hp: e.maxHp }); setGameState('BATTLE'); addMessage(`【${e.name}】を召喚。`, 'event');
-          }}>召喚</button>
-          <button className="debug-btn" onClick={() => { setBossDefeated(!bossDefeated); addMessage(`因縁の変転：ボス討伐状態を ${!bossDefeated} へ。`, 'event'); }}>因縁</button>
-        </div>
+        <>
+          <button 
+            className="debug-btn" 
+            onClick={() => setShowDebug(!showDebug)} 
+            style={{ position: 'fixed', bottom: '5px', left: '5px', zIndex: 10001, padding: '5px 8px', fontSize: '1rem', background: '#222', border: '1px solid var(--primary-gold)' }}
+          >
+            {showDebug ? '✖' : '🛠️'}
+          </button>
+          
+          {showDebug && (
+            <div className="debug-panel" style={{ bottom: '40px', left: '5px' }}>
+              <button className="debug-btn" onClick={() => setParty(p => p.map(m => ({ ...m, hp: m.maxHp, mp: m.maxMp, status: '平安' })))}>全員全快</button>
+              <button className="debug-btn" onClick={() => setParty(p => p.map(m => ({ ...m, hp: 1, status: '平安' })))} style={{ color: '#f55' }}>瀕死状態</button>
+              <button className="debug-btn" onClick={() => setEnemy(e => e ? { ...e, hp: 1 } : null)}>敵一撃</button>
+              <button className="debug-btn" onClick={() => { setEnemy(null); setGameState('EXPLORING'); }}>敵消滅</button>
+              <button className="debug-btn" onClick={() => setParty(p => p.map(m => ({ ...m, exp: m.exp + 2000 })))}>大量功徳</button>
+              <button className="debug-btn" onClick={() => {
+                const input = prompt("跳躍先の座標(x,y)を入力せよ (例: 9,1)", `${playerState.x},${playerState.y}`);
+                if (input) {
+                  const [nx, ny] = input.split(',').map(Number);
+                  if (!isNaN(nx) && !isNaN(ny)) {
+                    setPlayerState({ x: nx, y: ny, dir: DIRECTIONS.S });
+                    addMessage(`(x:${nx}, y:${ny}) への神速の跳躍。`, 'event');
+                  }
+                }
+              }} style={{ color: '#f1c40f' }}>神速跳躍</button>
+              <button className="debug-btn" onClick={() => { setPlayerState({ x: 1, y: 1, dir: DIRECTIONS.S }); addMessage('社へ帰還。', 'event'); }}>社へ帰還</button>
+              <button className="debug-btn" onClick={() => { setMapData(p => p.map(r => r.map(c => ({...c, visited: true})))); addMessage('霧が晴れた。', 'event'); }}>全地図開</button>
+              <button className="debug-btn" onClick={() => {
+                const eid = prompt("怪異の番付(0-10)を入力せよ (10:鵺)", "10");
+                const e = ENEMY_LIST[Number(eid)] || getRandomEnemy(1);
+                setEnemy({ ...e, hp: e.maxHp }); setGameState('BATTLE'); addMessage(`【${e.name}】を召喚。`, 'event');
+              }}>怪異召喚</button>
+              <button className="debug-btn" onClick={() => { setBossDefeated(!bossDefeated); addMessage(`因縁の変転：ボス討伐状態を ${!bossDefeated} へ。`, 'event'); }}>ボスフラグ</button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

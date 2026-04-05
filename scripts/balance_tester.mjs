@@ -13,6 +13,8 @@ import enemiesData from '../src/data/Enemies.json' with { type: 'json' };
 const SIM_RUNS = 1000; // 試行回数
 const STEPS_TO_BOSS = 100; // ボスに到達するまでのおよその探索歩数
 const ENCOUNTER_CHANCE = balanceData.rates.encounter;
+const MOBILE_MODE = process.argv.includes('--mobile');
+const MOBILE_FACTOR = 1.35; // モバイル操作（タップ等）による時間増加係数
 
 // --- EXP Table (Sync with App.jsx) ---
 const getRequiredExp = (lv) => {
@@ -100,17 +102,17 @@ function runOneGame() {
   while (!bossDefeated && totalWipeouts < 20) { // 最大20回まで転生
     // 探索フェーズ
     for (let s = 0; s < STEPS_TO_BOSS; s++) {
-      totalHumanTime += 0.05; // 1歩 3秒換算 (分)
+      totalHumanTime += 0.05 * (MOBILE_MODE ? MOBILE_FACTOR : 1); // 1歩 3秒換算 (分)
       if (Math.random() < ENCOUNTER_CHANCE) {
         totalBattles++;
-        totalHumanTime += 0.3; // 戦闘思考時間 20秒換算
+        totalHumanTime += 0.3 * (MOBILE_MODE ? MOBILE_FACTOR : 1); // 戦闘思考時間 20秒換算
         const lvSum = party.reduce((sum, m) => sum + m.lv, 0);
         const enemy = getRandomEnemy(lvSum);
         const res = simulateBattle(party, enemy);
         
         if (!res.won) {
           totalWipeouts++;
-          totalHumanTime += 2.0; // 全滅から復帰して歩き直す時間
+          totalHumanTime += 2.0 * (MOBILE_MODE ? MOBILE_FACTOR : 1); // 全滅から復帰して歩き直す時間
           // 転生の理: HP/MP 1 で井戸に戻り、社で全快(1,1に歩くのを想定)
           party = party.map(m => ({ ...m, hp: m.maxHp, mp: m.maxMp })); 
           break; // 探索やり直し
@@ -127,7 +129,7 @@ function runOneGame() {
     // ボス戦フェーズ
     const nueBase = enemiesData.find(e => e.id === 10);
     const nue = { ...nueBase, hp: (nueBase.minHp + nueBase.maxHp)/2 };
-    totalHumanTime += 1.0; // ボス演出時間
+    totalHumanTime += 1.0 * (MOBILE_MODE ? MOBILE_FACTOR : 1); // ボス演出時間
     const bossRes = simulateBattle(party, nue);
     if (bossRes.won) {
       bossDefeated = true;
@@ -142,7 +144,7 @@ function runOneGame() {
 }
 
 // --- Run Simulation Loop ---
-console.log(`\n--- 平安魔道伝 真・自動バランステスト (${SIM_RUNS} 試行) ---`);
+console.log(`\n--- 平安魔道伝 真・自動バランステスト (${SIM_RUNS} 試行 ${MOBILE_MODE ? '[モバイル]' : '[PC]'}) ---`);
 let stats = { won: 0, totalWipeouts: 0, totalLv: 0, totalBattles: 0, totalTime: 0 };
 
 for (let i = 0; i < SIM_RUNS; i++) {
