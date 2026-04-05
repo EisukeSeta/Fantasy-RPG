@@ -373,8 +373,6 @@ function App() {
               </div>
             )}
           </div>
-        </div>
-
         {isForceMobile ? (
           <div className="mobile-ui-container">
             <div className="mobile-utility-btns" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '5px', padding: '6px 5px', background: '#111', borderBottom: '1px solid #333' }}>
@@ -396,7 +394,7 @@ function App() {
             {showSpells && gameState === 'BATTLE' && isForceMobile && (
               <div className="mobile-spells-overlay">
                 {(SPELLS[party[activeBattler].jobKey] || []).filter(s => s.lv <= party[activeBattler].lv).map((s, idx) => (
-                  <button key={idx} className="spell-btn-mobile" onClick={() => { castSpell(s); setShowSpells(false); }}>{s.name} ({s.mp})</button>
+                  <button key={idx} className="spell-btn-mobile" onClick={() => { castSpell(s); setShowSpells(false); }}>{s.name}({s.mp})</button>
                 ))}
                 <button className="spell-btn-mobile cancel" onClick={() => setShowSpells(false)}>✖ キャンセル</button>
               </div>
@@ -423,13 +421,14 @@ function App() {
               {showSpells && gameState === 'BATTLE' && (
                 <div style={{ flex: 1, marginLeft: '10px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px', overflowY: 'auto' }}>
                   {(SPELLS[party[activeBattler].jobKey] || []).filter(s => s.lv <= party[activeBattler].lv).map((s, idx) => (
-                    <button key={idx} className="spell-btn" onClick={() => castSpell(s)}>{s.name}</button>
+                    <button key={idx} className="spell-btn" onClick={() => castSpell(s)}>{s.name}({s.mp})</button>
                   ))}
                 </div>
               )}
             </div>
           </div>
         )}
+      </div>
 
       {/* Log & Map Pane */}
       <div className={`pane-log window ${showMap ? 'mobile-active-pane' : ''}`}>
