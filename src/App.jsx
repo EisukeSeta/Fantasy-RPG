@@ -131,7 +131,8 @@ function App() {
                     }
                     return m;
                 });
-                addMessage(scenarioData.ui.resurrection, 'heal'); setGameState('EXPLORING'); setActiveDialog(null);
+                setActiveDialog(null);
+                addMessage(scenarioData.ui.resurrection, 'heal'); setGameState('EXPLORING');
               }
             });
           },
@@ -367,7 +368,7 @@ function App() {
 
       {/* Log & Map Pane */}
       <div className={`pane-log window ${showMap ? 'mobile-active-pane' : ''}`}>
-        <span className="window-title">言霊の記録 & 迷宮図</span>
+        <span className="window-title">{scenarioData.ui.labyrinthMap} <span style={{ color: 'var(--soft-gold)', marginLeft: '15px', textShadow: '0 0 10px rgba(184, 154, 66, 0.8)' }}>〔 {playerState.x}, {playerState.y} 〕</span></span>
         <div className="log-content">
           {messages.map((m, i) => <div key={i} className={`log-msg msg-${m.type}`}>{m.text}</div>)}
         </div>
@@ -397,10 +398,14 @@ function App() {
           <div className="dialog-content">{activeDialog.pages[activeDialog.currentPage]}</div>
           <div className="dialog-footer">
             {activeDialog.showChoices ? (
-              <><button className="dialog-btn" onClick={() => { initAudio(); if(activeDialog.onConfirm) activeDialog.onConfirm(); setActiveDialog(null); }}>はい</button>
-                <button className="dialog-btn" onClick={() => { if(activeDialog.onCancel) activeDialog.onCancel(); setActiveDialog(null); }}>否</button></>
+              <><button className="dialog-btn" onClick={() => { initAudio(); if(activeDialog.onConfirm) activeDialog.onConfirm(); else setActiveDialog(null); }}>はい</button>
+                <button className="dialog-btn" onClick={() => { if(activeDialog.onCancel) activeDialog.onCancel(); else setActiveDialog(null); }}>否</button></>
             ) : (
-              <button className="dialog-btn" onClick={() => { if (activeDialog.currentPage < activeDialog.pages.length - 1) setActiveDialog({...activeDialog, currentPage: activeDialog.currentPage + 1}); else setActiveDialog(null); }}>次へ</button>
+              <button className="dialog-btn" onClick={() => { 
+                if(activeDialog.onConfirm) activeDialog.onConfirm();
+                if (activeDialog.pages && activeDialog.currentPage < activeDialog.pages.length - 1) setActiveDialog({...activeDialog, currentPage: activeDialog.currentPage + 1}); 
+                else setActiveDialog(null); 
+              }}>次へ</button>
             )}
           </div>
         </div>
