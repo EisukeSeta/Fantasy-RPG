@@ -292,6 +292,7 @@ function App() {
       {/* Pane: Status */}
       <div className={`pane-status window ${showStatus ? 'mobile-active-pane' : ''}`}>
         <span className="window-title">隊員之証</span>
+        {isForceMobile && <button className="dialog-btn" onClick={() => setShowStatus(false)} style={{ margin: '15px' }}>閉じる</button>}
         <div className="status-grid">
           {party.map((m, i) => (
             <div key={i} className={`status-item ${gameState === 'BATTLE' && activeBattler === i ? 'active-battler' : ''}`} style={{ opacity: m.hp <= 0 ? 0.4 : 1 }}>
@@ -423,6 +424,7 @@ function App() {
       {/* Log & Map Pane */}
       <div className={`pane-log window ${showMap ? 'mobile-active-pane' : ''}`}>
         <span className="window-title">{scenarioData.ui.labyrinthMap} <span style={{ color: 'var(--soft-gold)', marginLeft: '15px', textShadow: '0 0 10px rgba(184, 154, 66, 0.8)' }}>〔 {playerState.x}, {playerState.y} 〕</span></span>
+        {isForceMobile && <button className="dialog-btn" onClick={() => setShowMap(false)} style={{ margin: '15px' }}>閉じる</button>}
         <div className="log-content">
           {messages.map((m, i) => <div key={i} className={`log-msg msg-${m.type}`}>{m.text}</div>)}
         </div>
