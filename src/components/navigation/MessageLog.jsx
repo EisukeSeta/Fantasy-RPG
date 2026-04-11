@@ -10,31 +10,30 @@ export const MessageLog = ({
 }) => {
   const logRef = useRef(null);
 
-  // PC版での自動スクロール
+  // 自動スクロール
   useEffect(() => {
-    if (!isForceMobile && logRef.current) {
+    if (logRef.current) {
       logRef.current.scrollTop = logRef.current.scrollHeight;
     }
-  }, [messages, isForceMobile]);
+  }, [messages]);
 
-  // モバイル版の簡易表示
-  if (isForceMobile) {
-    return (
-      <div className="mobile-log-display">
-        {messages.slice(-5).map((m, i) => (
-          <div key={i} className={`log-msg msg-${m.type} ${i === messages.length - 1 ? 'active-msg' : ''}`}>
-            {m.text}
-          </div>
-        ))}
-      </div>
-    );
-  }
+  const containerClass = isForceMobile ? 'mobile-log-scroll-area' : 'pc-log-area';
 
-  // PC版のフルログ表示
   return (
-    <div className={`pc-log-area`} style={{ flex: 1, borderTop: '2px solid #333', overflowY: 'scroll', padding: '10px', background: 'rgba(0,0,0,0.4)', scrollBehavior: 'smooth' }} ref={logRef}>
-      {messages.slice(-30).map((m, i) => (
-        <div key={i} className={`log-msg msg-${m.type}`} style={{ padding: '4px 0', borderBottom: '1px solid #222', fontSize: '0.9rem' }}>
+    <div 
+      className={containerClass} 
+      style={{ 
+        flex: 1, 
+        height: '100%',
+        overflowY: 'auto', 
+        padding: '12px', 
+        background: 'rgba(0,0,0,0.6)', 
+        scrollBehavior: 'smooth' 
+      }} 
+      ref={logRef}
+    >
+      {messages.slice(-40).map((m, i) => (
+        <div key={i} className={`log-msg msg-${m.type}`} style={{ padding: '6px 0', borderBottom: '1px solid #222', fontSize: isForceMobile ? '1.05rem' : '0.9rem', lineHeight: '1.6' }}>
           {m.text}
         </div>
       ))}

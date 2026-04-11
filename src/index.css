@@ -273,29 +273,29 @@ body {
   height: 100%;
 }
 
-.pc-log-area {
+.pc-log-area, .mobile-log-scroll-area {
   scrollbar-width: thin;
   scrollbar-color: var(--primary-gold) rgba(255, 215, 0, 0.1);
   scrollbar-gutter: stable; /* スクロールバー領域を常に確保 */
 }
 
-.pc-log-area::-webkit-scrollbar {
+.pc-log-area::-webkit-scrollbar, .mobile-log-scroll-area::-webkit-scrollbar {
   width: 8px;
   display: block !important; /* 強制表示 */
 }
 
-.pc-log-area::-webkit-scrollbar-track {
+.pc-log-area::-webkit-scrollbar-track, .mobile-log-scroll-area::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.5);
   border-left: 1px solid rgba(255, 215, 0, 0.1);
 }
 
-.pc-log-area::-webkit-scrollbar-thumb {
+.pc-log-area::-webkit-scrollbar-thumb, .mobile-log-scroll-area::-webkit-scrollbar-thumb {
   background: var(--primary-gold);
   border-radius: 4px;
   border: 1px solid rgba(0, 0, 0, 0.5);
 }
 
-.pc-log-area::-webkit-scrollbar-thumb:hover {
+.pc-log-area::-webkit-scrollbar-thumb:hover, .mobile-log-scroll-area::-webkit-scrollbar-thumb:hover {
   background: #fff; /* ホバー時はさらに強調 */
 }
 
