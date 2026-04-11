@@ -304,9 +304,25 @@ function App() {
           <div className="dialog-content">
             <p>{activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : ''}</p>
             {activeDialog.showChoices ? (
-              <div className="dialog-choices">
-                <button className="dialog-btn" onClick={() => { if(activeDialog.onConfirm) activeDialog.onConfirm(); setActiveDialog(null); }}>御意</button>
-                <button className="dialog-btn" onClick={() => { if(activeDialog.onCancel) activeDialog.onCancel(); setActiveDialog(null); }}>必要なし</button>
+              <div className="dialog-footer">
+                <button 
+                  className="btn-shura" 
+                  onClick={() => {
+                    if (activeDialog.onConfirm) activeDialog.onConfirm();
+                    else setActiveDialog(null);
+                  }}
+                >
+                  {activeDialog.labelConfirm || "御意"}
+                </button>
+                <button 
+                  className="btn-kegare" 
+                  onClick={() => {
+                    if (activeDialog.onCancel) activeDialog.onCancel();
+                    else setActiveDialog(null);
+                  }}
+                >
+                  {activeDialog.labelCancel || "撤退"}
+                </button>
               </div>
             ) : (
               <div className="dialog-footer">

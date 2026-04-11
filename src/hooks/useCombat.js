@@ -107,31 +107,37 @@ export const useCombat = ({
         setGameState('DEAD'); 
         SoundEngine.transitionTo('GAMEOVER');
         setActiveDialog({ 
-          title: "全滅", pages: [scenarioData.events.gameOver], currentPage: 0, showChoices: true,
+          title: "【終焉】", 
+          pages: [scenarioData.events.gameOver], 
+          currentPage: 0, 
+          showChoices: true,
+          labelConfirm: "御意（復活）",
+          labelCancel: "虚無に還る",
           onConfirm: () => {
+            // 転生ダイアログへ移行
             setActiveDialog({
-              title: "「転生」", pages: ["黄泉の理を書き換え、肉体を再構築する……。生命と記憶の代償は極大なり。"], currentPage: 0,
+              title: "【反魂の儀】", 
+              pages: [scenarioData.ui.resurrection, "生命の燈火は微か……。再び、現世（うつしよ）へ。"], 
+              currentPage: 0,
               onConfirm: () => {
                 setPlayerState({ x: 0, y: 0, dir: DIRECTIONS.S });
-                setParty(p => p.map(m => ({ ...m, hp: 1, mp: 1, exp: getRequiredExp(m.lv), status: 'alive' })));
-                setMapData(() => {
-                    const m = generateMap(); 
-                    for(let dy=-1; dy<=1; dy++) for(let dx=-1; dx<=1; dx++){
-                      const tx=0+dx, ty=0+dy; 
-                      if(tx>=0 && tx<MAP_WIDTH && ty>=0 && ty<MAP_HEIGHT) m[ty][tx].visited=true;
-                    }
-                    return m;
-                });
-                setActiveDialog(null);
+                setParty(p => p.map(m => ({ ...m, hp: 1, mp: 1, exp: getRequiredExp(m.lv), status: '平安' })));
                 addMessage(scenarioData.ui.resurrection, 'heal'); 
                 setGameState('EXPLORING');
+                setActiveDialog(null); // ここで初めて閉じる
               }
             });
           },
           onCancel: () => {
             setActiveDialog({
-              title: "「終焉」", pages: ["都は漆黒の闇に飲まれ、記憶も魂も、全ては虚無へと消えた……。"], currentPage: 0,
-              onConfirm: () => { setActiveDialog(null); setGameState('GAMEOVER'); SoundEngine.stop(); }
+              title: "【終焉】", 
+              pages: ["都は漆黒の闇に飲まれ、魂は虚無へと消えた……。"], 
+              currentPage: 0,
+              onConfirm: () => { 
+                setActiveDialog(null); 
+                setGameState('GAMEOVER'); 
+                SoundEngine.stop(); 
+              }
             });
           }
         });

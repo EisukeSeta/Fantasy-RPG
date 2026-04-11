@@ -94,19 +94,21 @@ export const useNavigation = (initialMap, initialPos, {
           return;
         }
 
-        // ボス遭遇判定
+        // ボス遭遇判定（鵺の咆哮）
         if (!bossDefeated && nX === BOSS_POS.x && nY === BOSS_POS.y) {
           setIsShake(true); 
-          setIsBossIntro(true); 
-          addMessage(scenarioData.events.nueAura, 'event');
-          setTimeout(() => { 
-            setIsShake(false); 
-            setIsBossIntro(false); 
-            const b = ENEMY_LIST.find(e => e.id === 10); 
-            setEnemy({...b, hp: b.maxHp}); 
-            setGameState('BATTLE'); 
-            addMessage(scenarioData.events.nueAppear, 'event'); 
-          }, 2000);
+          setActiveDialog({
+            title: "【古の怪異】",
+            pages: [scenarioData.events.nueAura],
+            currentPage: 0,
+            onConfirm: () => {
+              setIsShake(false);
+              const b = ENEMY_LIST.find(e => e.id === 10); 
+              setEnemy({...b, hp: b.maxHp}); 
+              setGameState('BATTLE'); 
+              addMessage(scenarioData.events.nueAppear, 'event'); 
+            }
+          });
           return;
         }
 
