@@ -255,30 +255,28 @@ function App() {
             }
           }
         }}>
-          <div className="dialog-window window" onClick={e => e.stopPropagation()}>
-            <span className="window-title">{activeDialog.title}</span>
-            <div className="dialog-content">
-              <p>{activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : ''}</p>
-              {activeDialog.showChoices ? (
-                <div className="dialog-choices">
-                  <button className="dialog-btn" onClick={() => { if(activeDialog.onConfirm) activeDialog.onConfirm(); setActiveDialog(null); }}>御意</button>
-                  <button className="dialog-btn" onClick={() => { if(activeDialog.onCancel) activeDialog.onCancel(); setActiveDialog(null); }}>必要なし</button>
-                </div>
-              ) : (
-                <div className="dialog-footer">
-                  <button className="dialog-btn" onClick={() => {
-                    if (activeDialog.pages && activeDialog.currentPage < activeDialog.pages.length - 1) {
-                      setActiveDialog({...activeDialog, currentPage: activeDialog.currentPage + 1});
-                    } else {
-                      if (activeDialog.onConfirm) activeDialog.onConfirm();
-                      setActiveDialog(null);
-                    }
-                  }}>
-                    {activeDialog.pages && activeDialog.currentPage < activeDialog.pages.length - 1 ? '続く' : '承知'}
-                  </button>
-                </div>
-              )}
-            </div>
+          <div className="dialog-title">{activeDialog.title}</div>
+          <div className="dialog-content">
+            <p>{activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : ''}</p>
+            {activeDialog.showChoices ? (
+              <div className="dialog-choices">
+                <button className="dialog-btn" onClick={() => { if(activeDialog.onConfirm) activeDialog.onConfirm(); setActiveDialog(null); }}>御意</button>
+                <button className="dialog-btn" onClick={() => { if(activeDialog.onCancel) activeDialog.onCancel(); setActiveDialog(null); }}>必要なし</button>
+              </div>
+            ) : (
+              <div className="dialog-footer">
+                <button className="dialog-btn" onClick={() => {
+                  if (activeDialog.pages && activeDialog.currentPage < activeDialog.pages.length - 1) {
+                    setActiveDialog({...activeDialog, currentPage: activeDialog.currentPage + 1});
+                  } else {
+                    if (activeDialog.onConfirm) activeDialog.onConfirm();
+                    setActiveDialog(null);
+                  }
+                }}>
+                  {activeDialog.pages && activeDialog.currentPage < activeDialog.pages.length - 1 ? '続く' : '承知'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
