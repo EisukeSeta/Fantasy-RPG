@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { generateMap, DIRECTIONS, DIR_DELTAS, MAP_WIDTH, MAP_HEIGHT } from './data/mapData';
 import { WireframeView } from './components/WireframeView';
-import { ENEMY_LIST, getRandomEnemy, calculateHitAndDamage } from './data/enemyData';
+import { ENEMY_LIST } from './data/enemyData';
+import { getRandomEnemy, calculateHitAndDamage } from './logic/combat';
+import { getRequiredExp } from './logic/growth';
 import { SPELLS } from './data/magicData';
 import SoundEngine from './utils/SoundEngine';
 
@@ -30,15 +32,6 @@ import mapEventsData from './data/MapEvents.json';
 
 const varGold = '#f0e68c';
 const ICON_MAPPING = { "shrine": "⛩️", "well": "井", "scroll": "📜" };
-
-const getRequiredExp = (lv) => {
-  if (lv <= 1) return 0;
-  if (lv <= balanceData.experience.baseTable.length) return balanceData.experience.baseTable[lv - 1];
-  const { sigmoidScale, sigmoidCenter, sigmoidSlope } = balanceData.experience;
-  const x = (lv - 1) / 49;
-  const sigmoid = 1 / (1 + Math.exp(-sigmoidSlope * (x - sigmoidCenter)));
-  return Math.floor(sigmoidScale * sigmoid);
-};
 
 const BOSS_POS = balanceData.map.bossPos;
 const isDebug = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debug') === 'true';
