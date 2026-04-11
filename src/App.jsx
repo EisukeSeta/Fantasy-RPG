@@ -154,8 +154,20 @@ function App() {
              </p>
              <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
                <button className="dialog-btn" onClick={handleRestart}>物語を再び辿る</button>
-               <button className="dialog-btn" style={{ opacity: 0.6 }} onClick={() => window.location.reload()}>終了</button>
+               <button className="dialog-btn" style={{ opacity: 0.6 }} onClick={() => setGameState('FINISHED')}>終了</button>
              </div>
+          </div>
+        </div>
+      )}
+
+      {/* 真の終焉（完全に終了） */}
+      {gameState === 'FINISHED' && (
+        <div className="boss-intro-overlay" style={{ background: '#000', zIndex: 30000 }}>
+          <div style={{ textAlign: 'center', maxWidth: '80%' }}>
+             <p style={{ color: '#888', fontSize: '1.2rem', fontStyle: 'italic', lineHeight: '2' }}>
+               {scenarioData.events.totalSilence}
+             </p>
+             <div style={{ marginTop: '100px', color: '#333', fontSize: '1rem', letterSpacing: '10px' }}>完</div>
           </div>
         </div>
       )}
