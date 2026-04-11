@@ -21,6 +21,13 @@ const ENCOUNTER_CHANCE = balanceData.rates.encounter;
 const MOBILE_MODE = process.argv.includes('--mobile');
 const MOBILE_FACTOR = 1.35; 
 
+// --- Audit Thresholds ---
+const THRESHOLD = {
+  MIN_WIN_RATE: 20.0,    // ボス討伐成功率 20%以上
+  MAX_WIPEOUTS: 25.0,    // 平均全滅回数 25回以下
+  MAX_PLAY_TIME: 120.0   // 推定平均プレイ時間 120分以下
+};
+
 // --- Player Stats & Job Logic ---
 const createInitialParty = () => JSON.parse(JSON.stringify(charactersData));
 
@@ -174,3 +181,18 @@ console.log(`● 総遭遇戦闘数: ${avgBattles}回`);
 console.log(`● 推定平均プレイ時間: ${avgTime}分`);
 console.log(`● 均衡判決: 【${verdict}】`);
 console.log(`\n--------------------------------------------`);
+
+// --- Audit Final Judgment ---
+let errors = [];
+if (winRate < THRESHOLD.MIN_WIN_RATE) errors.push(`[不均衡] ボス討伐成功率が低すぎます (${winRate}% < ${THRESHOLD.MIN_WIN_RATE}%)`);
+if (avgWipeouts > THRESHOLD.MAX_WIPEOUTS) errors.push(`[不均衡] 平均全滅回数が多すぎます (${avgWipeouts} > ${THRESHOLD.MAX_WIPEOUTS})`);
+if (avgTime > THRESHOLD.MAX_PLAY_TIME) errors.push(`[不均衡] 推定プレイ時間が長すぎます (${avgTime}分 > ${THRESHOLD.MAX_PLAY_TIME}分)`);
+
+if (errors.length > 0) {
+  console.error(`\n❌ 都の自動検番により、不均衡が検地されました:`);
+  errors.forEach(err => console.error(`  ${err}`));
+  console.error(`\nデータ(JSON)の数値を調整し、平安の調和を保ってください。\n`);
+  process.exit(1); 
+} else {
+  console.log(`\n✅ 都の自動検番: 均衡は保たれています。安泰なり。\n`);
+}

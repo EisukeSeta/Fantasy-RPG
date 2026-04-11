@@ -15,12 +15,14 @@ export const CombatArea = ({
 
   return (
     <div className={`pane-enemy ${enemy.isBoss ? 'boss-aura' : ''}`} style={{ position: 'relative', overflow: 'visible' }}>
-      {/* 敵側のポップアップ演出 */}
-      {visualEffects.filter(e => e.target === 'enemy').map(e => (
+      {visualEffects.filter(e => e.target === 'enemy' || e.type === 'action').map(e => (
         <div 
           key={e.id} 
-          className={`popup-number ${e.type === 'damage' ? 'popup-damage' : 'popup-heal'}`} 
-          style={{ left: '50%', top: '30%', zIndex: 10001, fontSize: '2.8rem' }}
+          className={
+            e.type === 'action' ? 'popup-action' :
+            `popup-number ${e.type === 'damage' ? 'popup-damage' : 'popup-heal'}`
+          }
+          style={e.type === 'action' ? {} : { left: '50%', top: '30%', zIndex: 10001, fontSize: '2.8rem' }}
         >
           {e.value}
         </div>

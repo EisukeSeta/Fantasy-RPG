@@ -16,7 +16,8 @@
     "minDmg": 8,
     "maxDmg": 15,
     "status": "平安",
-    "image": "watanabe_tsuna.png"
+    "image": "watanabe_tsuna.png",
+    "items": []
   },
   {
     "id": "Sei",
@@ -35,7 +36,8 @@
     "minDmg": 1,
     "maxDmg": 4,
     "status": "平安",
-    "image": "abe_seimei.png"
+    "image": "abe_seimei.png",
+    "items": []
   },
   {
     "id": "Bik",
@@ -54,6 +56,7 @@
     "minDmg": 2,
     "maxDmg": 6,
     "status": "平安",
-    "image": "yaobikuni.png"
+    "image": "yaobikuni.png",
+    "items": []
   }
 ]

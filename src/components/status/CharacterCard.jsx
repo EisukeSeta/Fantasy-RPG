@@ -2,6 +2,7 @@
 import React from 'react';
 import { CHAR_IMAGES, varGold } from '../../constants/gameData';
 import { getRequiredExp } from '../../logic/growth';
+import itemsData from '../../data/Items.json';
 
 /**
  * 個別の隊員情報を表示するカード部品
@@ -52,6 +53,20 @@ export const CharacterCard = ({
               width: `${Math.min(100, ((m.exp - getRequiredExp(m.lv)) / (getRequiredExp(m.lv + 1) - getRequiredExp(m.lv))) * 100)}%` 
             }} />
           </div>
+          {/* 武勲（アイテム）の表示 */}
+          <div className="item-medals" style={{ display: 'flex', gap: '4px', marginTop: '6px' }}>
+            {m.items && m.items.map(itemId => {
+              const item = itemsData.find(it => it.id === itemId);
+              return item ? (
+                <span key={item.id} title={`${item.name}: ${item.flavor}`} style={{ 
+                  fontSize: '1rem', 
+                  filter: 'drop-shadow(0 0 3px rgba(184, 154, 66, 0.6))' 
+                }}>
+                  {item.icon}
+                </span>
+              ) : null;
+            })}
+          </div>
         </div>
       </div>
     );
@@ -75,6 +90,15 @@ export const CharacterCard = ({
         <div className="mini-bar xp-mini"><div className="fill" style={{ 
           width: `${Math.min(100, ((m.exp - getRequiredExp(m.lv)) / (getRequiredExp(m.lv + 1) - getRequiredExp(m.lv))) * 100)}%` 
         }} /></div>
+      </div>
+      {/* モバイル版：右上に勲章を配置 */}
+      <div className="mini-medals" style={{ position: 'absolute', top: '-5px', right: '-5px', display: 'flex', gap: '2px' }}>
+        {m.items && m.items.map(itemId => {
+          const item = itemsData.find(it => it.id === itemId);
+          return item ? (
+            <span key={item.id} style={{ fontSize: '0.7rem' }}>{item.icon}</span>
+          ) : null;
+        })}
       </div>
     </div>
   );

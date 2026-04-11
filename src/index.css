@@ -644,6 +644,31 @@ body {
   text-shadow: 2px 2px 4px #000, -2px -2px 4px #000 !important; /* 文字の視認性確保 */
 }
 
+/* 術名・行動名のポップアップ演出 */
+.popup-action {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--primary-gold);
+  font-family: 'Sawarabi Mincho', serif;
+  font-size: 3.2rem;
+  font-weight: bold;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10100;
+  text-shadow: 0 0 15px #b89a42, 0 0 30px #fff, 0 0 5px #000;
+  letter-spacing: 0.2rem;
+  animation: actionPop 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes actionPop {
+  0% { opacity: 0; transform: translate(-50%, -30%) scale(0.5); filter: blur(10px); }
+  20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); filter: blur(0); }
+  70% { opacity: 1; transform: translate(-50%, -50%) scale(1.0); }
+  100% { opacity: 0; transform: translate(-50%, -70%) scale(1.2); filter: blur(5px); }
+}
+
 @keyframes enemyAppear {
   from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }

@@ -1,12 +1,12 @@
 [
   { "id": 1, "name": "餓鬼（がき）", "minHp": 4, "maxHp": 8, "ac": 9, "minDmg": 2, "maxDmg": 3, "exp": 80, "image": "gaki.png" },
-  { "id": 2, "name": "骸骨（がいこつ）", "minHp": 10, "maxHp": 18, "ac": 7, "minDmg": 4, "maxDmg": 7, "exp": 120, "image": "gaikotsu.png" },
-  { "id": 3, "name": "鉄鼠（てっそ）", "minHp": 8, "maxHp": 15, "ac": 8, "minDmg": 3, "maxDmg": 5, "exp": 100, "image": "tessatsu.png" },
+  { "id": 2, "name": "骸骨（がいこつ）", "minHp": 10, "maxHp": 18, "ac": 7, "minDmg": 4, "maxDmg": 7, "exp": 120, "image": "gaikotsu.png", "drops": [{ "itemId": 1, "rate": 0.08 }] },
+  { "id": 3, "name": "鉄鼠（てっそ）", "minHp": 8, "maxHp": 15, "ac": 8, "minDmg": 3, "maxDmg": 5, "exp": 100, "image": "tessatsu.png", "drops": [{ "itemId": 3, "rate": 0.05 }] },
   { "id": 4, "name": "人魂（ひとだま）", "minHp": 5, "maxHp": 12, "ac": 10, "minDmg": 1, "maxDmg": 6, "exp": 90, "image": "hitodama.png" },
-  { "id": 5, "name": "輪入道（わにゅうどう）", "minHp": 25, "maxHp": 45, "ac": 5, "minDmg": 8, "maxDmg": 15, "exp": 350, "image": "wanyudo.png" },
-  { "id": 6, "name": "濡れ女（ぬれおんな）", "minHp": 20, "maxHp": 35, "ac": 6, "minDmg": 6, "maxDmg": 12, "exp": 300, "image": "nureonna.png" },
-  { "id": 7, "name": "青坊主（あおぼうず）", "minHp": 30, "maxHp": 50, "ac": 4, "minDmg": 10, "maxDmg": 20, "exp": 450, "image": "aobozu.png" },
-  { "id": 8, "name": "土蜘蛛（つちぐも）", "minHp": 50, "maxHp": 80, "ac": 4, "minDmg": 15, "maxDmg": 25, "exp": 800, "image": "tsuchigumo.png" },
-  { "id": 9, "name": "牛鬼（うしおに）", "minHp": 100, "maxHp": 180, "ac": 2, "minDmg": 25, "maxDmg": 50, "exp": 1500, "image": "ushioni.png" },
-  { "id": 10, "name": "鵺（ぬえ）", "minHp": 100, "maxHp": 160, "ac": 5, "minDmg": 20, "maxDmg": 40, "exp": 5000, "image": "nue.png", "isBoss": true }
+  { "id": 5, "name": "輪入道（わにゅうどう）", "minHp": 25, "maxHp": 45, "ac": 5, "minDmg": 8, "maxDmg": 15, "exp": 350, "image": "wanyudo.png", "drops": [{ "itemId": 1, "rate": 0.15 }] },
+  { "id": 6, "name": "濡れ女（ぬれおんな）", "minHp": 20, "maxHp": 35, "ac": 6, "minDmg": 6, "maxDmg": 12, "exp": 300, "image": "nureonna.png", "drops": [{ "itemId": 2, "rate": 0.10 }] },
+  { "id": 7, "name": "青坊主（あおぼうず）", "minHp": 30, "maxHp": 50, "ac": 4, "minDmg": 10, "maxDmg": 20, "exp": 450, "image": "aobozu.png", "drops": [{ "itemId": 2, "rate": 0.20 }] },
+  { "id": 8, "name": "土蜘蛛（つちぐも）", "minHp": 50, "maxHp": 80, "ac": 4, "minDmg": 15, "maxDmg": 25, "exp": 800, "image": "tsuchigumo.png", "drops": [{ "itemId": 1, "rate": 0.20 }, { "itemId": 3, "rate": 0.10 }] },
+  { "id": 9, "name": "牛鬼（うしおに）", "minHp": 100, "maxHp": 180, "ac": 2, "minDmg": 25, "maxDmg": 50, "exp": 1500, "image": "ushioni.png", "drops": [{ "itemId": 1, "rate": 0.30 }, { "itemId": 3, "rate": 0.20 }] },
+  { "id": 10, "name": "鵺（ぬえ）", "minHp": 100, "maxHp": 160, "ac": 5, "minDmg": 20, "maxDmg": 40, "exp": 5000, "image": "nue.png", "isBoss": true, "drops": [{ "itemId": 100, "rate": 1.0 }] }
 ]

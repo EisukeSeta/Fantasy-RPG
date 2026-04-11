@@ -4,6 +4,7 @@ import { getRequiredExp } from '../logic/growth';
 import SoundEngine from '../utils/SoundEngine';
 import { DIRECTIONS, MAP_WIDTH, MAP_HEIGHT } from '../data/mapData';
 import { BOSS_POS } from '../constants/gameData';
+import itemsData from '../data/Items.json';
 
 /**
  * 戦闘ロジックを管理するカスタムフック
@@ -61,7 +62,39 @@ export const useCombat = ({
           });
         }
         
-        setParty(p => p.map(m => handleLevelUp({ ...m, exp: m.exp + Math.floor(enemy.exp * balanceData.rates.expShare) })));
+        // --- 武勲のドリップロジック ---
+        let droppedItem = null;
+        if (enemy.drops && enemy.drops.length > 0) {
+          for (const drop of enemy.drops) {
+            if (Math.random() < drop.rate) {
+              droppedItem = itemsData.find(it => it.id === drop.itemId);
+              if (droppedItem) break;
+            }
+          }
+        }
+
+        setParty(p => p.map((m, idx) => {
+          let updated = handleLevelUp({ ...m, exp: m.exp + Math.floor(enemy.exp * balanceData.rates.expShare) });
+          
+          // アイテム適用 (生存しているランダムな一人が入手)
+          const liveIndices = p.map((char, i) => char.hp > 0 ? i : -1).filter(i => i !== -1);
+          const luckyIdx = liveIndices[Math.floor(Math.random() * liveIndices.length)];
+          
+          if (droppedItem && idx === luckyIdx) {
+             // 既に持っていないか確認 (勲章なので重複なしとする)
+             if (!updated.items) updated.items = [];
+             if (!updated.items.includes(droppedItem.id)) {
+               updated.items.push(droppedItem.id);
+               addMessage(`【武勲】${m.name}は『${droppedItem.name}』を授かった！`, 'level_up');
+               addMessage(`《${droppedItem.flavor}》`, 'event');
+               // ステータス反映
+               if (droppedItem.effect.atk) { updated.minDmg += droppedItem.effect.atk; updated.maxDmg += droppedItem.effect.atk; }
+               if (droppedItem.effect.ac) { updated.ac += droppedItem.effect.ac; }
+               // mgk は暫定的に術ダメージ全体へのゲインとして扱う（将来的に拡張）
+             }
+          }
+          return updated;
+        }));
         
         setTimeout(() => {
           setGameState('EXPLORING'); 
@@ -169,6 +202,9 @@ export const useCombat = ({
     let nextP = [...party]; 
     nextP[activeBattler].mp -= spell.mp;
     let nextE = { ...enemy };
+
+    // 術名の言霊を放つ
+    triggerVisualEffect('enemy', spell.name, 'action');
     
     if (spell.type === 'ATTACK') {
       const dmg = spell.minDmg + Math.floor(Math.random()*(spell.maxDmg-spell.minDmg));
