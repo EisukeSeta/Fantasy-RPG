@@ -58,6 +58,10 @@ function App() {
   const [showMap, setShowMap] = useState(false);
   const [showStatus, setShowStatus] = useState(false);
   const [showDebug, setShowDebug] = useState(isDebug);
+  const [visualEffects, setVisualEffects] = useState([]); // { id, target, value, type }
+  const [flashColor, setFlashColor] = useState(null); // 'red', etc.
+  const [displayShake, setDisplayShake] = useState(null); // 'normal', 'heavy'
+  const [showVictory, setShowVictory] = useState(false);
   const [enemy, setEnemy] = useState(null);
   const [activeBattler, setActiveBattler] = useState(0);
   const [battleTurn, setBattleTurn] = useState(0);
@@ -109,15 +113,36 @@ function App() {
     return m;
   }, [addMessage]);
 
+  const triggerVisualEffect = useCallback((target, value, type, effectStyle = 'normal') => {
+    const id = Date.now() + Math.random();
+    setVisualEffects(prev => [...prev, { id, target, value, type }]);
+    setTimeout(() => {
+      setVisualEffects(prev => prev.filter(e => e.id !== id));
+    }, 800);
+
+    if (type === 'damage' && target.startsWith('party')) {
+      setFlashColor('red');
+      setTimeout(() => setFlashColor(null), 400);
+      setDisplayShake(effectStyle === 'heavy' ? 'heavy' : 'normal');
+      setTimeout(() => setDisplayShake(null), 400);
+    } else if (type === 'damage' && target === 'enemy') {
+      setDisplayShake('normal');
+      setTimeout(() => setDisplayShake(null), 300);
+    }
+  }, []);
+
   const endBattle = useCallback((won) => {
     if (won) {
+        setShowVictory(true);
         addMessage(`${enemy.name}${scenarioData.battle.defeat}`, 'level_up');
         if (enemy.isBoss) { 
           setBossDefeated(true); 
-          setTimeout(() => setActiveDialog({ title: '怪異調伏', pages: [scenarioData.events.bossDefeated], currentPage: 0 }), 500);
+          setTimeout(() => setActiveDialog({ title: '怪異調伏', pages: [scenarioData.events.bossDefeated], currentPage: 0 }), 1500);
         }
         setParty(p => p.map(m => handleLevelUp({ ...m, exp: m.exp + Math.floor(enemy.exp * balanceData.rates.expShare) })));
-        setGameState('EXPLORING'); setEnemy(null);
+        setTimeout(() => {
+          setGameState('EXPLORING'); setEnemy(null); setShowVictory(false);
+        }, 1200);
     } else {
         setGameState('DEAD'); SoundEngine.transitionTo('GAMEOVER');
         setActiveDialog({ 
@@ -156,7 +181,11 @@ function App() {
     const attacker = party[activeBattler];
     const res = calculateHitAndDamage(attacker.ac, attacker.minDmg, attacker.maxDmg, enemy.ac);
     let nEh = enemy.hp;
-    if (res.hit) { addMessage(`${attacker.name}${scenarioData.battle.attack} ${res.damage}${scenarioData.battle.damage}`); nEh -= res.damage; }
+    if (res.hit) { 
+      addMessage(`${attacker.name}${scenarioData.battle.attack} ${res.damage}${scenarioData.battle.damage}`); 
+      nEh -= res.damage; 
+      triggerVisualEffect('enemy', `-${res.damage}`, 'damage', res.critical ? 'heavy' : 'normal');
+    }
     else addMessage(`${attacker.name}${scenarioData.battle.miss}`);
     
     if (nEh <= 0) { endBattle(true); return; }
@@ -171,11 +200,13 @@ function App() {
         const alive = party.filter(m => m.hp > 0);
         if (alive.length === 0) return;
         const target = alive[Math.floor(Math.random() * alive.length)];
+        const targetIdx = party.findIndex(m => m.name === target.name);
         const eRes = calculateHitAndDamage(enemy.ac, enemy.minDmg, enemy.maxDmg, target.ac);
         if (eRes.hit) {
           addMessage(`${enemy.name}${scenarioData.battle.counter} ${scenarioData.battle.wound.replace('%DMG%', eRes.damage)}`, 'damage_party');
           const nextHP = Math.max(0, target.hp - eRes.damage);
           setParty(p => p.map(m => m.name === target.name ? { ...m, hp: nextHP, status: nextHP === 0 ? '討死' : '平安' } : m));
+          triggerVisualEffect(`party_${targetIdx}`, `-${eRes.damage}`, 'damage');
           if (party.every(m => (m.name === target.name ? nextHP : m.hp) <= 0)) endBattle(false);
         } else {
           addMessage(`${target.name}${scenarioData.battle.evade}`);
@@ -184,7 +215,7 @@ function App() {
         setBattleTurn(prev => prev + 1);
       }, 500);
     }
-  }, [gameState, party, activeBattler, enemy, addMessage, endBattle]);
+  }, [gameState, party, activeBattler, enemy, addMessage, endBattle, triggerVisualEffect]);
 
   const castSpell = useCallback((spell) => {
     if (gameState !== 'BATTLE' || !enemy) return;
@@ -194,12 +225,15 @@ function App() {
     let nextE = { ...enemy };
     if (spell.type === 'ATTACK') {
       const dmg = spell.minDmg + Math.floor(Math.random()*(spell.maxDmg-spell.minDmg));
-      addMessage(`${spell.name}${scenarioData.battle.spellAttack.replace('%ENEMY%', enemy.name).replace('%DMG%', dmg)}`); nextE.hp -= dmg;
+      addMessage(`${spell.name}${scenarioData.battle.spellAttack.replace('%ENEMY%', enemy.name).replace('%DMG%', dmg)}`); 
+      nextE.hp -= dmg;
+      triggerVisualEffect('enemy', `-${dmg}`, 'damage');
     } else if (spell.type === 'HEAL') {
       const target = nextP.filter(m => m.hp > 0).sort((a,b) => a.hp - b.hp)[0];
       const heal = spell.minHeal + Math.floor(Math.random()*(spell.maxHeal-spell.minHeal));
       target.hp = Math.min(target.maxHp, target.hp + heal);
       addMessage(`${spell.name}${scenarioData.battle.spellHeal.replace('%TARGET%', target.name).replace('%HEAL%', heal)}`, 'heal');
+      triggerVisualEffect(`party_${nextP.findIndex(m => m.name === target.name)}`, `+${heal}`, 'heal');
     }
     setParty(nextP); setEnemy(nextE); setShowSpells(null);
     if (nextE.hp <= 0) endBattle(true);
@@ -210,7 +244,7 @@ function App() {
           setBattleTurn(prev => prev + 1);
         } else handleFight();
       }
-  }, [party, activeBattler, enemy, addMessage, endBattle, gameState, handleFight]);
+  }, [party, activeBattler, enemy, addMessage, endBattle, gameState, handleFight, triggerVisualEffect]);
 
   const processMove = useCallback((type) => {
     if (activeDialog || gameState !== 'EXPLORING') return;
@@ -239,12 +273,14 @@ function App() {
           setEnemy({ ...e, hp: e.maxHp }); setGameState('BATTLE'); addMessage(scenarioData.events.encounter.replace('%ENEMY%', e.name), 'event');
         }
         
-        // 周辺8マスを視認化
+        // 周辺8マス(壁含む)を視認化
         setMapData(p => {
           const n=[...p.map(row => [...row])];
           for(let dy2=-1; dy2<=1; dy2++) for(let dx2=-1; dx2<=1; dx2++) {
             const tx = nX + dx2, ty = nY + dy2;
-            if(tx>=0 && tx<MAP_WIDTH && ty>=0 && ty<MAP_HEIGHT) n[ty][tx].visited = true;
+            if(tx>=0 && tx<MAP_WIDTH && ty>=0 && ty<MAP_HEIGHT) {
+              n[ty][tx].visited = true;
+            }
           }
           return n;
         });
@@ -290,7 +326,9 @@ function App() {
   const partyInDanger = party.some(m => m.hp > 0 && (m.hp <= m.maxHp * 0.2 || m.hp === 1));
 
   return (
-    <div className={`game-container ${isForceMobile ? 'layout-mobile' : ''} ${isShake ? 'shake-anim' : ''} ${partyInDanger ? 'danger-state' : ''}`}>
+    <div className={`game-container ${isForceMobile ? 'layout-mobile' : ''} ${isShake || displayShake === 'normal' ? 'shake-anim' : ''} ${displayShake === 'heavy' ? 'shake-heavy' : ''} ${partyInDanger ? 'danger-state' : ''}`}>
+      {/* 閃光エフェクト */}
+      {flashColor === 'red' && <div className="flash-red"></div>}
       {isBossIntro && (
         <div className="gameover-overlay" style={{ background: 'rgba(0,0,0,0.85)', animation: 'none' }}>
           <div className="gameover-splash" style={{ fontSize: '3rem', letterSpacing: '10px' }}>強大な怪異の気配……</div>
@@ -315,7 +353,11 @@ function App() {
         )}
         <div className="status-grid">
           {party.map((m, i) => (
-            <div key={i} className={`status-item ${gameState === 'BATTLE' && activeBattler === i ? 'active-battler' : ''}`} style={{ opacity: m.hp <= 0 ? 0.4 : 1 }}>
+            <div key={i} className={`status-item ${gameState === 'BATTLE' && activeBattler === i ? 'active-battler' : ''}`} style={{ opacity: m.hp <= 0 ? 0.4 : 1, position: 'relative', overflow: 'visible' }}>
+              {/* ポップアップ */}
+              {visualEffects.filter(e => e.target === `party_${i}`).map(e => (
+                <div key={e.id} className={`popup-number ${e.type === 'damage' ? 'popup-damage' : 'popup-heal'}`} style={{ zIndex: 10005, top: '20%', fontSize: '1.6rem' }}>{e.value}</div>
+              ))}
               <div className="status-portrait"><img src={CHAR_IMAGES[m.image]} alt={m.name} /></div>
               <div className="status-info">
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}><span className="status-name" style={{ color: m.hp === 1 ? '#f66' : '#fff' }}>{m.name}</span><span style={{ color: varGold, fontSize: '0.8rem' }}>Lv {m.lv}</span></div>
@@ -343,7 +385,17 @@ function App() {
             />
           )}
           {gameState === 'BATTLE' && enemy && (
-            <div className={`pane-enemy ${enemy.isBoss ? 'boss-aura' : ''}`}>
+            <div className={`pane-enemy ${enemy.isBoss ? 'boss-aura' : ''}`} style={{ position: 'relative', overflow: 'visible' }}>
+              {/* ポップアップ */}
+              {visualEffects.filter(e => e.target === 'enemy').map(e => (
+                <div key={e.id} className={`popup-number ${e.type === 'damage' ? 'popup-damage' : 'popup-heal'}`} style={{ left: '50%', top: '30%', zIndex: 10001, fontSize: '2.8rem' }}>{e.value}</div>
+              ))}
+              {/* 勝利スプラッシュ */}
+              {showVictory && (
+                <div className="victory-splash" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle, rgba(184, 154, 66, 0.45) 0%, transparent 85%)', zIndex: 10002, borderRadius: '8px', animation: 'victoryIn 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards' }}>
+                  <div style={{ color: '#fff', fontSize: '3.6rem', fontWeight: 'bold', textShadow: '0 0 20px #b89a42, 0 0 40px #fff, 0 0 10px #000', fontFamily: 'Sawarabi Mincho, serif', letterSpacing: '8px' }}>怪異調伏</div>
+                </div>
+              )}
               <div className={enemy.isBoss ? 'boss-name' : 'enemy-name'}>
                 {enemy.isBoss ? `＊＊＊ ${enemy.name} ＊＊＊` : enemy.name}
               </div>
@@ -357,7 +409,11 @@ function App() {
           {isForceMobile && (
             <div className="mobile-status-dashboard">
               {party.map((m, i) => (
-                <div key={i} className={`mini-member-card ${gameState === 'BATTLE' && activeBattler === i ? 'active-member' : ''}`}>
+                <div key={i} className={`mini-member-card ${gameState === 'BATTLE' && activeBattler === i ? 'active-member' : ''}`} style={{ position: 'relative' }}>
+                  {/* ポップアップ */}
+                  {visualEffects.filter(e => e.target === `party_${i}`).map(e => (
+                    <div key={e.id} className={`popup-number ${e.type === 'damage' ? 'popup-damage' : 'popup-heal'}`} style={{ fontSize: '1.2rem' }}>{e.value}</div>
+                  ))}
                   <div className="card-top">
                     <span className="card-name">{m.name.slice(0,2)}</span>
                     <span className="card-lv">L{m.lv}</span>
@@ -486,7 +542,17 @@ function App() {
               const ev = mapEventsData.events.find(e => e.x === x && e.y === y);
               const isPlayer = playerState.x === x && playerState.y === y;
               return (
-                <div key={`${x}-${y}`} className={`map-cell ${cell.visited ? (cell.type + ' visited') : ''} ${isPlayer ? 'player' : ''}`}>
+                <div 
+                  key={`${x}-${y}`} 
+                  className={`map-cell ${cell.visited ? 'visited' : ''} ${isPlayer ? 'player' : ''}`}
+                  style={cell.visited ? {
+                    borderTop: cell.n ? '2.5px solid var(--primary-gold)' : '1px solid #1a1a1a',
+                    borderBottom: cell.s ? '2.5px solid var(--primary-gold)' : '1px solid #1a1a1a',
+                    borderLeft: cell.w ? '2.5px solid var(--primary-gold)' : '1px solid #1a1a1a',
+                    borderRight: cell.e ? '2.5px solid var(--primary-gold)' : '1px solid #1a1a1a',
+                    boxSizing: 'border-box'
+                  } : {}}
+                >
                   {cell.visited && !isPlayer && ev && (ICON_MAPPING[ev.type] || '')}
                   {isPlayer && <span className="player-icon" style={{ transform: `rotate(${playerState.dir * 90}deg)` }}>▲</span>}
                 </div>
@@ -498,6 +564,17 @@ function App() {
           </div>
           {isForceMobile && <button className="dialog-btn" onClick={() => setShowMap(false)} style={{ marginTop: '30px', width: '80%', flexShrink: 0 }}>閉じる</button>}
         </div>
+
+        {/* Action Log (PC version) */}
+        {!isForceMobile && (
+          <div className="pc-log-area" style={{ flex: 1, borderTop: '2px solid #333', overflowY: 'auto', padding: '10px', background: 'rgba(0,0,0,0.4)', scrollBehavior: 'smooth' }}>
+            {messages.slice(-30).map((m, i) => (
+              <div key={i} className={`log-msg msg-${m.type}`} style={{ padding: '4px 0', borderBottom: '1px solid #222', fontSize: '0.9rem' }}>
+                {m.text}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {activeDialog && (
