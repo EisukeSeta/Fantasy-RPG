@@ -1,3 +1,3 @@
-import Enemies from './Enemies.json' assert { type: 'json' };
+import Enemies from './Enemies.json';
 
 export const ENEMY_LIST = Enemies;

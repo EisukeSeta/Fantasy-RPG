@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { generateMap, DIRECTIONS, DIR_DELTAS, MAP_WIDTH, MAP_HEIGHT } from './data/mapData';
 import { WireframeView } from './components/WireframeView';
 import { ENEMY_LIST } from './data/enemyData';
@@ -16,7 +16,6 @@ import SoundEngine from './utils/SoundEngine';
 import { 
   CHAR_IMAGES, 
   ENEMY_IMAGES, 
-  varGold, 
   ICON_MAPPING, 
   BOSS_POS, 
   isDebug 
@@ -35,7 +34,7 @@ function App() {
   const [gameState, setGameState] = useState('EXPLORING'); 
   const [messages, setMessages] = useState([{ text: scenarioData.events.gameStart, type: 'event' }]);
   const [isAudioInitialized, setAudioInitialized] = useState(false);
-  const [volume, setVolume] = useState(0.5);
+  const [volume] = useState(0.5);
   const [isMuted, setIsMuted] = useState(isDebug);
   const [isShake, setIsShake] = useState(false);
   const [isBossIntro, setIsBossIntro] = useState(false);
@@ -54,8 +53,6 @@ function App() {
   const [activeBattler, setActiveBattler] = useState(0);
   const [battleTurn, setBattleTurn] = useState(0);
   const [showSpells, setShowSpells] = useState(null);
-  const [mapZoom, setMapZoom] = useState(1.0);
-  const [lastDist, setLastDist] = useState(0);
   const [activeDialog, setActiveDialog] = useState({ ...scenarioData.opening, currentPage: 0 });
 
   const [mapData, setMapData] = useState(() => {
@@ -298,7 +295,7 @@ function App() {
       const a = party[activeBattler];
       if (!a || a.hp <= 0) {
         const nextIdx = party.findIndex(m => m.hp > 0);
-        if (nextIdx !== -1) setActiveBattler(nextIdx);
+        if (nextIdx !== -1) setTimeout(() => setActiveBattler(nextIdx), 0);
         return;
       }
       const t = setTimeout(() => {

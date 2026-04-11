@@ -6,9 +6,7 @@ import React, { useEffect, useRef } from 'react';
  */
 export const MessageLog = ({ 
   messages, 
-  isForceMobile, 
-  showMap,
-  scenarioData
+  isForceMobile
 }) => {
   const logRef = useRef(null);
 
