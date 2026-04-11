@@ -256,24 +256,37 @@ function App() {
         </>
       )}
 
-      <div className={!isForceMobile ? 'pane-right' : ''}>
-        <div className={`pane-log-map-wrapper ${!isForceMobile ? 'pc-layout' : ''}`}>
-          <LabyrinthMap 
-            mapData={mapData}
-            playerState={playerState}
-            mapEventsData={mapEventsData}
-            isForceMobile={isForceMobile}
-            showMap={showMap}
-            setShowMap={setShowMap}
-            scenarioData={scenarioData}
-          />
-
-          <MessageLog 
-            messages={messages}
-            isForceMobile={isForceMobile}
-          />
+      {isForceMobile ? (
+        /* モバイル版：オーバーレイとして機能する地図 */
+        <LabyrinthMap 
+          mapData={mapData}
+          playerState={playerState}
+          mapEventsData={mapEventsData}
+          isForceMobile={isForceMobile}
+          showMap={showMap}
+          setShowMap={setShowMap}
+          scenarioData={scenarioData}
+        />
+      ) : (
+        /* PC版：右側に固定表示されるパネル */
+        <div className="pane-right">
+          <div className="pane-log-map-wrapper pc-layout">
+            <LabyrinthMap 
+              mapData={mapData}
+              playerState={playerState}
+              mapEventsData={mapEventsData}
+              isForceMobile={isForceMobile}
+              showMap={showMap}
+              setShowMap={setShowMap}
+              scenarioData={scenarioData}
+            />
+            <MessageLog 
+              messages={messages}
+              isForceMobile={isForceMobile}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ダイアログ表示 */}
       {activeDialog && (
