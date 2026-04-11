@@ -56,18 +56,6 @@ export const ControlPanel = ({
             <button className="spell-btn-mobile cancel" onClick={() => setShowSpells(false)}>✖ キャンセル</button>
           </div>
         )}
-
-        {/* 探索時の移動 (App.jsx に残っている場合は調整が必要だが、一旦ここに統合) */}
-        {gameState === 'EXPLORING' && (
-          <div className="mobile-exploration-controls" style={{ padding: '10px', display: 'flex', justifyContent: 'center' }}>
-            <div className="move-pad-minimal" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '5px' }}>
-              <div /><button className="dialog-btn" onClick={() => processMove('FORWARD')}>⬆️</button><div />
-              <button className="dialog-btn" onClick={() => processMove('TURN_LEFT')}>↩️</button>
-              <button className="dialog-btn" onClick={() => processMove('BACKWARD')}>⬇️</button>
-              <button className="dialog-btn" onClick={() => processMove('TURN_RIGHT')}>↪️</button>
-            </div>
-          </div>
-        )}
       </div>
     );
   }

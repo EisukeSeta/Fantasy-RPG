@@ -228,31 +228,29 @@ function App() {
 
       {isForceMobile && (
         <>
-          <div className="mobile-log-area" style={{ flexShrink: 0, height: '180px', borderBottom: '1px solid #333', background: 'rgba(0,0,0,0.7)' }}>
+          <ControlPanel 
+            gameState={gameState}
+            party={party}
+            activeBattler={activeBattler}
+            isAutoBattle={isAutoBattle}
+            setIsAutoBattle={setIsAutoBattle}
+            handleFight={handleFight}
+            castSpell={castSpell}
+            processMove={processMove}
+            addMessage={addMessage}
+            isMuted={isMuted}
+            setIsMuted={setIsMuted}
+            isForceMobile={isForceMobile}
+            showSpells={showSpells}
+            setShowSpells={setShowSpells}
+            setShowStatus={setShowStatus}
+            setShowMap={setShowMap}
+            scenarioData={scenarioData}
+          />
+          <div className="mobile-log-area" style={{ flexShrink: 0, height: '220px', borderTop: '1px solid #333', background: 'rgba(0,0,0,0.7)' }}>
             <MessageLog 
               messages={messages}
               isForceMobile={isForceMobile}
-            />
-          </div>
-          <div className="mobile-ui-container">
-            <ControlPanel 
-              gameState={gameState}
-              party={party}
-              activeBattler={activeBattler}
-              isAutoBattle={isAutoBattle}
-              setIsAutoBattle={setIsAutoBattle}
-              handleFight={handleFight}
-              castSpell={castSpell}
-              processMove={processMove}
-              addMessage={addMessage}
-              isMuted={isMuted}
-              setIsMuted={setIsMuted}
-              isForceMobile={isForceMobile}
-              showSpells={showSpells}
-              setShowSpells={setShowSpells}
-              setShowStatus={setShowStatus}
-              setShowMap={setShowMap}
-              scenarioData={scenarioData}
             />
           </div>
         </>
