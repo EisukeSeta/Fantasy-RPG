@@ -1136,3 +1136,40 @@ body {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
+
+/* --- 終焉・全画面モードの意匠 --- */
+.fullscreen-mode {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  flex: 1 !important;
+}
+
+/* --- ダイアログ発話者アイコン --- */
+.dialog-speaker {
+  float: left;
+  width: 70px;
+  height: 70px;
+  margin-right: 15px;
+  margin-bottom: 5px;
+  border: 2px solid var(--primary-gold);
+  border-radius: 50%;
+  overflow: hidden;
+  background: #000;
+  box-shadow: 0 0 10px rgba(184, 154, 66, 0.5);
+}
+
+.dialog-speaker img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dialog-content {
+  overflow: hidden; /* float解除のため */
+}
+
+.dialog-content p {
+  line-height: 1.8;
+  font-family: 'Sawarabi Mincho', serif;
+}

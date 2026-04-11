@@ -12,7 +12,8 @@ import SoundEngine from './utils/SoundEngine';
 
 import { 
   BOSS_POS, 
-  isDebug 
+  isDebug,
+  CHAR_IMAGES
 } from './constants/gameData';
 
 import balanceData from './data/Balance.json';
@@ -184,37 +185,44 @@ function App() {
       )}
       
       {/* --- UIコンポーネントの配置 --- */}
-      <StatusPane 
-        party={party}
-        activeBattler={activeBattler}
-        gameState={gameState}
-        visualEffects={visualEffects}
-        isForceMobile={isForceMobile}
-        showStatus={showStatus}
-        setShowStatus={setShowStatus}
-      />
+      {gameState !== 'GAMEOVER' && gameState !== 'FINISHED' && gameState !== 'TITLE' && (
+        <StatusPane 
+          party={party}
+          activeBattler={activeBattler}
+          gameState={gameState}
+          visualEffects={visualEffects}
+          isForceMobile={isForceMobile}
+          showStatus={showStatus}
+          setShowStatus={setShowStatus}
+        />
+      )}
 
-      <div className={`pane-main ${isForceMobile && gameState === 'BATTLE' ? 'battle-mode' : ''}`}>
+      <div className={`pane-main ${(gameState === 'GAMEOVER' || gameState === 'FINISHED' || gameState === 'TITLE') ? 'fullscreen-mode' : ''} ${isForceMobile && gameState === 'BATTLE' ? 'battle-mode' : ''}`}>
         <div className="view-window window" style={{ flex: 1, position: 'relative', overflow: 'visible', margin: 0 }}>
-          {!isForceMobile && <span className="window-title">都の景色</span>}
-          <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
-            <WireframeView mapData={mapData} playerPos={playerState} playerDir={playerState.dir} />
-          </div>
-          {isForceMobile && (
-            <div 
-              style={{ position: 'absolute', inset: 0, zIndex: 5, cursor: 'pointer' }} 
-              onClick={() => processMove('FORWARD')} 
-              title="前進"
-            />
-          )}
-          <CombatArea 
-            enemy={enemy}
-            visualEffects={visualEffects}
-            showVictory={showVictory}
-            gameState={gameState}
-          />
+          {!isForceMobile && (gameState !== 'GAMEOVER' && gameState !== 'FINISHED' && gameState !== 'TITLE') && <span className="window-title">都の景色</span>}
           
-          {isForceMobile && (
+          {(gameState !== 'GAMEOVER' && gameState !== 'FINISHED' && gameState !== 'TITLE') && (
+            <>
+              <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+                <WireframeView mapData={mapData} playerPos={playerState} playerDir={playerState.dir} />
+              </div>
+              {isForceMobile && (
+                <div 
+                  style={{ position: 'absolute', inset: 0, zIndex: 5, cursor: 'pointer' }} 
+                  onClick={() => processMove('FORWARD')} 
+                  title="前進"
+                />
+              )}
+              <CombatArea 
+                enemy={enemy}
+                visualEffects={visualEffects}
+                showVictory={showVictory}
+                gameState={gameState}
+              />
+            </>
+          )}
+          
+          {isForceMobile && (gameState !== 'GAMEOVER' && gameState !== 'FINISHED' && gameState !== 'TITLE') && (
             <div className="mobile-status-dashboard">
               {party.map((m, i) => (
                 <CharacterCard 
@@ -231,7 +239,7 @@ function App() {
           )}
           
           {/* モバイル専用：探索画面上の没入型十字キー */}
-          {isForceMobile && gameState !== 'BATTLE' && (
+          {isForceMobile && gameState !== 'BATTLE' && gameState !== 'GAMEOVER' && gameState !== 'FINISHED' && gameState !== 'TITLE' && (
             <div className="mobile-btn-container overlay-dpad">
                <div />
                <button className="move-btn dpad-btn" onClick={() => processMove('FORWARD')}>⬆️</button>
@@ -243,7 +251,7 @@ function App() {
           )}
         </div>
 
-        {!isForceMobile && (
+        {!isForceMobile && (gameState !== 'GAMEOVER' && gameState !== 'FINISHED' && gameState !== 'TITLE') && (
           <ControlPanel 
             gameState={gameState}
             party={party}
@@ -266,7 +274,7 @@ function App() {
         )}
       </div>
 
-      {isForceMobile && (
+      {isForceMobile && (gameState !== 'GAMEOVER' && gameState !== 'FINISHED' && gameState !== 'TITLE') && (
         <>
           <ControlPanel 
             gameState={gameState}
@@ -298,34 +306,38 @@ function App() {
 
       {isForceMobile ? (
         /* モバイル版：オーバーレイとして機能する地図 */
-        <LabyrinthMap 
-          mapData={mapData}
-          playerState={playerState}
-          mapEventsData={mapEventsData}
-          isForceMobile={isForceMobile}
-          showMap={showMap}
-          setShowMap={setShowMap}
-          scenarioData={scenarioData}
-        />
+        (gameState !== 'GAMEOVER' && gameState !== 'FINISHED' && gameState !== 'TITLE') && (
+          <LabyrinthMap 
+            mapData={mapData}
+            playerState={playerState}
+            mapEventsData={mapEventsData}
+            isForceMobile={isForceMobile}
+            showMap={showMap}
+            setShowMap={setShowMap}
+            scenarioData={scenarioData}
+          />
+        )
       ) : (
         /* PC版：右側に固定表示されるパネル */
-        <div className="pane-right">
-          <div className="pane-log-map-wrapper pc-layout">
-            <LabyrinthMap 
-              mapData={mapData}
-              playerState={playerState}
-              mapEventsData={mapEventsData}
-              isForceMobile={isForceMobile}
-              showMap={showMap}
-              setShowMap={setShowMap}
-              scenarioData={scenarioData}
-            />
-            <MessageLog 
-              messages={messages}
-              isForceMobile={isForceMobile}
-            />
+        (gameState !== 'GAMEOVER' && gameState !== 'FINISHED' && gameState !== 'TITLE') && (
+          <div className="pane-right">
+            <div className="pane-log-map-wrapper pc-layout">
+              <LabyrinthMap 
+                mapData={mapData}
+                playerState={playerState}
+                mapEventsData={mapEventsData}
+                isForceMobile={isForceMobile}
+                showMap={showMap}
+                setShowMap={setShowMap}
+                scenarioData={scenarioData}
+              />
+              <MessageLog 
+                messages={messages}
+                isForceMobile={isForceMobile}
+              />
+            </div>
           </div>
-        </div>
+        )
       )}
 
       {/* ダイアログ表示 */}
@@ -342,6 +354,15 @@ function App() {
         }}>
           <div className="dialog-title">{activeDialog.title}</div>
           <div className="dialog-content">
+            {/* 発話者アイコンの表示 */}
+            {activeDialog.speakers && activeDialog.speakers[activeDialog.currentPage] && (
+              <div className="dialog-speaker">
+                <img 
+                  src={CHAR_IMAGES[activeDialog.speakers[activeDialog.currentPage]]} 
+                  alt="speaker" 
+                />
+              </div>
+            )}
             <p>{activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : ''}</p>
             {activeDialog.showChoices ? (
               <div className="dialog-footer">

@@ -94,12 +94,23 @@ export const useNavigation = (initialMap, initialPos, {
           return;
         }
 
-        // ボス遭遇判定（鵺の咆哮）
+        // ボス遭遇判定（鵺の咆哮と三将の呼応）
         if (!bossDefeated && nX === BOSS_POS.x && nY === BOSS_POS.y) {
           setIsShake(true); 
           setActiveDialog({
-            title: "【古の怪異】",
-            pages: [scenarioData.events.nueAura],
+            title: "【古の怪異、鵺】",
+            pages: [
+              scenarioData.events.nueAura,
+              "（渡辺綱）「案ずるな、晴明。この程度の気配、俺の太刀で断ち切ってくれる！　羅生門の鬼を斬ったこの腕、鈍ってはいないぞ。」",
+              "（安倍晴明）「……いや、綱。これまでに調伏してきた怪異とは『格』が違う。怨念の渦が、天の理すら書き換えておる。油断するな。」",
+              "（八百比丘尼）「……ふふ。死の香りが漂っていますわ。私たちが黄泉に還るか、この怪異を浄化するか……楽しみですわね。皆様、生き永らえてくださいませ？」"
+            ],
+            speakers: [
+              null,
+              "watanabe_tsuna.png",
+              "abe_seimei.png",
+              "yaobikuni.png"
+            ],
             currentPage: 0,
             onConfirm: () => {
               setIsShake(false);
