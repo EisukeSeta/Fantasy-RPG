@@ -4,37 +4,32 @@ import { WireframeView } from './components/WireframeView';
 import { ENEMY_LIST } from './data/enemyData';
 import { getRandomEnemy, calculateHitAndDamage } from './logic/combat';
 import { getRequiredExp } from './logic/growth';
+import { StatusPane } from './components/status/StatusPane';
+import { CombatArea } from './components/battle/CombatArea';
+import { CharacterCard } from './components/status/CharacterCard';
+import { LabyrinthMap } from './components/navigation/LabyrinthMap';
+import { MessageLog } from './components/navigation/MessageLog';
+import { ControlPanel } from './components/navigation/ControlPanel';
 import { SPELLS } from './data/magicData';
 import SoundEngine from './utils/SoundEngine';
 
-// Images (Allies/Enemies)
-import abeImg from './assets/allies/abe_seimei.png';
-import tsunaImg from './assets/allies/watanabe_tsuna.png';
-import yaobikuniImg from './assets/allies/yaobikuni.png';
-import gakiImg from './assets/enemies/gaki.png';
-import gaikotsuImg from './assets/enemies/gaikotsu.png';
-import tessatsuImg from './assets/enemies/tessatsu.png';
-import hitodamaImg from './assets/enemies/hitodama.png';
-import wanyudoImg from './assets/enemies/wanyudo.png';
-import nureonnaImg from './assets/enemies/nureonna.png';
-import aobozuImg from './assets/enemies/aobozu.png';
-import tsuchigumoImg from './assets/enemies/tsuchigumo.png';
-import ushioniImg from './assets/enemies/ushioni.png';
-import nueImg from './assets/enemies/nue.png';
-
-const CHAR_IMAGES = { "abe_seimei.png": abeImg, "watanabe_tsuna.png": tsunaImg, "yaobikuni.png": yaobikuniImg };
-const ENEMY_IMAGES = { "gaki.png": gakiImg, "gaikotsu.png": gaikotsuImg, "tessatsu.png": tessatsuImg, "hitodama.png": hitodamaImg, "wanyudo.png": wanyudoImg, "nureonna.png": nureonnaImg, "aobozu.png": aobozuImg, "tsuchigumo.png": tsuchigumoImg, "ushioni.png": ushioniImg, "nue.png": nueImg };
+import { 
+  CHAR_IMAGES, 
+  ENEMY_IMAGES, 
+  varGold, 
+  ICON_MAPPING, 
+  BOSS_POS, 
+  isDebug 
+} from './constants/gameData';
 
 import balanceData from './data/Balance.json';
 import scenarioData from './data/Scenario.json';
 import charactersData from './data/Characters.json';
 import mapEventsData from './data/MapEvents.json';
 
-const varGold = '#f0e68c';
-const ICON_MAPPING = { "shrine": "⛩️", "well": "井", "scroll": "📜" };
 
-const BOSS_POS = balanceData.map.bossPos;
-const isDebug = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debug') === 'true';
+
+
 
 function App() {
   const [gameState, setGameState] = useState('EXPLORING'); 
@@ -335,34 +330,16 @@ function App() {
       )}
 
       {/* Pane: Status */}
-      <div className={`pane-status window ${showStatus ? 'mobile-active-pane' : ''}`}>
-        <span className="window-title">隊員之証</span>
-        {isForceMobile && (
-          <div className="mobile-nav-tabs">
-            <button className="nav-tab-btn" onClick={() => { setShowStatus(false); setShowMap(false); }}>🏰 迷宮</button>
-            <button className="nav-tab-btn" onClick={() => { setShowStatus(false); setShowMap(true); }}>🗺️ 迷宮図</button>
-            <button className="nav-tab-btn active">👥 隊員証</button>
-          </div>
-        )}
-        <div className="status-grid">
-          {party.map((m, i) => (
-            <div key={i} className={`status-item ${gameState === 'BATTLE' && activeBattler === i ? 'active-battler' : ''}`} style={{ opacity: m.hp <= 0 ? 0.4 : 1, position: 'relative', overflow: 'visible' }}>
-              {/* ポップアップ */}
-              {visualEffects.filter(e => e.target === `party_${i}`).map(e => (
-                <div key={e.id} className={`popup-number ${e.type === 'damage' ? 'popup-damage' : 'popup-heal'}`} style={{ zIndex: 10005, top: '20%', fontSize: '1.6rem' }}>{e.value}</div>
-              ))}
-              <div className="status-portrait"><img src={CHAR_IMAGES[m.image]} alt={m.name} /></div>
-              <div className="status-info">
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span className="status-name" style={{ color: m.hp === 1 ? '#f66' : '#fff' }}>{m.name}</span><span style={{ color: varGold, fontSize: '0.8rem' }}>Lv {m.lv}</span></div>
-                <div className={`hp-bar-container ${m.hp === 1 ? 'danger-blink' : ''}`}><div className="hp-bar" style={{ width: `${(m.hp/m.maxHp)*100}%` }} /></div>
-                <div className="mp-bar-container"><div className="mp-bar" style={{ width: `${(m.mp/m.maxMp)*100}%` }} /></div>
-                <div className="xp-bar-container"><div className="xp-bar" style={{ width: `${Math.min(100, ((m.exp - getRequiredExp(m.lv)) / (getRequiredExp(m.lv + 1) - getRequiredExp(m.lv))) * 100)}%` }} /></div>
-              </div>
-            </div>
-          ))}
-        </div>
-        {isForceMobile && <button className="dialog-btn" onClick={() => setShowStatus(false)} style={{ margin: '20px' }}>閉じる</button>}
-      </div>
+      <StatusPane 
+        party={party}
+        visualEffects={visualEffects}
+        gameState={gameState}
+        activeBattler={activeBattler}
+        isForceMobile={isForceMobile}
+        showStatus={showStatus}
+        setShowStatus={setShowStatus}
+        setShowMap={setShowMap}
+      />
 
       <div className="pane-main">
         <div className="view-window window" style={{ flex: 1, position: 'relative', overflow: 'visible', margin: 0 }}>
@@ -377,197 +354,83 @@ function App() {
               title="前進"
             />
           )}
-          {gameState === 'BATTLE' && enemy && (
-            <div className={`pane-enemy ${enemy.isBoss ? 'boss-aura' : ''}`} style={{ position: 'relative', overflow: 'visible' }}>
-              {/* ポップアップ */}
-              {visualEffects.filter(e => e.target === 'enemy').map(e => (
-                <div key={e.id} className={`popup-number ${e.type === 'damage' ? 'popup-damage' : 'popup-heal'}`} style={{ left: '50%', top: '30%', zIndex: 10001, fontSize: '2.8rem' }}>{e.value}</div>
-              ))}
-              {/* 勝利スプラッシュ */}
-              {showVictory && (
-                <div className="victory-splash" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle, rgba(184, 154, 66, 0.45) 0%, transparent 85%)', zIndex: 10002, borderRadius: '8px', animation: 'victoryIn 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards' }}>
-                  <div style={{ color: '#fff', fontSize: '3.6rem', fontWeight: 'bold', textShadow: '0 0 20px #b89a42, 0 0 40px #fff, 0 0 10px #000', fontFamily: 'Sawarabi Mincho, serif', letterSpacing: '8px' }}>怪異調伏</div>
-                </div>
-              )}
-              <div className={enemy.isBoss ? 'boss-name' : 'enemy-name'}>
-                {enemy.isBoss ? `＊＊＊ ${enemy.name} ＊＊＊` : enemy.name}
-              </div>
-              <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', width: '100%' }}>
-                <img src={ENEMY_IMAGES[enemy.image]} alt={enemy.name} style={{ maxWidth: '85%', maxHeight: '85%', objectFit: 'contain', filter: enemy.isBoss ? 'drop-shadow(0 0 20px rgba(255, 215, 0, 0.8))' : 'drop-shadow(0 0 15px rgba(184, 154, 66, 0.4))' }} />
-              </div>
-              <div className="hp-bar-container" style={{ width: '70%', margin: '15px 0' }}><div className="hp-bar" style={{ width: `${(enemy.hp/enemy.maxHp)*100}%` }} /></div>
-            </div>
-          )}
+          <CombatArea 
+            enemy={enemy}
+            visualEffects={visualEffects}
+            showVictory={showVictory}
+            gameState={gameState}
+          />
           
           {isForceMobile && (
             <div className="mobile-status-dashboard">
               {party.map((m, i) => (
-                <div key={i} className={`mini-member-card ${gameState === 'BATTLE' && activeBattler === i ? 'active-member' : ''}`} style={{ position: 'relative' }}>
-                  {/* ポップアップ */}
-                  {visualEffects.filter(e => e.target === `party_${i}`).map(e => (
-                    <div key={e.id} className={`popup-number ${e.type === 'damage' ? 'popup-damage' : 'popup-heal'}`} style={{ fontSize: '1.2rem' }}>{e.value}</div>
-                  ))}
-                  <div className="card-top">
-                    <span className="card-name">{m.name.slice(0,2)}</span>
-                    <span className="card-lv">L{m.lv}</span>
-                  </div>
-                  <div className="card-bars">
-                    <div className="mini-bar hp-mini"><div className="fill" style={{ width: `${(m.hp/m.maxHp)*100}%` }} /></div>
-                    <div className="mini-bar mp-mini"><div className="fill" style={{ width: `${(m.mp/m.maxMp)*100}%` }} /></div>
-                    <div className="mini-bar xp-mini"><div className="fill" style={{ width: `${Math.min(100, ((m.exp - getRequiredExp(m.lv)) / (getRequiredExp(m.lv + 1) - getRequiredExp(m.lv))) * 100)}%` }} /></div>
-                  </div>
-                </div>
+                <CharacterCard 
+                  key={i}
+                  member={m}
+                  index={i}
+                  variant="mini"
+                  activeBattler={activeBattler}
+                  gameState={gameState}
+                  visualEffects={visualEffects}
+                />
               ))}
             </div>
           )}
           
+          {/* モバイル専用：探索画面上の没入型十字キー */}
           {isForceMobile && gameState !== 'BATTLE' && (
             <div className="mobile-btn-container overlay-dpad">
-               <>
-                 <div />
-                 <button className="move-btn dpad-btn" onClick={() => processMove('FORWARD')}>⬆️</button>
-                 <div />
-                 <button className="move-btn dpad-btn" onClick={() => processMove('TURN_LEFT')}>⬅️</button>
-                 <button className="move-btn dpad-btn" onClick={() => processMove('BACKWARD')}>⬇️</button>
-                 <button className="move-btn dpad-btn" onClick={() => processMove('TURN_RIGHT')}>➡️</button>
-               </>
+               <div />
+               <button className="move-btn dpad-btn" onClick={() => processMove('FORWARD')}>⬆️</button>
+               <div />
+               <button className="move-btn dpad-btn" onClick={() => processMove('TURN_LEFT')}>⬅️</button>
+               <button className="move-btn dpad-btn" onClick={() => processMove('BACKWARD')}>⬇️</button>
+               <button className="move-btn dpad-btn" onClick={() => processMove('TURN_RIGHT')}>➡️</button>
             </div>
           )}
         </div>
 
-        {!isForceMobile && (
-          <div className="controls-window window" style={{ height: '180px', marginTop: '15px' }}>
-            <div style={{ display: 'flex', height: '100%', padding: '15px' }}>
-              <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
-                {gameState === 'BATTLE' ? (
-                  <><button className="dialog-btn" style={{ gridColumn: 'span 2' }} onClick={handleFight}>{scenarioData.ui.fight}</button><button className="dialog-btn" onClick={() => setIsAutoBattle(!isAutoBattle)}>{isAutoBattle ? scenarioData.ui.shuraAuto : scenarioData.ui.manual}</button><button className="dialog-btn" onClick={() => setShowSpells(!showSpells)}>{scenarioData.ui.spells}</button><button className="dialog-btn" onClick={() => { if(Math.random()<0.5){ addMessage(scenarioData.battle.fleeSuccess); setEnemy(null); setGameState('EXPLORING'); } else addMessage(scenarioData.battle.fleeFail); }}>{scenarioData.ui.flee}</button></>
-                ) : (
-                  <><div /><button className="dialog-btn" onClick={() => processMove('FORWARD')}>⬆️ 前進</button><div /><button className="dialog-btn" onClick={() => processMove('TURN_LEFT')}>↩️ 左向</button><button className="dialog-btn" onClick={() => processMove('BACKWARD')}>⬇️ 後退</button><button className="dialog-btn" onClick={() => processMove('TURN_RIGHT')}>↪️ 右向</button></>
-                )}
-              </div>
-              <div style={{ width: '120px', display: 'flex', flexDirection: 'column', gap: '5px', marginLeft: '10px' }}>
-                 <button className="save-btn" style={{flex:1}} onClick={() => addMessage(scenarioData.ui.saveComplete, 'level_up')}>{scenarioData.ui.save}</button>
-                 <button className="save-btn" style={{flex:1}} onClick={() => setIsMuted(!isMuted)}>{isMuted ? scenarioData.ui.bgmOff : scenarioData.ui.bgmOn}</button>
-              </div>
-              {showSpells && gameState === 'BATTLE' && (
-                <div style={{ flex: 1, marginLeft: '10px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px', overflowY: 'auto' }}>
-                  {(SPELLS[party[activeBattler].jobKey] || []).filter(s => s.lv <= party[activeBattler].lv).map((s, idx) => (
-                    <button key={idx} className="spell-btn" onClick={() => castSpell(s)}>{s.name}({s.mp})</button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+        {/* --- 操作盤を中央下部へ復元 --- */}
+        <ControlPanel 
+          gameState={gameState}
+          party={party}
+          activeBattler={activeBattler}
+          isAutoBattle={isAutoBattle}
+          setIsAutoBattle={setIsAutoBattle}
+          handleFight={handleFight}
+          castSpell={castSpell}
+          processMove={processMove}
+          addMessage={addMessage}
+          isMuted={isMuted}
+          setIsMuted={setIsMuted}
+          isForceMobile={isForceMobile}
+          showSpells={showSpells}
+          setShowSpells={setShowSpells}
+          setShowStatus={setShowStatus}
+          setShowMap={setShowMap}
+          scenarioData={scenarioData}
+        />
       </div>
 
-      {isForceMobile && (
-        <div className="mobile-ui-container">
-          <div className="mobile-utility-btns" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '5px', padding: '6px 5px', background: '#111', borderBottom: '1px solid #333' }}>
-            <button className="dialog-btn" style={{ fontSize: '0.8rem', padding: '6px 2px' }} onClick={()=>setShowMap(true)}>🗺️ 迷宮図</button>
-            <button className="dialog-btn" style={{ fontSize: '0.8rem', padding: '6px 2px' }} onClick={()=>setShowStatus(true)}>👥 隊員証</button>
-            <button className="dialog-btn" style={{ fontSize: '0.8rem', padding: '6px 2px' }} onClick={()=>addMessage(scenarioData.ui.saveComplete, 'level_up')}>💾 記録</button>
-            <button className="dialog-btn" style={{ fontSize: '0.8rem', padding: '6px 2px' }} onClick={()=>setIsMuted(!isMuted)}>{isMuted?'🔇':'🔊'}</button>
-          </div>
+      <div className={!isForceMobile ? 'pane-right' : ''}>
+        <div className={`pane-log-map-wrapper ${!isForceMobile ? 'pc-layout' : ''}`}>
+          <LabyrinthMap 
+            mapData={mapData}
+            playerState={playerState}
+            mapEventsData={mapEventsData}
+            isForceMobile={isForceMobile}
+            showMap={showMap}
+            setShowMap={setShowMap}
+            scenarioData={scenarioData}
+          />
 
-          {gameState === 'BATTLE' && (
-            <div className="mobile-battle-commands">
-              <button className="battle-cmd-btn primary" onClick={handleFight}>🗡️ 打ちかかる</button>
-              <button className="battle-cmd-btn" onClick={() => setShowSpells(!showSpells)} style={{ background: showSpells ? 'var(--primary-gold)' : '', color: showSpells ? '#000' : '' }}>📜 術式</button>
-              <button className="battle-cmd-btn" onClick={() => setShowStatus(true)}>👥 隊員</button>
-              <button className="battle-cmd-btn" onClick={() => setIsAutoBattle(!isAutoBattle)}>{isAutoBattle ? scenarioData.ui.shuraAuto : scenarioData.ui.manual}</button>
-            </div>
-          )}
-
-          {showSpells && gameState === 'BATTLE' && isForceMobile && (
-            <div className="mobile-spells-overlay">
-              {(SPELLS[party[activeBattler].jobKey] || []).filter(s => s.lv <= party[activeBattler].lv).map((s, idx) => (
-                <button key={idx} className="spell-btn-mobile" onClick={() => { castSpell(s); setShowSpells(false); }}>{s.name}({s.mp})</button>
-              ))}
-              <button className="spell-btn-mobile cancel" onClick={() => setShowSpells(false)}>✖ キャンセル</button>
-            </div>
-          )}
-          
-          <div className="mobile-log-display">
-            {messages.map((m, i) => (
-              <div key={i} className={`log-msg msg-${m.type} ${i === messages.length - 1 ? 'active-msg' : ''}`}>
-                {m.text}
-              </div>
-            ))}
-          </div>
+          <MessageLog 
+            messages={messages}
+            isForceMobile={isForceMobile}
+            showMap={showMap}
+            scenarioData={scenarioData}
+          />
         </div>
-      )}
-
-      {/* Log & Map Pane */}
-      <div className={`pane-log window ${showMap ? 'mobile-active-pane' : ''}`}>
-        <span className="window-title">{scenarioData.ui.labyrinthMap} <span style={{ color: 'var(--soft-gold)', marginLeft: '15px', textShadow: '0 0 10px rgba(184, 154, 66, 0.8)' }}>〔 {playerState.x}, {playerState.y} 〕</span></span>
-        {isForceMobile && (
-          <div className="mobile-nav-tabs">
-            <button className="nav-tab-btn" onClick={() => { setShowStatus(false); setShowMap(false); }}>🏰 迷宮</button>
-            <button className="nav-tab-btn active">🗺️ 迷宮図</button>
-            <button className="nav-tab-btn" onClick={() => { setShowStatus(true); setShowMap(false); }}>👥 隊員証</button>
-          </div>
-        )}
-        
-        {/* Map view (Unified focus with Pinch Zoom) */}
-        <div 
-          style={{ flex: 1, padding: '20px 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', background: '#000', overflow: 'hidden', touchAction: 'none' }}
-          onTouchStart={(e) => {
-            if (e.touches.length === 2) {
-              const d = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-              setLastDist(d);
-            }
-          }}
-          onTouchMove={(e) => {
-            if (e.touches.length === 2) {
-              const d = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-              if (lastDist > 0) {
-                const diff = d - lastDist;
-                setMapZoom(prev => Math.min(2.5, Math.max(0.5, prev + diff * 0.005)));
-              }
-              setLastDist(d);
-            }
-          }}
-          onTouchEnd={() => setLastDist(0)}
-        >
-          <div style={{ transform: `scale(${mapZoom})`, transition: 'transform 0.1s ease-out', display: 'grid', gridTemplateColumns: `repeat(${MAP_WIDTH}, 22px)`, gap: 0, border: '1px solid #111' }}>
-            {mapData.map((row, y) => row.map((cell, x) => {
-              const ev = mapEventsData.events.find(e => e.x === x && e.y === y);
-              const isPlayer = playerState.x === x && playerState.y === y;
-              return (
-                <div 
-                  key={`${x}-${y}`} 
-                  className={`map-cell ${cell.visited ? 'visited' : ''} ${isPlayer ? 'player' : ''}`}
-                  style={cell.visited ? {
-                    borderTop: cell.n ? '2.5px solid var(--primary-gold)' : '1px solid #1a1a1a',
-                    borderBottom: cell.s ? '2.5px solid var(--primary-gold)' : '1px solid #1a1a1a',
-                    borderLeft: cell.w ? '2.5px solid var(--primary-gold)' : '1px solid #1a1a1a',
-                    borderRight: cell.e ? '2.5px solid var(--primary-gold)' : '1px solid #1a1a1a',
-                    boxSizing: 'border-box'
-                  } : {}}
-                >
-                  {cell.visited && !isPlayer && ev && (ICON_MAPPING[ev.type] || '')}
-                  {isPlayer && <span className="player-icon" style={{ transform: `rotate(${playerState.dir * 90}deg)` }}>▲</span>}
-                </div>
-              );
-            }))}
-          </div>
-          <div style={{ marginTop: '30px', fontSize: '0.75rem', color: '#aaa', display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
-            {mapEventsData.legend.map((l, idx) => <span key={idx} style={{ textAlign: 'center' }}>{l.icon}:{l.name}</span>)}
-          </div>
-          {isForceMobile && <button className="dialog-btn" onClick={() => setShowMap(false)} style={{ marginTop: '30px', width: '80%', flexShrink: 0 }}>閉じる</button>}
-        </div>
-
-        {/* Action Log (PC version) */}
-        {!isForceMobile && (
-          <div className="pc-log-area" style={{ flex: 1, borderTop: '2px solid #333', overflowY: 'auto', padding: '10px', background: 'rgba(0,0,0,0.4)', scrollBehavior: 'smooth' }}>
-            {messages.slice(-30).map((m, i) => (
-              <div key={i} className={`log-msg msg-${m.type}`} style={{ padding: '4px 0', borderBottom: '1px solid #222', fontSize: '0.9rem' }}>
-                {m.text}
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
       {activeDialog && (

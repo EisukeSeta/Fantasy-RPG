@@ -258,6 +258,47 @@ body {
     display: block;
 }
 
+/* --- Navigation & Log Layout --- */
+.pane-log-map-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.pane-log-map-wrapper.pc-layout {
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  height: 100%;
+}
+
+.pc-log-area {
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-gold) rgba(255, 215, 0, 0.1);
+  scrollbar-gutter: stable; /* スクロールバー領域を常に確保 */
+}
+
+.pc-log-area::-webkit-scrollbar {
+  width: 8px;
+  display: block !important; /* 強制表示 */
+}
+
+.pc-log-area::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.5);
+  border-left: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+.pc-log-area::-webkit-scrollbar-thumb {
+  background: var(--primary-gold);
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.5);
+}
+
+.pc-log-area::-webkit-scrollbar-thumb:hover {
+  background: #fff; /* ホバー時はさらに強調 */
+}
+
 /* --- モバイル・スマートフォン用レイアウト (layout-mobile クラス適用時) --- */
 .layout-mobile {
   display: flex !important;
