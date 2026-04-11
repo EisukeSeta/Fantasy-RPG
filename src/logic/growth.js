@@ -1,5 +1,5 @@
 // src/logic/growth.js
-import balanceData from '../data/Balance.json';
+import balanceData from '../data/Balance.json' with { type: 'json' };
 
 /**
  * 次のレベルに必要な累積経験値を計算する

@@ -7,7 +7,7 @@
   "rates": {
     "encounter": 0.1,
     "messageSpeed": 800,
-    "expShare": 0.33
+    "expShare": 0.25
   },
   "experience": {
     "maxLevel": 50,

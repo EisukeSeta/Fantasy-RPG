@@ -47,21 +47,46 @@ export const WireframeView = ({ mapData, playerPos, playerDir }) => {
                 (leftDir === DIRECTIONS.S && cell.s) ||
                 (leftDir === DIRECTIONS.W && cell.w);
 
-      hasRight = (rightDir === DIRECTIONS.N && cell.n) ||
+    hasRight = (rightDir === DIRECTIONS.N && cell.n) ||
                  (rightDir === DIRECTIONS.E && cell.e) ||
                  (rightDir === DIRECTIONS.S && cell.s) ||
                  (rightDir === DIRECTIONS.W && cell.w);
+      
+      const isExit = cell.isExit;
+      depthsToDraw.push({ d, hasFront, hasLeft, hasRight, isExit });
+    } else {
+      depthsToDraw.push({ d, hasFront, hasLeft, hasRight, isExit: false });
     }
 
-    depthsToDraw.push({ d, hasFront, hasLeft, hasRight });
-    if (hasFront) break; // このマスの前方に壁があるなら、これ以上奥は見えない
+    if (hasFront) break; 
   }
 
-  // 奥から順番に線画を生成する（上書きするため）
+  // 奥から順番に線画を生成する
   for (let i = depthsToDraw.length - 1; i >= 0; i--) {
-    const { d, hasFront, hasLeft, hasRight } = depthsToDraw[i];
+    const { d, hasFront, hasLeft, hasRight, isExit } = depthsToDraw[i];
     const b1 = getDepthBox(d);
     const b2 = getDepthBox(d + 1);
+
+    // --- 階段 (isExit) の描写 ---
+    if (isExit) {
+      const centerX = (b2.x1 + b2.x2) / 2;
+      const w = (b2.x2 - b2.x1) * 0.6;
+      const h = (b2.y2 - b2.y1) * 0.8;
+      
+      // 階段の意匠 (3段の横線と枠)
+      lines.push(
+        <g key={`exit-${d}`} opacity={1 - d * 0.25}>
+          <rect x={centerX - w/2} y={b2.y2 - h} width={w} height={h} fill="#222" stroke="var(--primary-gold)" strokeWidth="1" />
+          {[0.2, 0.4, 0.6, 0.8].map((step, idx) => (
+            <line key={`ex-step-${d}-${idx}`} 
+                  x1={centerX - w/2} y1={b2.y2 - h * step} 
+                  x2={centerX + w/2} y2={b2.y2 - h * step} 
+                  stroke="var(--primary-gold)" strokeWidth="0.5" />
+          ))}
+          <text x={centerX} y={b2.y2 - h - 2} textAnchor="middle" fill="var(--primary-gold)" fontSize={12 - d*2} style={{fontFamily: 'serif'}}>⛩️</text>
+        </g>
+      );
+    }
 
     // --- 左の壁 ---
     if (hasLeft) {

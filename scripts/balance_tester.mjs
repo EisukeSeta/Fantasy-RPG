@@ -1,30 +1,25 @@
 /**
  * 平安魔道伝 - バランステスター (Node.js用シミュレーター)
- * ゲームロジックを期待値ベースで高速実行し、バランスKPIを算出します。
+ * v3.4 抽出済みロジック完全同期版
  */
 
-import { ENEMY_LIST, getRandomEnemy, calculateHitAndDamage } from '../src/data/enemyData.js';
-import { SPELLS } from '../src/data/magicData.js';
-import balanceData from '../src/data/Balance.json' with { type: 'json' };
-import charactersData from '../src/data/Characters.json' with { type: 'json' };
-import enemiesData from '../src/data/Enemies.json' with { type: 'json' };
+import { getRandomEnemy, calculateHitAndDamage, SPELLS } from '../src/logic/combat.js';
+import { getRequiredExp } from '../src/logic/growth.js';
+
+// JSON loading for Node.js
+import { readFile } from 'node:fs/promises';
+const loadJSON = async (path) => JSON.parse(await readFile(new URL(path, import.meta.url)));
+
+const balanceData = await loadJSON('../src/data/Balance.json');
+const charactersData = await loadJSON('../src/data/Characters.json');
+const enemiesData = await loadJSON('../src/data/Enemies.json');
 
 // --- Emulator Settings ---
-const SIM_RUNS = 1000; // 試行回数
-const STEPS_TO_BOSS = 100; // ボスに到達するまでのおよその探索歩数
+const SIM_RUNS = 1000; 
+const STEPS_TO_BOSS = 100; 
 const ENCOUNTER_CHANCE = balanceData.rates.encounter;
 const MOBILE_MODE = process.argv.includes('--mobile');
-const MOBILE_FACTOR = 1.35; // モバイル操作（タップ等）による時間増加係数
-
-// --- EXP Table (Sync with App.jsx) ---
-const getRequiredExp = (lv) => {
-  if (lv <= 1) return 0;
-  if (lv <= balanceData.experience.baseTable.length) return balanceData.experience.baseTable[lv - 1];
-  const { sigmoidScale, sigmoidCenter, sigmoidSlope } = balanceData.experience;
-  const x = (lv - 1) / 49;
-  const sigmoid = 1 / (1 + Math.exp(-sigmoidSlope * (x - sigmoidCenter)));
-  return Math.floor(sigmoidScale * sigmoid);
-};
+const MOBILE_FACTOR = 1.35; 
 
 // --- Player Stats & Job Logic ---
 const createInitialParty = () => JSON.parse(JSON.stringify(charactersData));
@@ -37,10 +32,11 @@ function handleLevelUp(member) {
     m.maxMp += balanceData.partyBase.mpPerLevel;
     m.hp = m.maxHp;
     m.mp = m.maxMp;
-    // 攻撃力の伸び（App.jsxに準拠または期待値）
-    if (m.name.includes('綱')) { m.minDmg += 2; m.maxDmg += 3; m.ac -= 0.5; }
-    else if (m.name.includes('晴明')) { m.minDmg += 1; m.maxDmg += 2; m.ac -= 0.2; }
-    else { m.minDmg += 1; m.maxDmg += 1; m.ac -= 0.3; }
+    
+    // 職種別成長 (期待値)
+    if (m.jobKey === 'BUSHI') { m.minDmg += 2; m.maxDmg += 3; m.ac -= 0.5; }
+    else if (m.jobKey === 'ONMYOJI') { m.minDmg += 1; m.maxDmg += 2; m.ac -= 0.2; }
+    else if (m.jobKey === 'NISOU') { m.minDmg += 1; m.maxDmg += 1; m.ac -= 0.3; }
   }
   return m;
 }
@@ -63,9 +59,12 @@ function simulateBattle(party, enemy) {
       let spellToUse = null;
 
       // 比丘尼の回復優先 (簡易AI)
-      if (p[i].name.includes('比丘尼') && p[i].mp >= 2) {
-        const injured = p.find(m => m.hp > 0 && m.hp < m.maxHp * 0.6);
-        if (injured) { action = 'HEAL'; spellToUse = SPELLS.NISOU.find(s => s.name === '甘露の雨'); }
+      if (p[i].jobKey === 'NISOU' && p[i].mp >= 2) {
+        const injured = p.find(m => m.hp > 0 && m.hp < m.maxHp * 0.5);
+        if (injured) { 
+          action = 'HEAL'; 
+          spellToUse = SPELLS.NISOU.find(s => s.type === 'HEAL'); 
+        }
       }
       
       if (action === 'HEAL' && spellToUse) {
@@ -97,28 +96,26 @@ function runOneGame() {
   let totalBattles = 0;
   let totalWipeouts = 0;
   let bossDefeated = false;
-  let totalHumanTime = 0; // 分換算
+  let totalHumanTime = 0; 
 
-  while (!bossDefeated && totalWipeouts < 20) { // 最大20回まで転生
+  while (!bossDefeated && totalWipeouts < 30) { 
     // 探索フェーズ
     for (let s = 0; s < STEPS_TO_BOSS; s++) {
-      totalHumanTime += 0.05 * (MOBILE_MODE ? MOBILE_FACTOR : 1); // 1歩 3秒換算 (分)
+      totalHumanTime += 0.05 * (MOBILE_MODE ? MOBILE_FACTOR : 1);
       if (Math.random() < ENCOUNTER_CHANCE) {
         totalBattles++;
-        totalHumanTime += 0.3 * (MOBILE_MODE ? MOBILE_FACTOR : 1); // 戦闘思考時間 20秒換算
+        totalHumanTime += 0.3 * (MOBILE_MODE ? MOBILE_FACTOR : 1);
         const lvSum = party.reduce((sum, m) => sum + m.lv, 0);
         const enemy = getRandomEnemy(lvSum);
         const res = simulateBattle(party, enemy);
         
         if (!res.won) {
           totalWipeouts++;
-          totalHumanTime += 2.0 * (MOBILE_MODE ? MOBILE_FACTOR : 1); // 全滅から復帰して歩き直す時間
-          // 転生の理: HP/MP 1 で井戸に戻り、社で全快(1,1に歩くのを想定)
+          totalHumanTime += 2.0;
           party = party.map(m => ({ ...m, hp: m.maxHp, mp: m.maxMp })); 
-          break; // 探索やり直し
+          break; 
         }
         
-        // 勝利: 経験値獲得
         party = res.party.map(m => {
           const gain = Math.floor(enemy.exp * balanceData.rates.expShare);
           return handleLevelUp({ ...m, exp: m.exp + gain });
@@ -126,17 +123,19 @@ function runOneGame() {
       }
     }
 
+    if (bossDefeated) break;
+
     // ボス戦フェーズ
     const nueBase = enemiesData.find(e => e.id === 10);
     const nue = { ...nueBase, hp: (nueBase.minHp + nueBase.maxHp)/2 };
-    totalHumanTime += 1.0 * (MOBILE_MODE ? MOBILE_FACTOR : 1); // ボス演出時間
+    totalHumanTime += 1.0;
     const bossRes = simulateBattle(party, nue);
     if (bossRes.won) {
       bossDefeated = true;
     } else {
       totalWipeouts++;
       totalHumanTime += 2.0;
-      party = party.map(m => ({ ...m, hp: m.maxHp, mp: m.maxMp }));
+      party = party.map(m => ({ ...m, hp: m.maxHp, mp: m.maxMp, exp: getRequiredExp(m.lv) }));
     }
   }
 
@@ -144,7 +143,7 @@ function runOneGame() {
 }
 
 // --- Run Simulation Loop ---
-console.log(`\n--- 平安魔道伝 真・自動バランステスト (${SIM_RUNS} 試行 ${MOBILE_MODE ? '[モバイル]' : '[PC]'}) ---`);
+console.log(`\n--- 平安魔道伝 真・自動バランステスト v3.4 (${SIM_RUNS} 試行 ${MOBILE_MODE ? '[モバイル]' : '[PC]'}) ---`);
 let stats = { won: 0, totalWipeouts: 0, totalLv: 0, totalBattles: 0, totalTime: 0 };
 
 for (let i = 0; i < SIM_RUNS; i++) {

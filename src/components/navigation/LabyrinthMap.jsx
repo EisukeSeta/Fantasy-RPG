@@ -77,6 +77,7 @@ export const LabyrinthMap = ({
                 } : {}}
               >
                 {cell.visited && !isPlayer && ev && (ICON_MAPPING[ev.type] || '')}
+                {cell.visited && !isPlayer && cell.isExit && '⛩️'}
                 {isPlayer && <span className="player-icon" style={{ transform: `rotate(${playerState.dir * 90}deg)` }}>▲</span>}
               </div>
             );

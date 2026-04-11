@@ -1,5 +1,5 @@
-// src/logic/combat.js
-import Enemies from '../data/Enemies.json';
+import Enemies from '../data/Enemies.json' with { type: 'json' };
+export { SPELLS } from '../data/magicData.js';
 
 /**
  * 敵をランダムに抽選する（レベル調整含む）
