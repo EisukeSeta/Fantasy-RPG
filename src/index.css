@@ -1046,3 +1046,24 @@ body {
   pointer-events: none;
   background: radial-gradient(circle, rgba(184, 154, 66, 0.4) 0%, transparent 70%) !important;
 }
+
+/* --- ログ領域のスクロールバー装飾 --- */
+.pc-log-area::-webkit-scrollbar,
+.mobile-log-display::-webkit-scrollbar {
+  width: 6px;
+}
+.pc-log-area::-webkit-scrollbar-track,
+.mobile-log-display::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.3);
+}
+.pc-log-area::-webkit-scrollbar-thumb,
+.mobile-log-display::-webkit-scrollbar-thumb {
+  background: var(--primary-gold);
+  border-radius: 3px;
+  box-shadow: 0 0 5px rgba(184, 154, 66, 0.5);
+}
+
+.mobile-log-display {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
