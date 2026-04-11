@@ -184,25 +184,23 @@ function App() {
         </div>
       )}
       
-      {/* --- UIコンポーネントの配置 --- */}
-      {gameState !== 'GAMEOVER' && gameState !== 'FINISHED' && gameState !== 'TITLE' && (
-        <StatusPane 
-          party={party}
-          activeBattler={activeBattler}
-          gameState={gameState}
-          visualEffects={visualEffects}
-          isForceMobile={isForceMobile}
-          showStatus={showStatus}
-          setShowStatus={setShowStatus}
-        />
-      )}
+      {/* --- メインUI（探索・戦闘中のみ表示） --- */}
+      {(gameState === 'EXPLORING' || gameState === 'BATTLE') && (
+        <>
+          <StatusPane 
+            party={party}
+            activeBattler={activeBattler}
+            gameState={gameState}
+            visualEffects={visualEffects}
+            isForceMobile={isForceMobile}
+            showStatus={showStatus}
+            setShowStatus={setShowStatus}
+          />
 
-      <div className={`pane-main ${(gameState === 'GAMEOVER' || gameState === 'FINISHED' || gameState === 'TITLE') ? 'fullscreen-mode' : ''} ${isForceMobile && gameState === 'BATTLE' ? 'battle-mode' : ''}`}>
-        <div className="view-window window" style={{ flex: 1, position: 'relative', overflow: 'visible', margin: 0 }}>
-          {!isForceMobile && (gameState !== 'GAMEOVER' && gameState !== 'FINISHED' && gameState !== 'TITLE') && <span className="window-title">都の景色</span>}
-          
-          {(gameState !== 'GAMEOVER' && gameState !== 'FINISHED' && gameState !== 'TITLE') && (
-            <>
+          <div className={`pane-main ${isForceMobile && gameState === 'BATTLE' ? 'battle-mode' : ''}`}>
+            <div className="view-window window" style={{ flex: 1, position: 'relative', overflow: 'visible', margin: 0 }}>
+              {!isForceMobile && <span className="window-title">都の景色</span>}
+              
               <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
                 <WireframeView mapData={mapData} playerPos={playerState} playerDir={playerState.dir} />
               </div>
@@ -219,125 +217,121 @@ function App() {
                 showVictory={showVictory}
                 gameState={gameState}
               />
-            </>
-          )}
-          
-          {isForceMobile && (gameState !== 'GAMEOVER' && gameState !== 'FINISHED' && gameState !== 'TITLE') && (
-            <div className="mobile-status-dashboard">
-              {party.map((m, i) => (
-                <CharacterCard 
-                  key={i}
-                  member={m}
-                  index={i}
-                  variant="mini"
-                  activeBattler={activeBattler}
-                  gameState={gameState}
-                  visualEffects={visualEffects}
-                />
-              ))}
+              
+              {isForceMobile && (
+                <div className="mobile-status-dashboard">
+                  {party.map((m, i) => (
+                    <CharacterCard 
+                      key={i}
+                      member={m}
+                      index={i}
+                      variant="mini"
+                      activeBattler={activeBattler}
+                      gameState={gameState}
+                      visualEffects={visualEffects}
+                    />
+                  ))}
+                </div>
+              )}
+              
+              {/* モバイル専用：探索画面上の没入型十字キー */}
+              {isForceMobile && gameState !== 'BATTLE' && (
+                <div className="mobile-btn-container overlay-dpad">
+                   <div />
+                   <button className="move-btn dpad-btn" onClick={() => processMove('FORWARD')}>⬆️</button>
+                   <div />
+                   <button className="move-btn dpad-btn" onClick={() => processMove('TURN_LEFT')}>⬅️</button>
+                   <button className="move-btn dpad-btn" onClick={() => processMove('BACKWARD')}>⬇️</button>
+                   <button className="move-btn dpad-btn" onClick={() => processMove('TURN_RIGHT')}>➡️</button>
+                </div>
+              )}
             </div>
-          )}
-          
-          {/* モバイル専用：探索画面上の没入型十字キー */}
-          {isForceMobile && gameState !== 'BATTLE' && gameState !== 'GAMEOVER' && gameState !== 'FINISHED' && gameState !== 'TITLE' && (
-            <div className="mobile-btn-container overlay-dpad">
-               <div />
-               <button className="move-btn dpad-btn" onClick={() => processMove('FORWARD')}>⬆️</button>
-               <div />
-               <button className="move-btn dpad-btn" onClick={() => processMove('TURN_LEFT')}>⬅️</button>
-               <button className="move-btn dpad-btn" onClick={() => processMove('BACKWARD')}>⬇️</button>
-               <button className="move-btn dpad-btn" onClick={() => processMove('TURN_RIGHT')}>➡️</button>
-            </div>
-          )}
-        </div>
 
-        {!isForceMobile && (gameState !== 'GAMEOVER' && gameState !== 'FINISHED' && gameState !== 'TITLE') && (
-          <ControlPanel 
-            gameState={gameState}
-            party={party}
-            activeBattler={activeBattler}
-            isAutoBattle={isAutoBattle}
-            setIsAutoBattle={setIsAutoBattle}
-            handleFight={handleFight}
-            castSpell={castSpell}
-            processMove={processMove}
-            addMessage={addMessage}
-            isMuted={isMuted}
-            setIsMuted={setIsMuted}
-            isForceMobile={isForceMobile}
-            showSpells={showSpells}
-            setShowSpells={setShowSpells}
-            setShowStatus={setShowStatus}
-            setShowMap={setShowMap}
-            scenarioData={scenarioData}
-          />
-        )}
-      </div>
-
-      {isForceMobile && (gameState !== 'GAMEOVER' && gameState !== 'FINISHED' && gameState !== 'TITLE') && (
-        <>
-          <ControlPanel 
-            gameState={gameState}
-            party={party}
-            activeBattler={activeBattler}
-            isAutoBattle={isAutoBattle}
-            setIsAutoBattle={setIsAutoBattle}
-            handleFight={handleFight}
-            castSpell={castSpell}
-            processMove={processMove}
-            addMessage={addMessage}
-            isMuted={isMuted}
-            setIsMuted={setIsMuted}
-            isForceMobile={isForceMobile}
-            showSpells={showSpells}
-            setShowSpells={setShowSpells}
-            setShowStatus={setShowStatus}
-            setShowMap={setShowMap}
-            scenarioData={scenarioData}
-          />
-          <div className="mobile-log-area" style={{ borderTop: '1px solid #333', background: 'rgba(0,0,0,0.7)' }}>
-            <MessageLog 
-              messages={messages}
-              isForceMobile={isForceMobile}
-            />
-          </div>
-        </>
-      )}
-
-      {isForceMobile ? (
-        /* モバイル版：オーバーレイとして機能する地図 */
-        (gameState !== 'GAMEOVER' && gameState !== 'FINISHED' && gameState !== 'TITLE') && (
-          <LabyrinthMap 
-            mapData={mapData}
-            playerState={playerState}
-            mapEventsData={mapEventsData}
-            isForceMobile={isForceMobile}
-            showMap={showMap}
-            setShowMap={setShowMap}
-            scenarioData={scenarioData}
-          />
-        )
-      ) : (
-        /* PC版：右側に固定表示されるパネル */
-        (gameState !== 'GAMEOVER' && gameState !== 'FINISHED' && gameState !== 'TITLE') && (
-          <div className="pane-right">
-            <div className="pane-log-map-wrapper pc-layout">
-              <LabyrinthMap 
-                mapData={mapData}
-                playerState={playerState}
-                mapEventsData={mapEventsData}
+            {!isForceMobile && (
+              <ControlPanel 
+                gameState={gameState}
+                party={party}
+                activeBattler={activeBattler}
+                isAutoBattle={isAutoBattle}
+                setIsAutoBattle={setIsAutoBattle}
+                handleFight={handleFight}
+                castSpell={castSpell}
+                processMove={processMove}
+                addMessage={addMessage}
+                isMuted={isMuted}
+                setIsMuted={setIsMuted}
                 isForceMobile={isForceMobile}
-                showMap={showMap}
+                showSpells={showSpells}
+                setShowSpells={setShowSpells}
+                setShowStatus={setShowStatus}
                 setShowMap={setShowMap}
                 scenarioData={scenarioData}
               />
-              <MessageLog 
-                messages={messages}
-                isForceMobile={isForceMobile}
-              />
-            </div>
+            )}
           </div>
-        )
+
+          {isForceMobile && (
+            <>
+              <ControlPanel 
+                gameState={gameState}
+                party={party}
+                activeBattler={activeBattler}
+                isAutoBattle={isAutoBattle}
+                setIsAutoBattle={setIsAutoBattle}
+                handleFight={handleFight}
+                castSpell={castSpell}
+                processMove={processMove}
+                addMessage={addMessage}
+                isMuted={isMuted}
+                setIsMuted={setIsMuted}
+                isForceMobile={isForceMobile}
+                showSpells={showSpells}
+                setShowSpells={setShowSpells}
+                setShowStatus={setShowStatus}
+                setShowMap={setShowMap}
+                scenarioData={scenarioData}
+              />
+              <div className="mobile-log-area" style={{ borderTop: '1px solid #333', background: 'rgba(0,0,0,0.7)' }}>
+                <MessageLog 
+                  messages={messages}
+                  isForceMobile={isForceMobile}
+                />
+              </div>
+            </>
+          )}
+
+          {isForceMobile ? (
+            /* モバイル版：オーバーレイとして機能する地図 */
+            <LabyrinthMap 
+              mapData={mapData}
+              playerState={playerState}
+              mapEventsData={mapEventsData}
+              isForceMobile={isForceMobile}
+              showMap={showMap}
+              setShowMap={setShowMap}
+              scenarioData={scenarioData}
+            />
+          ) : (
+            /* PC版：右側に固定表示されるパネル */
+            <div className="pane-right">
+              <div className="pane-log-map-wrapper pc-layout">
+                <LabyrinthMap 
+                  mapData={mapData}
+                  playerState={playerState}
+                  mapEventsData={mapEventsData}
+                  isForceMobile={isForceMobile}
+                  showMap={showMap}
+                  setShowMap={setShowMap}
+                  scenarioData={scenarioData}
+                />
+                <MessageLog 
+                  messages={messages}
+                  isForceMobile={isForceMobile}
+                />
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* ダイアログ表示 */}
