@@ -313,7 +313,8 @@ body {
 
 .layout-mobile .pane-main {
   width: 100vw !important;
-  flex: 0 0 45vh !important; /* 探索時は45% */
+  height: 100vw !important; /* 常に正方形 */
+  flex: 0 0 100vw !important; 
   position: relative !important;
   overflow: hidden !important;
   margin: 0 !important;
@@ -321,7 +322,7 @@ body {
 }
 
 .layout-mobile .pane-main.battle-mode {
-  flex: 0 0 40vh !important; /* 戦闘時は少し縮小 */
+  flex: 0 0 100vw !important; /* 戦闘時も正方形を維持 */
 }
 
 /* モバイル操作盤（ユーティリティ） */
