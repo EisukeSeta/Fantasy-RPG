@@ -154,7 +154,7 @@ function App() {
         setShowStatus={setShowStatus}
       />
 
-      <div className="pane-main">
+      <div className={`pane-main ${isForceMobile && gameState === 'BATTLE' ? 'battle-mode' : ''}`}>
         <div className="view-window window" style={{ flex: 1, position: 'relative', overflow: 'visible', margin: 0 }}>
           {!isForceMobile && <span className="window-title">都の景色</span>}
           <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
@@ -247,7 +247,7 @@ function App() {
             setShowMap={setShowMap}
             scenarioData={scenarioData}
           />
-          <div className="mobile-log-area" style={{ flexShrink: 0, height: '220px', borderTop: '1px solid #333', background: 'rgba(0,0,0,0.7)' }}>
+          <div className="mobile-log-area" style={{ borderTop: '1px solid #333', background: 'rgba(0,0,0,0.7)' }}>
             <MessageLog 
               messages={messages}
               isForceMobile={isForceMobile}

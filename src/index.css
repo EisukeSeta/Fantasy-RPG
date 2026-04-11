@@ -306,36 +306,47 @@ body {
   width: 100vw !important;
   height: 100vh !important;
   height: 100dvh !important;
-  overflow-y: auto !important;
+  overflow: hidden !important; /* 全体スクロール禁止 */
   background: var(--ancient-black);
-  padding-top: env(safe-area-inset-top, 0) !important;
-  padding-bottom: env(safe-area-inset-bottom, 0) !important;
-}
-
-.layout-mobile .window-title {
-  padding: 1px 6px !important;
-  font-size: 0.65rem !important;
+  padding: 0 !important;
 }
 
 .layout-mobile .pane-main {
   width: 100vw !important;
-  height: 100vw !important; 
-  aspect-ratio: 1 / 1 !important;
-  flex: 0 0 100vw !important; /* 強制的に幅=高さ固定 */
+  flex: 0 0 45vh !important; /* 探索時は45% */
   position: relative !important;
   overflow: hidden !important;
   margin: 0 !important;
   padding: 0 !important;
 }
 
+.layout-mobile .pane-main.battle-mode {
+  flex: 0 0 40vh !important; /* 戦闘時は少し縮小 */
+}
+
+/* モバイル操作盤（ユーティリティ） */
+.layout-mobile .mobile-ui-container {
+  flex: 0 0 auto !important;
+  min-height: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  z-index: 20;
+  background: #000;
+  border-top: 1px solid #333;
+}
+
+/* モバイル言行録領域（残りの全領域を占有） */
+.layout-mobile .mobile-log-area {
+  flex: 1 !important; 
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
 .layout-mobile .view-window {
   width: 100% !important;
   height: 100% !important;
   margin: 0 !important;
-  padding: 0 !important;
   border: none !important;
-  background: #000 !important;
-  flex: none !important; /* 縦伸び防止 */
 }
 
 .layout-mobile .view-window .window-title {
@@ -358,16 +369,7 @@ body {
   flex-wrap: nowrap !important;
 }
 
-.layout-mobile .mobile-ui-container {
-  flex: 1 0 auto !important; /* 縮小させず、中身に応じて高さを確保 */
-  min-height: 350px !important;
-  display: flex !important;
-  flex-direction: column !important;
-  background: #000 !important; /* 確実に不透明にする */
-  border-top: 1px solid #333 !important;
-  z-index: 20;
-  position: relative;
-}
+/* ユーティリティ・ボタン類の設定は一本化済み */
 
 .layout-mobile .mini-status-panel {
   display: flex !important;
