@@ -203,26 +203,52 @@ function App() {
           )}
         </div>
 
-        <ControlPanel 
-          gameState={gameState}
-          party={party}
-          activeBattler={activeBattler}
-          isAutoBattle={isAutoBattle}
-          setIsAutoBattle={setIsAutoBattle}
-          handleFight={handleFight}
-          castSpell={castSpell}
-          processMove={processMove}
-          addMessage={addMessage}
-          isMuted={isMuted}
-          setIsMuted={setIsMuted}
-          isForceMobile={isForceMobile}
-          showSpells={showSpells}
-          setShowSpells={setShowSpells}
-          setShowStatus={setShowStatus}
-          setShowMap={setShowMap}
-          scenarioData={scenarioData}
-        />
+        {!isForceMobile && (
+          <ControlPanel 
+            gameState={gameState}
+            party={party}
+            activeBattler={activeBattler}
+            isAutoBattle={isAutoBattle}
+            setIsAutoBattle={setIsAutoBattle}
+            handleFight={handleFight}
+            castSpell={castSpell}
+            processMove={processMove}
+            addMessage={addMessage}
+            isMuted={isMuted}
+            setIsMuted={setIsMuted}
+            isForceMobile={isForceMobile}
+            showSpells={showSpells}
+            setShowSpells={setShowSpells}
+            setShowStatus={setShowStatus}
+            setShowMap={setShowMap}
+            scenarioData={scenarioData}
+          />
+        )}
       </div>
+
+      {isForceMobile && (
+        <div className="mobile-ui-container">
+          <ControlPanel 
+            gameState={gameState}
+            party={party}
+            activeBattler={activeBattler}
+            isAutoBattle={isAutoBattle}
+            setIsAutoBattle={setIsAutoBattle}
+            handleFight={handleFight}
+            castSpell={castSpell}
+            processMove={processMove}
+            addMessage={addMessage}
+            isMuted={isMuted}
+            setIsMuted={setIsMuted}
+            isForceMobile={isForceMobile}
+            showSpells={showSpells}
+            setShowSpells={setShowSpells}
+            setShowStatus={setShowStatus}
+            setShowMap={setShowMap}
+            scenarioData={scenarioData}
+          />
+        </div>
+      )}
 
       <div className={!isForceMobile ? 'pane-right' : ''}>
         <div className={`pane-log-map-wrapper ${!isForceMobile ? 'pc-layout' : ''}`}>

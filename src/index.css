@@ -306,7 +306,7 @@ body {
   width: 100vw !important;
   height: 100vh !important;
   height: 100dvh !important;
-  overflow: hidden !important;
+  overflow-y: auto !important;
   background: var(--ancient-black);
   padding-top: env(safe-area-inset-top, 0) !important;
   padding-bottom: env(safe-area-inset-bottom, 0) !important;
