@@ -124,6 +124,18 @@ function App() {
     window.addEventListener('keydown', hk); return () => window.removeEventListener('keydown', hk);
   }, [gameState, activeDialog, processMove]);
 
+  const handleRestart = useCallback(() => {
+    setGameState('EXPLORING');
+    setPlayerState({ x: 0, y: 0, dir: DIRECTIONS.S });
+    setParty(charactersData.map(c => ({ ...c, items: [] })));
+    setMapData(generateMap());
+    setMessages([{ text: scenarioData.events.gameStart, type: 'event' }]);
+    setBossDefeated(false);
+    setActiveDialog(null);
+    setEnemy(null);
+    SoundEngine.transitionTo('EXPLORING');
+  }, [setPlayerState, setParty, setMapData, setMessages, setBossDefeated, setGameState, setActiveDialog, setEnemy]);
+
   const partyInDanger = party.some(m => m.hp > 0 && (m.hp <= m.maxHp * 0.2 || m.hp === 1));
 
   return (
@@ -131,6 +143,22 @@ function App() {
       {/* 閃光エフェクト */}
       {flashColor === 'red' && <div className="flash-red"></div>}
       {isBossIntro && <div className="boss-intro-overlay"><span>{scenarioData.events.bossWarning}</span></div>}
+      
+      {/* ゲームオーバー（終焉）表示 */}
+      {gameState === 'GAMEOVER' && (
+        <div className="boss-intro-overlay" style={{ background: 'rgba(0,0,0,0.95)', zIndex: 20000, flexDirection: 'column' }}>
+          <div style={{ textAlign: 'center', maxWidth: '80%', padding: '20px' }}>
+             <h1 style={{ color: '#600', fontSize: '4rem', textShadow: '0 0 10px #000', marginBottom: '10px' }}>終焉</h1>
+             <p style={{ color: '#ccc', fontSize: '1.2rem', lineHeight: '1.8', marginBottom: '40px' }}>
+               {scenarioData.events.badEnding}
+             </p>
+             <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
+               <button className="dialog-btn" onClick={handleRestart}>物語を再び辿る</button>
+               <button className="dialog-btn" style={{ opacity: 0.6 }} onClick={() => window.location.reload()}>終了</button>
+             </div>
+          </div>
+        </div>
+      )}
       
       {/* クリア特別表示 */}
       {gameState === 'TITLE' && (
