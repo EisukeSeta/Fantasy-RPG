@@ -185,10 +185,29 @@ export const useCombat = ({
     setShowSpells(null);
   }, [enemy, addMessage, handleLevelUp, setGameState, setEnemy, setParty, setActiveDialog, setBossDefeated, balanceData, scenarioData, setPlayerState, setMapData, forceLoot, setCombatInterjection, party]);
 
+  // --- 実効能力値の計算（パッシブ効果反映：勲章の霊力） ---
+  const getEffectiveStats = useCallback((member) => {
+    let stats = { ...member };
+    if (member.items) {
+      member.items.forEach(itemId => {
+        const item = itemsData.find(it => it.id === itemId);
+        if (item && item.effect) {
+          if (item.effect.atk) {
+            stats.minDmg += item.effect.atk;
+            stats.maxDmg += item.effect.atk;
+          }
+          if (item.effect.ac) stats.ac += item.effect.ac;
+          if (item.effect.mgk) stats.mgk = (stats.mgk || 0) + item.effect.mgk;
+        }
+      });
+    }
+    return stats;
+  }, []);
+
   const handleFight = useCallback(() => {
     if (gameState !== 'BATTLE' || !enemy) return;
     
-    const attacker = party[activeBattler];
+    const attacker = getEffectiveStats(party[activeBattler]);
     const res = calculateHitAndDamage(attacker.ac, attacker.minDmg, attacker.maxDmg, enemy.ac);
     let nEh = enemy.hp;
 
@@ -216,7 +235,8 @@ export const useCombat = ({
         const alive = party.filter(m => m.hp > 0);
         if (alive.length === 0) return;
         
-        const target = alive[Math.floor(Math.random() * alive.length)];
+        const baseTarget = alive[Math.floor(Math.random() * alive.length)];
+        const target = getEffectiveStats(baseTarget);
         const targetIdx = party.findIndex(m => m.name === target.name);
         const eRes = calculateHitAndDamage(enemy.ac, enemy.minDmg, enemy.maxDmg, target.ac);
         
@@ -256,11 +276,11 @@ export const useCombat = ({
         setBattleTurn(prev => prev + 1);
       }, 500);
     }
-  }, [gameState, party, activeBattler, enemy, addMessage, endBattle, triggerVisualEffect, setEnemy, setParty, scenarioData, isAutoBattle, setCombatInterjection]);
+  }, [gameState, party, activeBattler, enemy, addMessage, endBattle, triggerVisualEffect, setEnemy, setParty, scenarioData, isAutoBattle, setCombatInterjection, getEffectiveStats]);
 
   const castSpell = useCallback((spell) => {
     if (gameState !== 'BATTLE' || !enemy) return;
-    const attacker = party[activeBattler];
+    const attacker = getEffectiveStats(party[activeBattler]);
     if (attacker.mp < spell.mp) { addMessage(scenarioData.battle.noMana); return; }
     
     let nextP = [...party]; 
@@ -298,7 +318,7 @@ export const useCombat = ({
         handleFight();
       }
     }
-  }, [party, activeBattler, enemy, addMessage, endBattle, gameState, handleFight, triggerVisualEffect, setParty, setEnemy, scenarioData]);
+  }, [party, activeBattler, enemy, addMessage, endBattle, gameState, handleFight, triggerVisualEffect, setParty, setEnemy, scenarioData, getEffectiveStats]);
 
   // オートバトル・ループ
   useEffect(() => {

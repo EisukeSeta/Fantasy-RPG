@@ -16,9 +16,35 @@ export const CharacterCard = ({
   variant = 'sidebar', 
   activeBattler, 
   gameState, 
-  visualEffects 
+  visualEffects,
+  setActiveDialog
 }) => {
   const isActive = gameState === 'BATTLE' && activeBattler === i;
+
+  // 勲章（パッシブ強化）の補正合計を算出
+  const bonuses = (m.items || []).reduce((acc, itemId) => {
+    const item = itemsData.find(it => it.id === itemId);
+    if (item && item.effect) {
+      if (item.effect.atk) acc.atk += item.effect.atk;
+      if (item.effect.ac) acc.ac += item.effect.ac;
+      if (item.effect.mgk) acc.mgk += item.effect.mgk;
+    }
+    return acc;
+  }, { atk: 0, ac: 0, mgk: 0 });
+
+  const showItemDetail = (item) => {
+    if (!setActiveDialog) return;
+    setActiveDialog({
+      title: `【${item.name}】`,
+      pages: [
+        item.flavor,
+        `《効能》\n${Object.entries(item.effect).map(([k, v]) => `${k.toUpperCase()} +${v}`).join(", ")}`
+      ],
+      currentPage: 0,
+      isStory: true,
+      bgImage: "src/images/闇夜の平安京.png"
+    });
+  };
   
   // サイドバー版 (詳細)
   if (variant === 'sidebar') {
@@ -44,24 +70,41 @@ export const CharacterCard = ({
           </div>
           <div className={`hp-bar-container ${m.hp === 1 ? 'danger-blink' : ''}`}>
             <div className="hp-bar" style={{ width: `${(m.hp / m.maxHp) * 100}%` }} />
+            <div style={{ position: 'absolute', right: '4px', top: '1px', fontSize: '0.65rem' }}>{m.hp}/{m.maxHp}</div>
           </div>
           <div className="mp-bar-container">
             <div className="mp-bar" style={{ width: `${(m.mp / m.maxMp) * 100}%` }} />
+            <div style={{ position: 'absolute', right: '4px', top: '1px', fontSize: '0.65rem' }}>{m.mp}/{m.maxMp}</div>
           </div>
-          <div className="xp-bar-container">
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginTop: '4px', opacity: 0.9 }}>
+             <span>攻 {m.minDmg}-{m.maxDmg}{bonuses.atk > 0 && <span style={{ color: varGold }}> (+{bonuses.atk})</span>}</span>
+             <span>避 {m.ac}{bonuses.ac !== 0 && <span style={{ color: varGold }}> ({bonuses.ac > 0 ? `+${bonuses.ac}` : bonuses.ac})</span>}</span>
+          </div>
+
+          <div className="xp-bar-container" style={{ height: '2px', marginTop: '4px' }}>
             <div className="xp-bar" style={{ 
               width: `${Math.min(100, ((m.exp - getRequiredExp(m.lv)) / (getRequiredExp(m.lv + 1) - getRequiredExp(m.lv))) * 100)}%` 
             }} />
           </div>
+
           {/* 武勲（アイテム）の表示 */}
-          <div className="item-medals" style={{ display: 'flex', gap: '4px', marginTop: '6px' }}>
+          <div className="item-medals" style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
             {m.items && m.items.map(itemId => {
               const item = itemsData.find(it => it.id === itemId);
               return item ? (
-                <span key={item.id} title={`${item.name}: ${item.flavor}`} style={{ 
-                  fontSize: '1rem', 
-                  filter: 'drop-shadow(0 0 3px rgba(184, 154, 66, 0.6))' 
-                }}>
+                <span 
+                  key={item.id} 
+                  title={item.name} 
+                  onClick={(e) => { e.stopPropagation(); showItemDetail(item); }}
+                  style={{ 
+                    fontSize: '1.2rem', 
+                    cursor: 'pointer',
+                    filter: 'drop-shadow(0 0 4px rgba(184, 154, 66, 0.8))',
+                    transition: 'transform 0.2s'
+                  }}
+                  className="medal-icon"
+                >
                   {item.icon}
                 </span>
               ) : null;

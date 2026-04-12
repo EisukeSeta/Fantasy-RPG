@@ -13,7 +13,8 @@ export const StatusPane = ({
   isForceMobile, 
   showStatus,
   setShowStatus,
-  setShowMap
+  setShowMap,
+  setActiveDialog
 }) => {
   const activeClass = showStatus ? 'mobile-active-pane' : '';
 
@@ -39,6 +40,7 @@ export const StatusPane = ({
             activeBattler={activeBattler}
             gameState={gameState}
             visualEffects={visualEffects}
+            setActiveDialog={setActiveDialog}
           />
         ))}
       </div>

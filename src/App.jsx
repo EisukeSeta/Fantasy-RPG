@@ -276,6 +276,7 @@ function App() {
             isForceMobile={isForceMobile}
             showStatus={showStatus}
             setShowStatus={setShowStatus}
+            setActiveDialog={setActiveDialog}
           />
 
           <div className={`pane-main ${isForceMobile && gameState === 'BATTLE' ? 'battle-mode' : ''}`}>
