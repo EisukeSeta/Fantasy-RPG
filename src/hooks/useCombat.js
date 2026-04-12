@@ -23,7 +23,8 @@ export const useCombat = ({
   generateMap,
   setPlayerState,
   setMapData,
-  setActiveDialog
+  setActiveDialog,
+  forceLoot
 }) => {
   const [activeBattler, setActiveBattler] = useState(0);
   const [battleTurn, setBattleTurn] = useState(0);
@@ -66,7 +67,7 @@ export const useCombat = ({
         let droppedItem = null;
         if (enemy.drops && enemy.drops.length > 0) {
           for (const drop of enemy.drops) {
-            if (Math.random() < drop.rate) {
+            if (forceLoot || Math.random() < drop.rate) {
               droppedItem = itemsData.find(it => it.id === drop.itemId);
               if (droppedItem) break;
             }
@@ -182,19 +183,23 @@ export const useCombat = ({
         const eRes = calculateHitAndDamage(enemy.ac, enemy.minDmg, enemy.maxDmg, target.ac);
         
         if (eRes.hit) {
-          addMessage(`${enemy.name}${scenarioData.battle.counter} ${scenarioData.battle.wound.replace('%DMG%', eRes.damage)}`, 'damage_party');
+          addMessage(`${enemy.name}${scenarioData.battle.counter} ${target.name}${scenarioData.battle.wound.replace('%DMG%', eRes.damage)}`, 'damage_party');
           const nextHP = Math.max(0, target.hp - eRes.damage);
           setParty(p => p.map(m => m.name === target.name ? { ...m, hp: nextHP, status: nextHP === 0 ? '討死' : '平安' } : m));
           triggerVisualEffect(`party_${targetIdx}`, `-${eRes.damage}`, 'damage');
           
           // --- 散り際の余韻（デス・クオート） ---
           if (nextHP === 0) {
-            const speakerKey = target.image.split('.')[0];
-            const quote = scenarioData.events.deathQuotes[speakerKey];
-            if (quote) {
+            // 画像名からキーを抽出 (例: abe_seimei.png -> abe_seimei または abe-seimei)
+            let speakerKey = target.image.split('.')[0];
+            // 互換性のため、ハイフンをアンダースコアに正規化
+            speakerKey = speakerKey.replace(/-/g, '_');
+            
+            const quotes = scenarioData.events.deathQuotes[speakerKey];
+            if (quotes) {
               setActiveDialog({
                 title: "【討死】",
-                pages: [{ speaker: speakerKey, text: quote }],
+                pages: quotes, 
                 currentPage: 0
               });
             }

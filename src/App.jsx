@@ -43,6 +43,7 @@ function App() {
   const [displayShake, setDisplayShake] = useState(null); // 'normal', 'heavy'
   const [enemy, setEnemy] = useState(null);
   const [activeDialog, setActiveDialog] = useState({ ...scenarioData.opening, currentPage: 0 });
+  const [forceLoot, setForceLoot] = useState(false);
 
   const isForceMobile = (typeof window !== 'undefined' && (window.innerWidth <= 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent))) || new URLSearchParams(window.location.search).get('mobile') === '1';
 
@@ -99,7 +100,7 @@ function App() {
   } = useCombat({
     gameState, setGameState, party, setParty, enemy, setEnemy, 
     addMessage, triggerVisualEffect, scenarioData, balanceData, 
-    generateMap, setPlayerState, setMapData, setActiveDialog, setBossDefeated
+    generateMap, setPlayerState, setMapData, setActiveDialog, setBossDefeated, forceLoot
   });
 
   // 音響の理
@@ -148,7 +149,7 @@ function App() {
       
       {/* ゲームオーバー（終焉）表示 */}
       {gameState === 'GAMEOVER' && (
-        <div className="boss-intro-overlay" style={{ position: 'fixed', background: 'rgba(0,0,0,0.95)', zIndex: 20000, flexDirection: 'column' }}>
+        <div className="boss-intro-overlay" style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.95)', zIndex: 20000, flexDirection: 'column' }}>
           <div style={{ textAlign: 'center', maxWidth: '80%', padding: '20px' }}>
              <h1 style={{ color: '#600', fontSize: '4rem', textShadow: '0 0 10px #000', marginBottom: '10px' }}>終焉</h1>
              <p style={{ color: '#ccc', fontSize: '1.2rem', lineHeight: '1.8', marginBottom: '40px' }}>
@@ -172,7 +173,7 @@ function App() {
 
       {/* 真の終焉（完全に終了） */}
       {gameState === 'FINISHED' && (
-        <div className="boss-intro-overlay" style={{ position: 'fixed', background: '#000', zIndex: 30000 }}>
+        <div className="boss-intro-overlay" style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh', background: '#000', zIndex: 30000 }}>
           <div style={{ textAlign: 'center', maxWidth: '80%' }}>
              <p style={{ color: '#888', fontSize: '1.2rem', fontStyle: 'italic', lineHeight: '2' }}>
                 {(() => {
@@ -466,6 +467,13 @@ function App() {
                 setEnemy({ ...e, hp: e.maxHp }); setGameState('BATTLE'); addMessage(`【${e.name}】を召喚。`, 'event');
               }}>怪異召喚</button>
               <button className="debug-btn" onClick={() => { setBossDefeated(!bossDefeated); addMessage(`因縁の変転：ボス討伐状態を ${!bossDefeated} へ。`, 'event'); }}>ボスフラグ</button>
+              <button 
+                className="debug-btn" 
+                onClick={() => { setForceLoot(!forceLoot); addMessage(`武勲の理：ドロップ必中を ${!forceLoot} へ。`, 'event'); }}
+                style={{ color: forceLoot ? '#f1c40f' : '#666' }}
+              >
+                武勲必中: {forceLoot ? 'ON' : 'OFF'}
+              </button>
             </div>
           )}
         </>

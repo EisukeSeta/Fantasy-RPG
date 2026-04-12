@@ -46,8 +46,8 @@ export const BOSS_POS = balanceData.map.bossPos;
 export const isDebug = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debug') === 'true';
 
 export const DIALOG_SPEAKERS = {
-  "tsuna": { name: "渡辺 綱", image: tsunaImg },
-  "seimei": { name: "安倍 晴明", image: abeImg },
+  "watanabe_tsuna": { name: "渡辺 綱", image: tsunaImg },
+  "abe_seimei": { name: "安倍 晴明", image: abeImg },
   "yaobikuni": { name: "八百比丘尼", image: yaobikuniImg },
   "narrator": { name: null, image: null }
 };
