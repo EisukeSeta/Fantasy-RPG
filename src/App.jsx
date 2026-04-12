@@ -192,10 +192,12 @@ function App() {
         {/* 真・タイトル画面（闇夜の平安京） */}
         {gameState === 'TITLE' && (
           <div className="boss-intro-overlay" style={{ 
-            backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)), url(${TitleBg})`,
+            position: 'fixed',
+            inset: 0,
+            backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url(${TitleBg})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            zIndex: 20000,
+            zIndex: 30000,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
@@ -203,25 +205,27 @@ function App() {
             <div style={{ 
               textAlign: 'center', 
               animation: 'fadeIn 2s ease-out',
-              padding: '40px',
-              background: 'rgba(0,0,0,0.6)',
-              backdropFilter: 'blur(4px)',
-              border: '2px solid var(--primary-gold)',
-              boxShadow: '0 0 50px rgba(0,0,0,1)'
+              padding: 'clamp(20px, 5vw, 60px)',
+              background: 'rgba(0,0,0,0.4)',
+              backdropFilter: 'blur(8px)',
+              border: '1px solid rgba(184, 154, 66, 0.4)',
+              boxShadow: '0 0 40px rgba(0,0,0,0.8)',
+              width: '90%',
+              maxWidth: '600px'
             }}>
               <h1 style={{ 
                 color: 'var(--primary-gold)', 
-                fontSize: '4rem', 
-                textShadow: '0 0 20px #b89a42, 0 0 40px #fff',
+                fontSize: 'clamp(2.5rem, 8vw, 4.5rem)', 
+                textShadow: '0 0 10px rgba(184, 154, 66, 0.8), 2px 2px 4px #000',
                 fontFamily: 'Sawarabi Mincho, serif',
                 margin: 0,
-                letterSpacing: '15px'
+                letterSpacing: 'min(15px, 3vw)'
               }}>
                 平安魔道伝
               </h1>
               <p style={{ 
                 color: '#fff', 
-                fontSize: '1.6rem', 
+                fontSize: 'clamp(1rem, 4vw, 1.8rem)', 
                 letterSpacing: '8px', 
                 marginTop: '10px',
                 fontFamily: 'Sawarabi Mincho, serif',
@@ -236,11 +240,11 @@ function App() {
                   SoundEngine.init();
                   SoundEngine.transitionTo('EXPLORING');
                   setGameState('EXPLORING');
-                  setActiveDialog({ ...scenarioData.opening, currentPage: 0 });
+                  setActiveDialog({ ...scenarioData.opening, currentPage: 0, bgImage: TitleBg });
                 }} style={{ 
                   padding: '15px 40px', 
                   fontSize: '1.4rem',
-                  boxShadow: '0 0 15px var(--primary-gold)'
+                  boxShadow: '0 0 15px rgba(184, 154, 66, 0.4)'
                 }}>
                   魂の旅を始める
                 </button>
@@ -413,84 +417,99 @@ function App() {
 
       {/* 共通ダイアログシステム（肖像画・名前対応） */}
       {activeDialog && (
-        <div className={`dialog-overlay ${gameState === 'BATTLE' ? 'battle-interjection' : ''}`} onClick={(e) => {
-          if (e.target.className.includes('dialog-overlay') && !activeDialog.showChoices) {
-            if (activeDialog.pages && activeDialog.currentPage < activeDialog.pages.length - 1) {
-              setActiveDialog({...activeDialog, currentPage: activeDialog.currentPage + 1});
-            } else {
-              if (activeDialog.onConfirm) activeDialog.onConfirm();
-              setActiveDialog(null);
+        <div className={`dialog-overlay ${gameState === 'BATTLE' ? 'battle-interjection' : ''}`} 
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundImage: activeDialog.bgImage ? `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)), url(${activeDialog.bgImage})` : 'none',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            zIndex: 10000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+          onClick={(e) => {
+            if (e.target.className.includes('dialog-overlay') && !activeDialog.showChoices) {
+              if (activeDialog.pages && activeDialog.currentPage < activeDialog.pages.length - 1) {
+                setActiveDialog({...activeDialog, currentPage: activeDialog.currentPage + 1});
+              } else {
+                if (activeDialog.onConfirm) activeDialog.onConfirm();
+                setActiveDialog(null);
+              }
             }
-          }
-        }}>
-          <div className="dialog-title">{activeDialog.title}</div>
-          <div className="dialog-content">
-            {/* 発話者アイコンの表示（構造化データまたはレガシー配列に対応） */}
-            {(() => {
-              const currentPage = activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : null;
-              let speakerKey = null;
-
-              if (currentPage && typeof currentPage === 'object' && currentPage.speaker) {
-                speakerKey = currentPage.speaker;
-              } else if (activeDialog.speakers && activeDialog.speakers[activeDialog.currentPage]) {
-                // レガシー対応（配列で渡された場合。拡張子付きなら削る）
-                speakerKey = activeDialog.speakers[activeDialog.currentPage].split('.')[0];
-              }
-
-              const speakerInfo = DIALOG_SPEAKERS[speakerKey];
-              if (speakerInfo && speakerInfo.image) {
-                return (
-                  <>
-                    <div className="dialog-speaker">
-                      <img src={speakerInfo.image} alt={speakerInfo.name || "speaker"} />
-                    </div>
-                    {speakerInfo.name && <div className="dialog-speaker-name">{speakerInfo.name}</div>}
-                  </>
-                );
-              }
-              return null;
-            })()}
-            <p>
+          }}
+        >
+          <div className="dialog-window" style={{ background: activeDialog.bgImage ? 'rgba(10, 10, 10, 0.4)' : 'rgba(10, 10, 10, 0.95)', border: activeDialog.bgImage ? '1px solid rgba(184, 154, 66, 0.4)' : '2px solid var(--primary-gold)' }}>
+            <div className="dialog-title">{activeDialog.title}</div>
+            <div className="dialog-content">
+              {/* 発話者アイコンの表示（構造化データまたはレガシー配列に対応） */}
               {(() => {
-                const currentPage = activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : '';
-                return typeof currentPage === 'object' ? currentPage.text : currentPage;
+                const currentPage = activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : null;
+                let speakerKey = null;
+
+                if (currentPage && typeof currentPage === 'object' && currentPage.speaker) {
+                  speakerKey = currentPage.speaker;
+                } else if (activeDialog.speakers && activeDialog.speakers[activeDialog.currentPage]) {
+                  // レガシー対応（配列で渡された場合。拡張子付きなら削る）
+                  speakerKey = activeDialog.speakers[activeDialog.currentPage].split('.')[0];
+                }
+
+                const speakerInfo = DIALOG_SPEAKERS[speakerKey];
+                if (speakerInfo && speakerInfo.image) {
+                  return (
+                    <>
+                      <div className="dialog-speaker">
+                        <img src={speakerInfo.image} alt={speakerInfo.name || "speaker"} />
+                      </div>
+                      {speakerInfo.name && <div className="dialog-speaker-name">{speakerInfo.name}</div>}
+                    </>
+                  );
+                }
+                return null;
               })()}
-            </p>
-            {activeDialog.showChoices ? (
-              <div className="dialog-footer">
-                <button 
-                  className="btn-shura" 
-                  onClick={() => {
-                    if (activeDialog.onConfirm) activeDialog.onConfirm();
-                    else setActiveDialog(null);
-                  }}
-                >
-                  {activeDialog.labelConfirm || "御意"}
-                </button>
-                <button 
-                  className="btn-kegare" 
-                  onClick={() => {
-                    if (activeDialog.onCancel) activeDialog.onCancel();
-                    else setActiveDialog(null);
-                  }}
-                >
-                  {activeDialog.labelCancel || "撤退"}
-                </button>
-              </div>
-            ) : (
-              <div className="dialog-footer">
-                <button className="dialog-btn" onClick={() => {
-                  if (activeDialog.pages && activeDialog.currentPage < activeDialog.pages.length - 1) {
-                    setActiveDialog({...activeDialog, currentPage: activeDialog.currentPage + 1});
-                  } else {
-                    if (activeDialog.onConfirm) activeDialog.onConfirm();
-                    setActiveDialog(null);
-                  }
-                }}>
-                  {activeDialog.pages && activeDialog.currentPage < activeDialog.pages.length - 1 ? '続く' : '承知'}
-                </button>
-              </div>
-            )}
+              <p>
+                {(() => {
+                  const currentPage = activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : '';
+                  return typeof currentPage === 'object' ? currentPage.text : currentPage;
+                })()}
+              </p>
+              {activeDialog.showChoices ? (
+                <div className="dialog-footer">
+                  <button 
+                    className="btn-shura" 
+                    onClick={() => {
+                      if (activeDialog.onConfirm) activeDialog.onConfirm();
+                      else setActiveDialog(null);
+                    }}
+                  >
+                    {activeDialog.labelConfirm || "御意"}
+                  </button>
+                  <button 
+                    className="btn-kegare" 
+                    onClick={() => {
+                      if (activeDialog.onCancel) activeDialog.onCancel();
+                      else setActiveDialog(null);
+                    }}
+                  >
+                    {activeDialog.labelCancel || "撤退"}
+                  </button>
+                </div>
+              ) : (
+                <div className="dialog-footer">
+                  <button className="dialog-btn" onClick={() => {
+                    if (activeDialog.pages && activeDialog.currentPage < activeDialog.pages.length - 1) {
+                      setActiveDialog({...activeDialog, currentPage: activeDialog.currentPage + 1});
+                    } else {
+                      if (activeDialog.onConfirm) activeDialog.onConfirm();
+                      setActiveDialog(null);
+                    }
+                  }}>
+                    {activeDialog.pages && activeDialog.currentPage < activeDialog.pages.length - 1 ? '続く' : '承知'}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
