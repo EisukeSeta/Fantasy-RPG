@@ -169,6 +169,8 @@ export const useCombat = ({
             setActiveDialog({
               ...scenarioData.events.badEnding,
               currentPage: 0,
+              isStory: true,
+              bgImage: "src/images/闇夜の平安京.png", // 都が闇に沈むイメージとして再利用
               onConfirm: () => { 
                 setActiveDialog(null); 
                 setGameState('GAMEOVER'); 
