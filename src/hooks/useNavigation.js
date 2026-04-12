@@ -137,7 +137,13 @@ export const useNavigation = (initialMap, initialPos, {
         // マップイベント判定
         const event = mapEventsData.events.find(e => e.x === nX && e.y === nY);
         if (event) {
-          setActiveDialog({ title: event.name, pages: [event.description], currentPage: 0 });
+          const isNarrative = ['shrine', 'well', 'scroll'].includes(event.type) || event.isStart;
+          setActiveDialog({ 
+            title: event.name, 
+            pages: [event.description], 
+            currentPage: 0,
+            isStory: isNarrative
+          });
           if (event.isHeal) { 
             setParty(p => p.map(m => ({ ...m, hp: m.maxHp, mp: m.maxMp, status: '平安' }))); 
             addMessage(`【${event.name}】の静寂にて隊員の心身が癒やされ、生命と霊力が再び漲った。`, 'heal'); 
