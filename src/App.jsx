@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { generateMap, DIRECTIONS, MAP_WIDTH, MAP_HEIGHT } from './data/mapData';
+import TitleBg from './images/闇夜の平安京.png';
+import packageJson from '../package.json';
 import { WireframeView } from './components/WireframeView';
 import { ENEMY_LIST } from './data/enemyData';
 import { StatusPane } from './components/status/StatusPane';
@@ -26,7 +28,7 @@ import { useNavigation } from './hooks/useNavigation';
 import { useCombat } from './hooks/useCombat';
 
 function App() {
-  const [gameState, setGameState] = useState('EXPLORING'); 
+  const [gameState, setGameState] = useState('TITLE'); 
   const [messages, setMessages] = useState([{ text: scenarioData.events.gameStart, type: 'event' }]);
   const [isAudioInitialized, setAudioInitialized] = useState(false);
   const [volume] = useState(0.5);
@@ -41,7 +43,7 @@ function App() {
   const [flashColor, setFlashColor] = useState(null); // 'red', etc.
   const [displayShake, setDisplayShake] = useState(null); // 'normal', 'heavy'
   const [enemy, setEnemy] = useState(null);
-  const [activeDialog, setActiveDialog] = useState({ ...scenarioData.opening, currentPage: 0 });
+  const [activeDialog, setActiveDialog] = useState(null); // 開始時にダイアログは表示しない
   const [forceLoot, setForceLoot] = useState(false);
   const [combatInterjection, setCombatInterjection] = useState(null); // { member, quotes, currentPage, onClose }
 
@@ -187,13 +189,74 @@ function App() {
         {/* 閃光エフェクト */}
         {flashColor === 'red' && <div className="flash-red"></div>}
         
-        {/* クリア特別表示 */}
+        {/* 真・タイトル画面（闇夜の平安京） */}
         {gameState === 'TITLE' && (
-          <div className="boss-intro-overlay" style={{ background: 'rgba(0,0,0,0.9)', zIndex: 20000 }}>
-            <div style={{ textAlign: 'center' }}>
-               <h1 style={{ color: 'var(--primary-gold)', fontSize: '3rem', textShadow: '0 0 20px #b89a42' }}>平安魔道伝</h1>
-               <p style={{ color: '#fff', fontSize: '1.5rem' }}>羅生門編・第一章 完</p>
-               <button className="dialog-btn" onClick={() => window.location.reload()} style={{ marginTop: '50px' }}>再び都を救う（リロード）</button>
+          <div className="boss-intro-overlay" style={{ 
+            backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)), url(${TitleBg})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            zIndex: 20000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <div style={{ 
+              textAlign: 'center', 
+              animation: 'fadeIn 2s ease-out',
+              padding: '40px',
+              background: 'rgba(0,0,0,0.6)',
+              backdropFilter: 'blur(4px)',
+              border: '2px solid var(--primary-gold)',
+              boxShadow: '0 0 50px rgba(0,0,0,1)'
+            }}>
+              <h1 style={{ 
+                color: 'var(--primary-gold)', 
+                fontSize: '4rem', 
+                textShadow: '0 0 20px #b89a42, 0 0 40px #fff',
+                fontFamily: 'Sawarabi Mincho, serif',
+                margin: 0,
+                letterSpacing: '15px'
+              }}>
+                平安魔道伝
+              </h1>
+              <p style={{ 
+                color: '#fff', 
+                fontSize: '1.6rem', 
+                letterSpacing: '8px', 
+                marginTop: '10px',
+                fontFamily: 'Sawarabi Mincho, serif',
+                opacity: 0.8
+              }}>
+                羅生門編・第一章
+              </p>
+              
+              <div style={{ marginTop: '60px' }}>
+                <button className="dialog-btn" onClick={() => {
+                  setAudioInitialized(true);
+                  SoundEngine.init();
+                  SoundEngine.transitionTo('EXPLORING');
+                  setGameState('EXPLORING');
+                  setActiveDialog({ ...scenarioData.opening, currentPage: 0 });
+                }} style={{ 
+                  padding: '15px 40px', 
+                  fontSize: '1.4rem',
+                  boxShadow: '0 0 15px var(--primary-gold)'
+                }}>
+                  魂の旅を始める
+                </button>
+              </div>
+
+              {bossDefeated && (
+                <div style={{ marginTop: '30px' }}>
+                  <button className="dialog-btn" onClick={() => window.location.reload()} style={{ opacity: 0.7 }}>
+                    再び都を救う（転生）
+                  </button>
+                </div>
+              )}
+              
+              <div style={{ marginTop: '40px', color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem' }}>
+                &copy; Antigravity RPG System - Rashomon v{packageJson.version}
+              </div>
             </div>
           </div>
         )}
