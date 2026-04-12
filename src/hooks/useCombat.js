@@ -26,8 +26,8 @@ export const useCombat = ({
   setActiveDialog,
   forceLoot,
   activeDialog,
-  deathInterjection,
-  setDeathInterjection
+  combatInterjection,
+  setCombatInterjection
 }) => {
   const [activeBattler, setActiveBattler] = useState(0);
   const [battleTurn, setBattleTurn] = useState(0);
@@ -100,6 +100,30 @@ export const useCombat = ({
           return updated;
         }));
         
+        // --- 武勲の検分（アイテム獲得独白） ---
+        if (droppedItem) {
+          const luckyOne = party.find(m => m.hp > 0) || party[0];
+          const speakerKey = luckyOne.image.split('.')[0].replace(/-/g, '_');
+          const quotes = scenarioData.events.lootQuotes[speakerKey];
+          
+          if (quotes) {
+            setCombatInterjection({
+              member: luckyOne,
+              quotes: quotes,
+              currentPage: 0,
+              onClose: () => {
+                setShowVictory(true);
+                setTimeout(() => {
+                  setGameState('EXPLORING'); 
+                  setEnemy(null); 
+                  setShowVictory(false);
+                }, 1500);
+              }
+            });
+            return enemy.isBoss;
+          }
+        }
+
         setTimeout(() => {
           setGameState('EXPLORING'); 
           setEnemy(null); 
@@ -148,7 +172,7 @@ export const useCombat = ({
     setActiveBattler(0); 
     setBattleTurn(0); 
     setShowSpells(null);
-  }, [enemy, addMessage, handleLevelUp, setGameState, setEnemy, setParty, setActiveDialog, balanceData, scenarioData, generateMap, setPlayerState, setMapData]);
+  }, [enemy, addMessage, handleLevelUp, setGameState, setEnemy, setParty, setActiveDialog, balanceData, scenarioData, generateMap, setPlayerState, setMapData, itemsData, forceLoot, setCombatInterjection]);
 
   const handleFight = useCallback(() => {
     if (gameState !== 'BATTLE' || !enemy) return;
@@ -198,10 +222,14 @@ export const useCombat = ({
             
             const quotes = scenarioData.events.deathQuotes[speakerKey];
             if (quotes) {
-              setDeathInterjection({
+              setCombatInterjection({
                 member: target,
                 quotes: quotes,
-                currentPage: 0
+                currentPage: 0,
+                onClose: () => {
+                  // 独白終了後、もしオートバトル中なら次のターンへ進むきっかけを作る
+                  if (isAutoBattle) setBattleTurn(prev => prev + 1);
+                }
               });
             }
           }
@@ -217,7 +245,7 @@ export const useCombat = ({
         setBattleTurn(prev => prev + 1);
       }, 500);
     }
-  }, [gameState, party, activeBattler, enemy, addMessage, endBattle, triggerVisualEffect, setEnemy, setParty, scenarioData]);
+  }, [gameState, party, activeBattler, enemy, addMessage, endBattle, triggerVisualEffect, setEnemy, setParty, scenarioData, isAutoBattle, setCombatInterjection]);
 
   const castSpell = useCallback((spell) => {
     if (gameState !== 'BATTLE' || !enemy) return;
@@ -259,11 +287,11 @@ export const useCombat = ({
         handleFight();
       }
     }
-  }, [party, activeBattler, enemy, addMessage, endBattle, gameState, handleFight, triggerVisualEffect, setParty, setEnemy, scenarioData]);
+  }, [party, activeBattler, enemy, addMessage, endBattle, gameState, handleFight, triggerVisualEffect, setParty, setEnemy, scenarioData, isAutoBattle, setCombatInterjection]);
 
   // オートバトル・ループ
   useEffect(() => {
-    if (isAutoBattle && gameState === 'BATTLE' && enemy && !activeDialog && !deathInterjection) {
+    if (isAutoBattle && gameState === 'BATTLE' && enemy && !activeDialog && !combatInterjection) {
       const a = party[activeBattler];
       if (!a || a.hp <= 0) {
         const nextIdx = party.findIndex(m => m.hp > 0);
@@ -278,7 +306,7 @@ export const useCombat = ({
       }, 800);
       return () => clearTimeout(t);
     }
-  }, [isAutoBattle, gameState, enemy, party, activeBattler, handleFight, castSpell, battleTurn, activeDialog]);
+  }, [isAutoBattle, gameState, enemy, party, activeBattler, handleFight, castSpell, battleTurn, activeDialog, combatInterjection]);
 
   // オート戦闘の最後の一人修正のために battleTurn を監視
   useEffect(() => {

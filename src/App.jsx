@@ -44,7 +44,7 @@ function App() {
   const [enemy, setEnemy] = useState(null);
   const [activeDialog, setActiveDialog] = useState({ ...scenarioData.opening, currentPage: 0 });
   const [forceLoot, setForceLoot] = useState(false);
-  const [deathInterjection, setDeathInterjection] = useState(null); // { member, quotes, currentPage }
+  const [combatInterjection, setCombatInterjection] = useState(null); // { member, quotes, currentPage, onClose }
 
   const isForceMobile = (typeof window !== 'undefined' && (window.innerWidth <= 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent))) || new URLSearchParams(window.location.search).get('mobile') === '1';
 
@@ -102,7 +102,7 @@ function App() {
     gameState, setGameState, party, setParty, enemy, setEnemy, 
     addMessage, triggerVisualEffect, scenarioData, balanceData, 
     generateMap, setPlayerState, setMapData, setActiveDialog, setBossDefeated, forceLoot, activeDialog,
-    deathInterjection, setDeathInterjection
+    combatInterjection, setCombatInterjection
   });
 
   // 音響の理
@@ -434,25 +434,27 @@ function App() {
         </div>
       )}
 
-      {/* 合戦専用：デス・インタージェクション（死の間際の独白最小ウィンドウ） */}
-      {deathInterjection && (
+      {/* 合戦専用：差し込みウィンドウ（独白・検分など） */}
+      {combatInterjection && (
         <div className="combat-interjection-overlay">
           <div className="combat-interjection-window window">
             <div className="interjection-speaker">
-              <img src={CHAR_IMAGES[deathInterjection.member.image]} alt="death-speaker" />
+              <img src={CHAR_IMAGES[combatInterjection.member.image]} alt="interjection-speaker" />
             </div>
             <div className="interjection-content">
-              <div className="interjection-name">{deathInterjection.member.name}</div>
-              <p>{deathInterjection.quotes[deathInterjection.currentPage].text}</p>
+              <div className="interjection-name">{combatInterjection.member.name}</div>
+              <p>{combatInterjection.quotes[combatInterjection.currentPage].text}</p>
               <div style={{ textAlign: 'right' }}>
                 <button className="dialog-btn" onClick={() => {
-                  if (deathInterjection.currentPage < deathInterjection.quotes.length - 1) {
-                    setDeathInterjection({ ...deathInterjection, currentPage: deathInterjection.currentPage + 1 });
+                  if (combatInterjection.currentPage < combatInterjection.quotes.length - 1) {
+                    setCombatInterjection({ ...combatInterjection, currentPage: combatInterjection.currentPage + 1 });
                   } else {
-                    setDeathInterjection(null);
+                    const callback = combatInterjection.onClose;
+                    setCombatInterjection(null);
+                    if (callback) callback();
                   }
                 }}>
-                  {deathInterjection.currentPage < deathInterjection.quotes.length - 1 ? '続く' : '承知'}
+                  {combatInterjection.currentPage < combatInterjection.quotes.length - 1 ? "続く" : "承知"}
                 </button>
               </div>
             </div>
