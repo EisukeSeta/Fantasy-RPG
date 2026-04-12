@@ -130,8 +130,7 @@ export const useCombat = ({
           },
           onCancel: () => {
             setActiveDialog({
-              title: "【終焉：闇の抱擁】", 
-              pages: [scenarioData.events.badEnding], 
+              ...scenarioData.events.badEnding,
               currentPage: 0,
               onConfirm: () => { 
                 setActiveDialog(null); 

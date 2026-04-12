@@ -13,7 +13,8 @@ import SoundEngine from './utils/SoundEngine';
 import { 
   BOSS_POS, 
   isDebug,
-  CHAR_IMAGES
+  CHAR_IMAGES,
+  DIALOG_SPEAKERS
 } from './constants/gameData';
 
 import balanceData from './data/Balance.json';
@@ -151,7 +152,15 @@ function App() {
           <div style={{ textAlign: 'center', maxWidth: '80%', padding: '20px' }}>
              <h1 style={{ color: '#600', fontSize: '4rem', textShadow: '0 0 10px #000', marginBottom: '10px' }}>終焉</h1>
              <p style={{ color: '#ccc', fontSize: '1.2rem', lineHeight: '1.8', marginBottom: '40px' }}>
-               {scenarioData.events.badEnding}
+                {(() => {
+                  const data = scenarioData.events.badEnding;
+                  if (typeof data === 'string') return data;
+                  if (data.pages && data.pages.length > 0) {
+                    const lastPage = data.pages[data.pages.length - 1];
+                    return typeof lastPage === 'object' ? lastPage.text : lastPage;
+                  }
+                  return '';
+                })()}
              </p>
              <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
                <button className="dialog-btn" onClick={handleRestart}>物語を再び辿る</button>
@@ -166,7 +175,10 @@ function App() {
         <div className="boss-intro-overlay" style={{ background: '#000', zIndex: 30000 }}>
           <div style={{ textAlign: 'center', maxWidth: '80%' }}>
              <p style={{ color: '#888', fontSize: '1.2rem', fontStyle: 'italic', lineHeight: '2' }}>
-               {scenarioData.events.totalSilence}
+                {(() => {
+                  const data = scenarioData.events.totalSilence;
+                  return typeof data === 'string' ? data : (data.pages?.[0]?.text || '');
+                })()}
              </p>
              <div style={{ marginTop: '100px', color: '#333', fontSize: '1rem', letterSpacing: '10px' }}>完</div>
           </div>
@@ -348,16 +360,34 @@ function App() {
         }}>
           <div className="dialog-title">{activeDialog.title}</div>
           <div className="dialog-content">
-            {/* 発話者アイコンの表示 */}
-            {activeDialog.speakers && activeDialog.speakers[activeDialog.currentPage] && (
-              <div className="dialog-speaker">
-                <img 
-                  src={CHAR_IMAGES[activeDialog.speakers[activeDialog.currentPage]]} 
-                  alt="speaker" 
-                />
-              </div>
-            )}
-            <p>{activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : ''}</p>
+            {/* 発話者アイコンの表示（構造化データまたはレガシー配列に対応） */}
+            {(() => {
+              const currentPage = activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : null;
+              let speakerKey = null;
+
+              if (currentPage && typeof currentPage === 'object' && currentPage.speaker) {
+                speakerKey = currentPage.speaker;
+              } else if (activeDialog.speakers && activeDialog.speakers[activeDialog.currentPage]) {
+                // レガシー対応（配列で渡された場合。拡張子付きなら削る）
+                speakerKey = activeDialog.speakers[activeDialog.currentPage].split('.')[0];
+              }
+
+              const speakerInfo = DIALOG_SPEAKERS[speakerKey];
+              if (speakerInfo && speakerInfo.image) {
+                return (
+                  <div className="dialog-speaker">
+                    <img src={speakerInfo.image} alt={speakerInfo.name || "speaker"} />
+                  </div>
+                );
+              }
+              return null;
+            })()}
+            <p>
+              {(() => {
+                const currentPage = activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : '';
+                return typeof currentPage === 'object' ? currentPage.text : currentPage;
+              })()}
+            </p>
             {activeDialog.showChoices ? (
               <div className="dialog-footer">
                 <button 
