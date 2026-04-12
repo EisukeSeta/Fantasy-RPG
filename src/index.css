@@ -1102,6 +1102,67 @@ body {
   animation: slideInSouth 0.4s ease-out;
 }
 
+/* --- 合戦専用：デス・インタージェクション（最小差し込み窓） --- */
+.combat-interjection-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 15000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.combat-interjection-window {
+  width: 90%;
+  max-width: 450px;
+  background: rgba(10, 10, 10, 0.98);
+  border: 2px solid var(--primary-gold);
+  padding: 15px;
+  display: flex;
+  gap: 15px;
+  box-shadow: 0 0 50px rgba(0,0,0,1);
+  animation: slideInSouth 0.4s ease-out;
+}
+
+.interjection-speaker {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 1px solid var(--primary-gold);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.interjection-speaker img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.interjection-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.interjection-name {
+  font-size: 0.8rem;
+  color: var(--primary-gold);
+  border-bottom: 1px solid rgba(184, 154, 66, 0.3);
+  margin-bottom: 8px;
+  padding-bottom: 2px;
+}
+
+.interjection-content p {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #fff;
+  font-family: 'Sawarabi Mincho', serif;
+}
+
 .flash-red {
   position: fixed;
   inset: 0;

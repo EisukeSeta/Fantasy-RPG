@@ -25,7 +25,9 @@ export const useCombat = ({
   setMapData,
   setActiveDialog,
   forceLoot,
-  activeDialog
+  activeDialog,
+  deathInterjection,
+  setDeathInterjection
 }) => {
   const [activeBattler, setActiveBattler] = useState(0);
   const [battleTurn, setBattleTurn] = useState(0);
@@ -189,18 +191,16 @@ export const useCombat = ({
           setParty(p => p.map(m => m.name === target.name ? { ...m, hp: nextHP, status: nextHP === 0 ? '討死' : '平安' } : m));
           triggerVisualEffect(`party_${targetIdx}`, `-${eRes.damage}`, 'damage');
           
-          // --- 散り際の余韻（デス・クオート） ---
+          // --- 散り際の余韻（合戦専用：デス・インタージェクション） ---
           if (nextHP === 0) {
-            // 画像名からキーを抽出 (例: abe_seimei.png -> abe_seimei または abe-seimei)
             let speakerKey = target.image.split('.')[0];
-            // 互換性のため、ハイフンをアンダースコアに正規化
             speakerKey = speakerKey.replace(/-/g, '_');
             
             const quotes = scenarioData.events.deathQuotes[speakerKey];
             if (quotes) {
-              setActiveDialog({
-                title: "【討死】",
-                pages: quotes, 
+              setDeathInterjection({
+                member: target,
+                quotes: quotes,
                 currentPage: 0
               });
             }
@@ -263,7 +263,7 @@ export const useCombat = ({
 
   // オートバトル・ループ
   useEffect(() => {
-    if (isAutoBattle && gameState === 'BATTLE' && enemy && !activeDialog) {
+    if (isAutoBattle && gameState === 'BATTLE' && enemy && !activeDialog && !deathInterjection) {
       const a = party[activeBattler];
       if (!a || a.hp <= 0) {
         const nextIdx = party.findIndex(m => m.hp > 0);

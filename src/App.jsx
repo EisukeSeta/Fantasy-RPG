@@ -44,6 +44,7 @@ function App() {
   const [enemy, setEnemy] = useState(null);
   const [activeDialog, setActiveDialog] = useState({ ...scenarioData.opening, currentPage: 0 });
   const [forceLoot, setForceLoot] = useState(false);
+  const [deathInterjection, setDeathInterjection] = useState(null); // { member, quotes, currentPage }
 
   const isForceMobile = (typeof window !== 'undefined' && (window.innerWidth <= 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent))) || new URLSearchParams(window.location.search).get('mobile') === '1';
 
@@ -100,7 +101,8 @@ function App() {
   } = useCombat({
     gameState, setGameState, party, setParty, enemy, setEnemy, 
     addMessage, triggerVisualEffect, scenarioData, balanceData, 
-    generateMap, setPlayerState, setMapData, setActiveDialog, setBossDefeated, forceLoot, activeDialog
+    generateMap, setPlayerState, setMapData, setActiveDialog, setBossDefeated, forceLoot, activeDialog,
+    deathInterjection, setDeathInterjection
   });
 
   // 音響の理
@@ -428,6 +430,32 @@ function App() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* 合戦専用：デス・インタージェクション（死の間際の独白最小ウィンドウ） */}
+      {deathInterjection && (
+        <div className="combat-interjection-overlay">
+          <div className="combat-interjection-window window">
+            <div className="interjection-speaker">
+              <img src={CHAR_IMAGES[deathInterjection.member.image]} alt="death-speaker" />
+            </div>
+            <div className="interjection-content">
+              <div className="interjection-name">{deathInterjection.member.name}</div>
+              <p>{deathInterjection.quotes[deathInterjection.currentPage].text}</p>
+              <div style={{ textAlign: 'right' }}>
+                <button className="dialog-btn" onClick={() => {
+                  if (deathInterjection.currentPage < deathInterjection.quotes.length - 1) {
+                    setDeathInterjection({ ...deathInterjection, currentPage: deathInterjection.currentPage + 1 });
+                  } else {
+                    setDeathInterjection(null);
+                  }
+                }}>
+                  {deathInterjection.currentPage < deathInterjection.quotes.length - 1 ? '続く' : '承知'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
