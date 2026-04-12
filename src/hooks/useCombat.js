@@ -23,6 +23,7 @@ export const useCombat = ({
   setPlayerState,
   setMapData,
   setActiveDialog,
+  setBossDefeated,
   forceLoot,
   activeDialog,
   combatInterjection,
@@ -53,6 +54,7 @@ export const useCombat = ({
         addMessage(`${enemy.name}${scenarioData.battle.defeat}`, 'level_up');
         
         if (enemy.isBoss) { 
+          setBossDefeated(true);
           setTimeout(() => setActiveDialog({ 
             title: '怪異調伏', 
             pages: [scenarioData.events.bossDefeated], 
@@ -179,7 +181,7 @@ export const useCombat = ({
     setActiveBattler(0); 
     setBattleTurn(0); 
     setShowSpells(null);
-  }, [enemy, addMessage, handleLevelUp, setGameState, setEnemy, setParty, setActiveDialog, balanceData, scenarioData, setPlayerState, setMapData, forceLoot, setCombatInterjection, party]);
+  }, [enemy, addMessage, handleLevelUp, setGameState, setEnemy, setParty, setActiveDialog, setBossDefeated, balanceData, scenarioData, setPlayerState, setMapData, forceLoot, setCombatInterjection, party]);
 
   const handleFight = useCallback(() => {
     if (gameState !== 'BATTLE' || !enemy) return;
