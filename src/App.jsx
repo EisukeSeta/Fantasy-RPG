@@ -450,6 +450,30 @@ function App() {
               color: '#fff',
               textShadow: '0 0 30px rgba(0,0,0,1), 0 0 15px rgba(184, 154, 66, 0.4)'
             }}>
+              {/* 肖像と名前：背景に溶け込む演出 */}
+              {(() => {
+                const currentPage = activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : null;
+                let speakerKey = null;
+                if (currentPage && typeof currentPage === 'object' && currentPage.speaker) {
+                  speakerKey = currentPage.speaker;
+                } else if (activeDialog.speakers && activeDialog.speakers[activeDialog.currentPage]) {
+                  speakerKey = activeDialog.speakers[activeDialog.currentPage].split('.')[0];
+                }
+                const speakerInfo = DIALOG_SPEAKERS[speakerKey];
+                if (speakerInfo && speakerInfo.image) {
+                  return (
+                    <div className="story-speaker-spirit" style={{ marginBottom: '40px', animation: 'fadeIn 2s ease-out' }}>
+                      <div className="spirit-portrait">
+                        <img src={speakerInfo.image} alt={speakerInfo.name} />
+                      </div>
+                      <div className="spirit-name" style={{ color: 'var(--primary-gold)', fontSize: '1.4rem', marginTop: '10px', letterSpacing: '8px', textShadow: '0 0 10px rgba(184, 154, 66, 0.6)' }}>
+                        {speakerInfo.name}
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
               <div style={{ 
                 fontFamily: 'Sawarabi Mincho, serif', 
                 fontSize: 'clamp(1.5rem, 6vw, 2.8rem)',

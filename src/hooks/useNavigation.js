@@ -85,6 +85,8 @@ export const useNavigation = (initialMap, initialPos, {
               "平安の都は、貴殿らの帰還を待っていることだろう。"
             ],
             currentPage: 0,
+            isStory: true,
+            bgImage: "src/images/闇夜の平安京.png", // 凱旋のイメージとしてタイトル背景を再利用
             onConfirm: () => {
                addMessage("⛩️ 羅生門編・第一章 完。都への道が開かれた。", "level_up");
                setGameState('TITLE'); // または専用のクリア画面へ
@@ -99,6 +101,7 @@ export const useNavigation = (initialMap, initialPos, {
           setActiveDialog({
             ...scenarioData.events.nueAura,
             currentPage: 0,
+            isStory: true,
             onConfirm: () => {
               setIsShake(false);
               const b = ENEMY_LIST.find(e => e.id === 10); 

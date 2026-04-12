@@ -53,7 +53,13 @@ export const useCombat = ({
         addMessage(`${enemy.name}${scenarioData.battle.defeat}`, 'level_up');
         
         if (enemy.isBoss) { 
-          setTimeout(() => setActiveDialog({ title: '怪異調伏', pages: [scenarioData.events.bossDefeated], currentPage: 0 }), 1500);
+          setTimeout(() => setActiveDialog({ 
+            title: '怪異調伏', 
+            pages: [scenarioData.events.bossDefeated], 
+            currentPage: 0,
+            isStory: true,
+            bgImage: enemy.image // 戦っていたボスの姿を背景に残す
+          }), 1500);
           // ボス討伐成功時に階段（出口）を設置
           setMapData(prev => {
             const next = [...prev.map(row => [...row])];
@@ -221,12 +227,13 @@ export const useCombat = ({
             
             const quotes = scenarioData.events.deathQuotes[speakerKey];
             if (quotes) {
-              setCombatInterjection({
-                member: target,
-                quotes: quotes,
+              setActiveDialog({
+                title: '【討死】',
+                pages: quotes,
                 currentPage: 0,
-                onClose: () => {
-                  // 独白終了後、もしオートバトル中なら次のターンへ進むきっかけを作る
+                isStory: true,
+                onConfirm: () => {
+                  // 物語終了後、もしオートバトル中なら次のターンへ進むきっかけを作る
                   if (isAutoBattle) setBattleTurn(prev => prev + 1);
                 }
               });
@@ -244,7 +251,7 @@ export const useCombat = ({
         setBattleTurn(prev => prev + 1);
       }, 500);
     }
-  }, [gameState, party, activeBattler, enemy, addMessage, endBattle, triggerVisualEffect, setEnemy, setParty, scenarioData, isAutoBattle, setCombatInterjection]);
+  }, [gameState, party, activeBattler, enemy, addMessage, endBattle, triggerVisualEffect, setEnemy, setParty, scenarioData, isAutoBattle, setActiveDialog]);
 
   const castSpell = useCallback((spell) => {
     if (gameState !== 'BATTLE' || !enemy) return;
