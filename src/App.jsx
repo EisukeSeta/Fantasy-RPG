@@ -100,7 +100,7 @@ function App() {
   } = useCombat({
     gameState, setGameState, party, setParty, enemy, setEnemy, 
     addMessage, triggerVisualEffect, scenarioData, balanceData, 
-    generateMap, setPlayerState, setMapData, setActiveDialog, setBossDefeated, forceLoot
+    generateMap, setPlayerState, setMapData, setActiveDialog, setBossDefeated, forceLoot, activeDialog
   });
 
   // 音響の理
@@ -142,16 +142,12 @@ function App() {
   const partyInDanger = party.some(m => m.hp > 0 && (m.hp <= m.maxHp * 0.2 || m.hp === 1));
 
   return (
-    <div className={`game-container ${isForceMobile ? 'layout-mobile' : ''} ${isShake || displayShake === 'normal' ? 'shake-anim' : ''} ${displayShake === 'heavy' ? 'shake-heavy' : ''} ${partyInDanger ? 'danger-state' : ''}`}>
-      {/* 閃光エフェクト */}
-      {flashColor === 'red' && <div className="flash-red"></div>}
-      {isBossIntro && <div className="boss-intro-overlay"><span>{scenarioData.events.bossWarning}</span></div>}
-      
-      {/* ゲームオーバー（終焉）表示 */}
+    <>
+      {/* ゲームオーバー（終焉）表示：最上位に配置して中央揃えを確実に */}
       {gameState === 'GAMEOVER' && (
-        <div className="boss-intro-overlay" style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.95)', zIndex: 20000, flexDirection: 'column' }}>
+        <div className="boss-intro-overlay" style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.95)', zIndex: 30000, flexDirection: 'column', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', margin: 0, padding: 0 }}>
           <div style={{ textAlign: 'center', maxWidth: '80%', padding: '20px' }}>
-             <h1 style={{ color: '#600', fontSize: '4rem', textShadow: '0 0 10px #000', marginBottom: '10px' }}>終焉</h1>
+             <h1 style={{ color: '#600', fontSize: '4rem', fontFamily: 'Sawarabi Mincho, serif', textShadow: '0 0 10px #000', marginBottom: '10px' }}>終焉</h1>
              <p style={{ color: '#ccc', fontSize: '1.2rem', lineHeight: '1.8', marginBottom: '40px' }}>
                 {(() => {
                   const data = scenarioData.events.badEnding;
@@ -173,7 +169,7 @@ function App() {
 
       {/* 真の終焉（完全に終了） */}
       {gameState === 'FINISHED' && (
-        <div className="boss-intro-overlay" style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh', background: '#000', zIndex: 30000 }}>
+        <div className="boss-intro-overlay" style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh', background: '#000', zIndex: 40000, display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', margin: 0, padding: 0 }}>
           <div style={{ textAlign: 'center', maxWidth: '80%' }}>
              <p style={{ color: '#888', fontSize: '1.2rem', fontStyle: 'italic', lineHeight: '2' }}>
                 {(() => {
@@ -185,17 +181,22 @@ function App() {
           </div>
         </div>
       )}
-      
-      {/* クリア特別表示 */}
-      {gameState === 'TITLE' && (
-        <div className="boss-intro-overlay" style={{ background: 'rgba(0,0,0,0.9)', zIndex: 20000 }}>
-          <div style={{ textAlign: 'center' }}>
-             <h1 style={{ color: 'var(--primary-gold)', fontSize: '3rem', textShadow: '0 0 20px #b89a42' }}>平安魔道伝</h1>
-             <p style={{ color: '#fff', fontSize: '1.5rem' }}>羅生門編・第一章 完</p>
-             <button className="dialog-btn" onClick={() => window.location.reload()} style={{ marginTop: '50px' }}>再び都を救う（リロード）</button>
+
+      <div className={`game-container ${isForceMobile ? 'layout-mobile' : ''} ${isShake || displayShake === 'normal' ? 'shake-anim' : ''} ${displayShake === 'heavy' ? 'shake-heavy' : ''} ${partyInDanger ? 'danger-state' : ''}`}>
+        {/* 閃光エフェクト */}
+        {flashColor === 'red' && <div className="flash-red"></div>}
+        {isBossIntro && <div className="boss-intro-overlay"><span>{scenarioData.events.bossWarning}</span></div>}
+        
+        {/* クリア特別表示 */}
+        {gameState === 'TITLE' && (
+          <div className="boss-intro-overlay" style={{ background: 'rgba(0,0,0,0.9)', zIndex: 20000 }}>
+            <div style={{ textAlign: 'center' }}>
+               <h1 style={{ color: 'var(--primary-gold)', fontSize: '3rem', textShadow: '0 0 20px #b89a42' }}>平安魔道伝</h1>
+               <p style={{ color: '#fff', fontSize: '1.5rem' }}>羅生門編・第一章 完</p>
+               <button className="dialog-btn" onClick={() => window.location.reload()} style={{ marginTop: '50px' }}>再び都を救う（リロード）</button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
       
       {/* --- メインUI（探索・戦闘中のみ表示） --- */}
       {(gameState === 'EXPLORING' || gameState === 'BATTLE') && (
@@ -347,10 +348,10 @@ function App() {
         </>
       )}
 
-      {/* ダイアログ表示 */}
+      {/* 共通ダイアログシステム（肖像画・名前対応） */}
       {activeDialog && (
-        <div className="dialog-overlay" onClick={(e) => {
-          if (e.target.className === 'dialog-overlay' && !activeDialog.showChoices) {
+        <div className={`dialog-overlay ${gameState === 'BATTLE' ? 'battle-interjection' : ''}`} onClick={(e) => {
+          if (e.target.className.includes('dialog-overlay') && !activeDialog.showChoices) {
             if (activeDialog.pages && activeDialog.currentPage < activeDialog.pages.length - 1) {
               setActiveDialog({...activeDialog, currentPage: activeDialog.currentPage + 1});
             } else {
@@ -455,30 +456,31 @@ function App() {
                   const [nx, ny] = input.split(',').map(Number);
                   if (!isNaN(nx) && !isNaN(ny)) {
                     setPlayerState({ x: nx, y: ny, dir: DIRECTIONS.S });
-                    addMessage(`(x:${nx}, y:${ny}) への神速の跳躍。`, 'event');
+                    addMessage("(x:" + nx + ", y:" + ny + ") への神速の跳躍。", "event");
                   }
                 }
               }} style={{ color: '#f1c40f' }}>神速跳躍</button>
-              <button className="debug-btn" onClick={() => { setPlayerState({ x: 1, y: 1, dir: DIRECTIONS.S }); addMessage('社へ帰還。', 'event'); }}>社へ帰還</button>
-              <button className="debug-btn" onClick={() => { setMapData(p => p.map(r => r.map(c => ({...c, visited: true})))); addMessage('霧が晴れた。', 'event'); }}>全地図開</button>
+              <button className="debug-btn" onClick={() => { setPlayerState({ x: 1, y: 1, dir: DIRECTIONS.S }); addMessage("社へ帰還。", "event"); }}>社へ帰還</button>
+              <button className="debug-btn" onClick={() => { setMapData(p => p.map(r => r.map(c => ({...c, visited: true})))); addMessage("霧が晴れた。", "event"); }}>全地図開</button>
               <button className="debug-btn" onClick={() => {
                 const eid = prompt("怪異の番付(0-10)を入力せよ (10:鵺)", "10");
                 const e = ENEMY_LIST[Number(eid)] || ENEMY_LIST[0];
-                setEnemy({ ...e, hp: e.maxHp }); setGameState('BATTLE'); addMessage(`【${e.name}】を召喚。`, 'event');
+                setEnemy({ ...e, hp: e.maxHp }); setGameState('BATTLE'); addMessage("【" + e.name + "】を召喚。", "event");
               }}>怪異召喚</button>
-              <button className="debug-btn" onClick={() => { setBossDefeated(!bossDefeated); addMessage(`因縁の変転：ボス討伐状態を ${!bossDefeated} へ。`, 'event'); }}>ボスフラグ</button>
+              <button className="debug-btn" onClick={() => { setBossDefeated(!bossDefeated); addMessage("因縁の変転：ボス討伐状態を " + (!bossDefeated) + " へ。", "event"); }}>ボスフラグ</button>
               <button 
                 className="debug-btn" 
-                onClick={() => { setForceLoot(!forceLoot); addMessage(`武勲の理：ドロップ必中を ${!forceLoot} へ。`, 'event'); }}
+                onClick={() => { setForceLoot(!forceLoot); addMessage("武勲の理：ドロップ必中を " + (!forceLoot) + " へ。", "event"); }}
                 style={{ color: forceLoot ? '#f1c40f' : '#666' }}
               >
-                武勲必中: {forceLoot ? 'ON' : 'OFF'}
+                武勲必中: {forceLoot ? "ON" : "OFF"}
               </button>
             </div>
           )}
         </>
       )}
     </div>
+    </>
   );
 }
 

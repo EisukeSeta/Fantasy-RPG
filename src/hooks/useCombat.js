@@ -24,7 +24,8 @@ export const useCombat = ({
   setPlayerState,
   setMapData,
   setActiveDialog,
-  forceLoot
+  forceLoot,
+  activeDialog
 }) => {
   const [activeBattler, setActiveBattler] = useState(0);
   const [battleTurn, setBattleTurn] = useState(0);
@@ -262,7 +263,7 @@ export const useCombat = ({
 
   // オートバトル・ループ
   useEffect(() => {
-    if (isAutoBattle && gameState === 'BATTLE' && enemy) {
+    if (isAutoBattle && gameState === 'BATTLE' && enemy && !activeDialog) {
       const a = party[activeBattler];
       if (!a || a.hp <= 0) {
         const nextIdx = party.findIndex(m => m.hp > 0);
@@ -277,7 +278,7 @@ export const useCombat = ({
       }, 800);
       return () => clearTimeout(t);
     }
-  }, [isAutoBattle, gameState, enemy, party, activeBattler, handleFight, castSpell, battleTurn]);
+  }, [isAutoBattle, gameState, enemy, party, activeBattler, handleFight, castSpell, battleTurn, activeDialog]);
 
   // オート戦闘の最後の一人修正のために battleTurn を監視
   useEffect(() => {
