@@ -64,7 +64,7 @@ export const ControlPanel = ({
   return (
     <div className="pane-info window" style={{ marginTop: '10px' }}>
       <span className="window-title">作戦指示</span>
-      <div className="combat-actions-pc" style={{ display: 'flex', padding: '15px', gap: '15px', alignItems: 'flex-start' }}>
+      <div className="combat-actions-pc" style={{ display: 'flex', padding: '15px', gap: '15px', alignItems: 'flex-start', justifyContent: 'center' }}>
         
         {/* 移動・戦闘コマンド (3x3 グリッド) */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridAutoRows: '50px', gap: '5px', width: '200px' }}>

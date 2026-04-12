@@ -234,7 +234,7 @@ function App() {
                 羅生門編・第一章
               </p>
               
-              <div style={{ marginTop: '60px' }}>
+              <div style={{ marginTop: '60px', display: 'flex', justifyContent: 'center' }}>
                 <button className="dialog-btn" onClick={() => {
                   setAudioInitialized(true);
                   SoundEngine.init();

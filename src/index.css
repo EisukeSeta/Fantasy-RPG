@@ -716,7 +716,9 @@ body {
 
 .dialog-footer {
   display: flex;
+  justify-content: center;
   gap: 20px;
+  width: 100%;
 }
 
 /* タップ移動用オーバーレイ */
