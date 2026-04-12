@@ -186,6 +186,20 @@ export const useCombat = ({
           const nextHP = Math.max(0, target.hp - eRes.damage);
           setParty(p => p.map(m => m.name === target.name ? { ...m, hp: nextHP, status: nextHP === 0 ? '討死' : '平安' } : m));
           triggerVisualEffect(`party_${targetIdx}`, `-${eRes.damage}`, 'damage');
+          
+          // --- 散り際の余韻（デス・クオート） ---
+          if (nextHP === 0) {
+            const speakerKey = target.image.split('.')[0];
+            const quote = scenarioData.events.deathQuotes[speakerKey];
+            if (quote) {
+              setActiveDialog({
+                title: "【討死】",
+                pages: [{ speaker: speakerKey, text: quote }],
+                currentPage: 0
+              });
+            }
+          }
+
           if (party.every(m => (m.name === target.name ? nextHP : m.hp) <= 0)) {
             endBattle(false);
           }

@@ -148,7 +148,7 @@ function App() {
       
       {/* ゲームオーバー（終焉）表示 */}
       {gameState === 'GAMEOVER' && (
-        <div className="boss-intro-overlay" style={{ background: 'rgba(0,0,0,0.95)', zIndex: 20000, flexDirection: 'column' }}>
+        <div className="boss-intro-overlay" style={{ position: 'fixed', background: 'rgba(0,0,0,0.95)', zIndex: 20000, flexDirection: 'column' }}>
           <div style={{ textAlign: 'center', maxWidth: '80%', padding: '20px' }}>
              <h1 style={{ color: '#600', fontSize: '4rem', textShadow: '0 0 10px #000', marginBottom: '10px' }}>終焉</h1>
              <p style={{ color: '#ccc', fontSize: '1.2rem', lineHeight: '1.8', marginBottom: '40px' }}>
@@ -172,7 +172,7 @@ function App() {
 
       {/* 真の終焉（完全に終了） */}
       {gameState === 'FINISHED' && (
-        <div className="boss-intro-overlay" style={{ background: '#000', zIndex: 30000 }}>
+        <div className="boss-intro-overlay" style={{ position: 'fixed', background: '#000', zIndex: 30000 }}>
           <div style={{ textAlign: 'center', maxWidth: '80%' }}>
              <p style={{ color: '#888', fontSize: '1.2rem', fontStyle: 'italic', lineHeight: '2' }}>
                 {(() => {
@@ -375,9 +375,12 @@ function App() {
               const speakerInfo = DIALOG_SPEAKERS[speakerKey];
               if (speakerInfo && speakerInfo.image) {
                 return (
-                  <div className="dialog-speaker">
-                    <img src={speakerInfo.image} alt={speakerInfo.name || "speaker"} />
-                  </div>
+                  <>
+                    <div className="dialog-speaker">
+                      <img src={speakerInfo.image} alt={speakerInfo.name || "speaker"} />
+                    </div>
+                    {speakerInfo.name && <div className="dialog-speaker-name">{speakerInfo.name}</div>}
+                  </>
                 );
               }
               return null;
