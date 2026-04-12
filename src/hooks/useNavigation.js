@@ -16,7 +16,6 @@ export const useNavigation = (initialMap, initialPos, {
   setGameState, 
   setEnemy, 
   setIsShake, 
-  setIsBossIntro,
   setActiveDialog,
   setParty,
   scenarioData,
@@ -143,7 +142,7 @@ export const useNavigation = (initialMap, initialPos, {
         }
       }
     }
-  }, [playerState, mapData, gameState, activeDialog, bossDefeated, party, addMessage, setGameState, setEnemy, setIsShake, setIsBossIntro, setActiveDialog, setParty, scenarioData, mapEventsData]);
+  }, [playerState, mapData, gameState, activeDialog, bossDefeated, party, addMessage, setGameState, setEnemy, setIsShake, setActiveDialog, setParty, scenarioData, mapEventsData]);
 
   return {
     playerState,

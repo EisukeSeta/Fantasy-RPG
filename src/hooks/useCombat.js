@@ -20,7 +20,6 @@ export const useCombat = ({
   triggerVisualEffect,
   scenarioData,
   balanceData,
-  generateMap,
   setPlayerState,
   setMapData,
   setActiveDialog,
@@ -172,7 +171,7 @@ export const useCombat = ({
     setActiveBattler(0); 
     setBattleTurn(0); 
     setShowSpells(null);
-  }, [enemy, addMessage, handleLevelUp, setGameState, setEnemy, setParty, setActiveDialog, balanceData, scenarioData, generateMap, setPlayerState, setMapData, itemsData, forceLoot, setCombatInterjection]);
+  }, [enemy, addMessage, handleLevelUp, setGameState, setEnemy, setParty, setActiveDialog, balanceData, scenarioData, setPlayerState, setMapData, forceLoot, setCombatInterjection, party]);
 
   const handleFight = useCallback(() => {
     if (gameState !== 'BATTLE' || !enemy) return;
@@ -287,7 +286,7 @@ export const useCombat = ({
         handleFight();
       }
     }
-  }, [party, activeBattler, enemy, addMessage, endBattle, gameState, handleFight, triggerVisualEffect, setParty, setEnemy, scenarioData, isAutoBattle, setCombatInterjection]);
+  }, [party, activeBattler, enemy, addMessage, endBattle, gameState, handleFight, triggerVisualEffect, setParty, setEnemy, scenarioData]);
 
   // オートバトル・ループ
   useEffect(() => {

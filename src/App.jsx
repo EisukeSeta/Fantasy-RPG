@@ -32,7 +32,6 @@ function App() {
   const [volume] = useState(0.5);
   const [isMuted, setIsMuted] = useState(isDebug);
   const [isShake, setIsShake] = useState(false);
-  const [isBossIntro, setIsBossIntro] = useState(false);
   const [party, setParty] = useState(charactersData.map(c => ({ ...c })));
   const [bossDefeated, setBossDefeated] = useState(false);
   const [showMap, setShowMap] = useState(false);
@@ -86,7 +85,7 @@ function App() {
     processMove 
   } = useNavigation(generateMap(), { x: 1, y: 1, dir: DIRECTIONS.S }, {
     gameState, activeDialog, bossDefeated, party, addMessage, 
-    setGameState, setEnemy, setIsShake, setIsBossIntro, setActiveDialog, setParty, scenarioData, mapEventsData
+    setGameState, setEnemy, setIsShake, setActiveDialog, setParty, scenarioData, mapEventsData
   });
 
   const {
@@ -101,7 +100,7 @@ function App() {
   } = useCombat({
     gameState, setGameState, party, setParty, enemy, setEnemy, 
     addMessage, triggerVisualEffect, scenarioData, balanceData, 
-    generateMap, setPlayerState, setMapData, setActiveDialog, setBossDefeated, forceLoot, activeDialog,
+    setPlayerState, setMapData, setActiveDialog, setBossDefeated, forceLoot, activeDialog,
     combatInterjection, setCombatInterjection
   });
 
@@ -187,7 +186,6 @@ function App() {
       <div className={`game-container ${isForceMobile ? 'layout-mobile' : ''} ${isShake || displayShake === 'normal' ? 'shake-anim' : ''} ${displayShake === 'heavy' ? 'shake-heavy' : ''} ${partyInDanger ? 'danger-state' : ''}`}>
         {/* 閃光エフェクト */}
         {flashColor === 'red' && <div className="flash-red"></div>}
-        {isBossIntro && <div className="boss-intro-overlay"><span>{scenarioData.events.bossWarning}</span></div>}
         
         {/* クリア特別表示 */}
         {gameState === 'TITLE' && (
