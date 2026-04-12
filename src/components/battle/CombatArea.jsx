@@ -56,7 +56,7 @@ export const CombatArea = ({
 
       {/* 敵の情報表示 */}
       <div className={enemy.isBoss ? 'boss-name' : 'enemy-name'}>
-        {enemy.isBoss ? `＊＊＊ ${enemy.name} ＊＊＊` : enemy.name}
+        {enemy.isBoss ? `*** ${enemy.name} ***` : enemy.name}
       </div>
       
       <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', width: '100%' }}>
