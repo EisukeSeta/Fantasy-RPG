@@ -432,7 +432,10 @@ function App() {
             padding: activeDialog.isStory ? '40px 20px' : '0'
           }}
           onClick={(e) => {
-            if (activeDialog.isStory || (e.target.className.includes('dialog-overlay') && !activeDialog.showChoices)) {
+            // 選択肢が表示されている間は、誤操作防止のため画面全体のクリックを無効化する
+            if (activeDialog.showChoices) return;
+
+            if (activeDialog.isStory || e.target.className.includes('dialog-overlay')) {
               if (activeDialog.pages && activeDialog.currentPage < activeDialog.pages.length - 1) {
                 setActiveDialog({...activeDialog, currentPage: activeDialog.currentPage + 1});
               } else {
