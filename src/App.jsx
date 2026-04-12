@@ -240,7 +240,7 @@ function App() {
                   SoundEngine.init();
                   SoundEngine.transitionTo('EXPLORING');
                   setGameState('EXPLORING');
-                  setActiveDialog({ ...scenarioData.opening, currentPage: 0, bgImage: TitleBg });
+                  setActiveDialog({ ...scenarioData.opening, currentPage: 0, bgImage: TitleBg, isStory: true });
                 }} style={{ 
                   padding: '15px 40px', 
                   fontSize: '1.4rem',
@@ -417,20 +417,20 @@ function App() {
 
       {/* 共通ダイアログシステム（肖像画・名前対応） */}
       {activeDialog && (
-        <div className={`dialog-overlay ${gameState === 'BATTLE' ? 'battle-interjection' : ''}`} 
+        <div className={`dialog-overlay ${gameState === 'BATTLE' ? 'battle-interjection' : ''} ${activeDialog.isStory ? 'story-mode-overlay' : ''}`} 
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundImage: activeDialog.bgImage ? `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)), url(${activeDialog.bgImage})` : 'none',
+            backgroundImage: activeDialog.bgImage ? `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.7)), radial-gradient(circle, transparent 20%, rgba(0,0,0,0.8) 100%), url(${activeDialog.bgImage})` : 'none',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            zIndex: 10000,
+            zIndex: 30000,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
           }}
           onClick={(e) => {
-            if (e.target.className.includes('dialog-overlay') && !activeDialog.showChoices) {
+            if (activeDialog.isStory || (e.target.className.includes('dialog-overlay') && !activeDialog.showChoices)) {
               if (activeDialog.pages && activeDialog.currentPage < activeDialog.pages.length - 1) {
                 setActiveDialog({...activeDialog, currentPage: activeDialog.currentPage + 1});
               } else {
@@ -440,77 +440,90 @@ function App() {
             }
           }}
         >
-          <div className="dialog-window" style={{ background: activeDialog.bgImage ? 'rgba(10, 10, 10, 0.4)' : 'rgba(10, 10, 10, 0.95)', border: activeDialog.bgImage ? '1px solid rgba(184, 154, 66, 0.4)' : '2px solid var(--primary-gold)' }}>
-            <div className="dialog-title">{activeDialog.title}</div>
-            <div className="dialog-content">
-              {/* 発話者アイコンの表示（構造化データまたはレガシー配列に対応） */}
-              {(() => {
-                const currentPage = activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : null;
-                let speakerKey = null;
-
-                if (currentPage && typeof currentPage === 'object' && currentPage.speaker) {
-                  speakerKey = currentPage.speaker;
-                } else if (activeDialog.speakers && activeDialog.speakers[activeDialog.currentPage]) {
-                  // レガシー対応（配列で渡された場合。拡張子付きなら削る）
-                  speakerKey = activeDialog.speakers[activeDialog.currentPage].split('.')[0];
-                }
-
-                const speakerInfo = DIALOG_SPEAKERS[speakerKey];
-                if (speakerInfo && speakerInfo.image) {
-                  return (
-                    <>
-                      <div className="dialog-speaker">
-                        <img src={speakerInfo.image} alt={speakerInfo.name || "speaker"} />
-                      </div>
-                      {speakerInfo.name && <div className="dialog-speaker-name">{speakerInfo.name}</div>}
-                    </>
-                  );
-                }
-                return null;
-              })()}
-              <p>
+          {activeDialog.isStory ? (
+            /* 幽玄モード：枠無し・中央特大文字 */
+            <div style={{ 
+              width: '85%', 
+              maxWidth: '1200px', 
+              textAlign: 'center', 
+              animation: 'fadeInText 2.5s ease-out',
+              color: '#fff',
+              textShadow: '0 0 30px rgba(0,0,0,1), 0 0 15px rgba(184, 154, 66, 0.4)'
+            }}>
+              <div style={{ 
+                fontFamily: 'Sawarabi Mincho, serif', 
+                fontSize: 'clamp(1.5rem, 6vw, 2.8rem)',
+                lineHeight: 2.2,
+                letterSpacing: '0.4em',
+                marginBottom: '100px',
+                whiteSpace: 'pre-wrap'
+              }}>
                 {(() => {
                   const currentPage = activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : '';
                   return typeof currentPage === 'object' ? currentPage.text : currentPage;
                 })()}
-              </p>
-              {activeDialog.showChoices ? (
-                <div className="dialog-footer">
-                  <button 
-                    className="btn-shura" 
-                    onClick={() => {
-                      if (activeDialog.onConfirm) activeDialog.onConfirm();
-                      else setActiveDialog(null);
-                    }}
-                  >
-                    {activeDialog.labelConfirm || "御意"}
-                  </button>
-                  <button 
-                    className="btn-kegare" 
-                    onClick={() => {
-                      if (activeDialog.onCancel) activeDialog.onCancel();
-                      else setActiveDialog(null);
-                    }}
-                  >
-                    {activeDialog.labelCancel || "撤退"}
-                  </button>
-                </div>
-              ) : (
-                <div className="dialog-footer">
-                  <button className="dialog-btn" onClick={() => {
-                    if (activeDialog.pages && activeDialog.currentPage < activeDialog.pages.length - 1) {
-                      setActiveDialog({...activeDialog, currentPage: activeDialog.currentPage + 1});
-                    } else {
-                      if (activeDialog.onConfirm) activeDialog.onConfirm();
-                      setActiveDialog(null);
-                    }
-                  }}>
-                    {activeDialog.pages && activeDialog.currentPage < activeDialog.pages.length - 1 ? '続く' : '承知'}
-                  </button>
-                </div>
-              )}
+              </div>
+              <div style={{ fontSize: '1.2rem', opacity: 0.5, letterSpacing: '0.6em', animation: 'pulse-story 3s infinite', fontFamily: 'Sawarabi Mincho, serif' }}>
+                ‥ 次第を追う ‥
+              </div>
             </div>
-          </div>
+          ) : (
+            /* 通常モード：肖像画あり・ウィンドウ枠あり */
+            <div className="dialog-window" style={{ background: activeDialog.bgImage ? 'rgba(10, 10, 10, 0.4)' : 'rgba(10, 10, 10, 0.95)', border: activeDialog.bgImage ? '1px solid rgba(184, 154, 66, 0.4)' : '2px solid var(--primary-gold)' }}>
+              <div className="dialog-title">{activeDialog.title}</div>
+              <div className="dialog-content">
+                {/* 発話者アイコンの表示（構造化データまたはレガシー配列に対応） */}
+                {(() => {
+                  const currentPage = activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : null;
+                  let speakerKey = null;
+
+                  if (currentPage && typeof currentPage === 'object' && currentPage.speaker) {
+                    speakerKey = currentPage.speaker;
+                  } else if (activeDialog.speakers && activeDialog.speakers[activeDialog.currentPage]) {
+                    speakerKey = activeDialog.speakers[activeDialog.currentPage].split('.')[0];
+                  }
+
+                  const speakerInfo = DIALOG_SPEAKERS[speakerKey];
+                  if (speakerInfo && speakerInfo.image) {
+                    return (
+                      <>
+                        <div className="dialog-speaker">
+                          <img src={speakerInfo.image} alt={speakerInfo.name || "speaker"} />
+                        </div>
+                        {speakerInfo.name && <div className="dialog-speaker-name">{speakerInfo.name}</div>}
+                      </>
+                    );
+                  }
+                  return null;
+                })()}
+                <p>
+                  {(() => {
+                    const currentPage = activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : '';
+                    return typeof currentPage === 'object' ? currentPage.text : currentPage;
+                  })()}
+                </p>
+                {activeDialog.showChoices ? (
+                  <div className="dialog-footer">
+                    <button className="btn-shura" onClick={() => { if (activeDialog.onConfirm) activeDialog.onConfirm(); else setActiveDialog(null); }}> {activeDialog.labelConfirm || "御意"} </button>
+                    <button className="btn-kegare" onClick={() => { if (activeDialog.onCancel) activeDialog.onCancel(); else setActiveDialog(null); }}> {activeDialog.labelCancel || "撤退"} </button>
+                  </div>
+                ) : (
+                  <div className="dialog-footer">
+                    <button className="dialog-btn" onClick={() => {
+                      if (activeDialog.pages && activeDialog.currentPage < activeDialog.pages.length - 1) {
+                        setActiveDialog({...activeDialog, currentPage: activeDialog.currentPage + 1});
+                      } else {
+                        if (activeDialog.onConfirm) activeDialog.onConfirm();
+                        setActiveDialog(null);
+                      }
+                    }}>
+                      {activeDialog.pages && activeDialog.currentPage < activeDialog.pages.length - 1 ? '続く' : '承知'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
