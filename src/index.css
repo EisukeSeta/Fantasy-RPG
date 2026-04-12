@@ -1297,20 +1297,17 @@ body {
 
 /* 霊体肖像（Story Mode用アイコン） */
 .story-speaker-spirit {
-  position: absolute;
-  top: 60px;
-  left: 50%;
-  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   z-index: 20005;
+  margin-bottom: 20px;
 }
 
 .spirit-portrait {
-  width: clamp(120px, 18vw, 180px);
-  height: clamp(120px, 18vw, 180px);
+  width: clamp(100px, 15vw, 160px);
+  height: clamp(100px, 15vw, 160px);
   border-radius: 50%;
   overflow: hidden;
   border: 1px solid rgba(184, 154, 66, 0.4);

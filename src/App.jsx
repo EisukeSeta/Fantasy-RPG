@@ -426,8 +426,10 @@ function App() {
             backgroundPosition: 'center',
             zIndex: 30000,
             display: 'flex',
+            flexDirection: activeDialog.isStory ? 'column' : 'row',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            padding: activeDialog.isStory ? '40px 20px' : '0'
           }}
           onClick={(e) => {
             if (activeDialog.isStory || (e.target.className.includes('dialog-overlay') && !activeDialog.showChoices)) {
@@ -474,12 +476,13 @@ function App() {
                 }
                 return null;
               })()}
-              <div style={{ 
+              <div className="story-mode-text-wrapper" style={{ 
                 fontFamily: 'Sawarabi Mincho, serif', 
-                fontSize: 'clamp(1.5rem, 6vw, 2.8rem)',
-                lineHeight: 2.2,
+                fontSize: 'clamp(1.2rem, 5vw, 2.5rem)',
+                lineHeight: 2.0,
                 letterSpacing: '0.4em',
-                marginBottom: '100px',
+                marginBottom: '10vh',
+                maxWidth: '90%',
                 whiteSpace: 'pre-wrap'
               }}>
                 {(() => {
@@ -487,9 +490,17 @@ function App() {
                   return typeof currentPage === 'object' ? currentPage.text : currentPage;
                 })()}
               </div>
-              <div style={{ fontSize: '1.2rem', opacity: 0.5, letterSpacing: '0.6em', animation: 'pulse-story 3s infinite', fontFamily: 'Sawarabi Mincho, serif' }}>
-                ‥ 次第を追う ‥
-              </div>
+              
+              {activeDialog.showChoices ? (
+                <div className="dialog-footer" style={{ border: 'none', background: 'transparent', justifyContent: 'center', gap: '40px' }}>
+                  <button className="btn-shura" style={{ padding: '15px 40px', fontSize: '1.2rem' }} onClick={() => { if (activeDialog.onConfirm) activeDialog.onConfirm(); else setActiveDialog(null); }}> {activeDialog.labelConfirm || "御意"} </button>
+                  <button className="btn-kegare" style={{ padding: '15px 40px', fontSize: '1.2rem' }} onClick={() => { if (activeDialog.onCancel) activeDialog.onCancel(); else setActiveDialog(null); }}> {activeDialog.labelCancel || "撤退"} </button>
+                </div>
+              ) : (
+                <div style={{ fontSize: '1.2rem', opacity: 0.5, letterSpacing: '0.6em', animation: 'pulse-story 3s infinite', fontFamily: 'Sawarabi Mincho, serif' }}>
+                  ‥ 次第を追う ‥
+                </div>
+              )}
             </div>
           ) : (
             /* 通常モード：肖像画あり・ウィンドウ枠あり */

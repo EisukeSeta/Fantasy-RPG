@@ -143,6 +143,7 @@ export const useCombat = ({
           title: "【終焉】", 
           pages: [scenarioData.events.gameOver], 
           currentPage: 0, 
+          isStory: true,
           showChoices: true,
           labelConfirm: "御意（復活）",
           labelCancel: "虚無に還る",
@@ -152,6 +153,7 @@ export const useCombat = ({
               title: "【反魂の儀】", 
               pages: [scenarioData.ui.resurrection, "生命の燈火は微か……。再び、現世（うつしよ）へ。"], 
               currentPage: 0,
+              isStory: true,
               onConfirm: () => {
                 setPlayerState({ x: 0, y: 0, dir: DIRECTIONS.S });
                 setParty(p => p.map(m => ({ ...m, hp: 1, mp: 1, exp: getRequiredExp(m.lv), status: '平安' })));
@@ -227,13 +229,12 @@ export const useCombat = ({
             
             const quotes = scenarioData.events.deathQuotes[speakerKey];
             if (quotes) {
-              setActiveDialog({
-                title: '【討死】',
-                pages: quotes,
+              setCombatInterjection({
+                member: target,
+                quotes: quotes,
                 currentPage: 0,
-                isStory: true,
-                onConfirm: () => {
-                  // 物語終了後、もしオートバトル中なら次のターンへ進むきっかけを作る
+                onClose: () => {
+                  // 独白終了後、もしオートバトル中なら次のターンへ進むきっかけを作る
                   if (isAutoBattle) setBattleTurn(prev => prev + 1);
                 }
               });
@@ -251,7 +252,7 @@ export const useCombat = ({
         setBattleTurn(prev => prev + 1);
       }, 500);
     }
-  }, [gameState, party, activeBattler, enemy, addMessage, endBattle, triggerVisualEffect, setEnemy, setParty, scenarioData, isAutoBattle, setActiveDialog]);
+  }, [gameState, party, activeBattler, enemy, addMessage, endBattle, triggerVisualEffect, setEnemy, setParty, scenarioData, isAutoBattle, setCombatInterjection]);
 
   const castSpell = useCallback((spell) => {
     if (gameState !== 'BATTLE' || !enemy) return;
