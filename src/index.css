@@ -682,7 +682,7 @@ body {
   right: 0 !important;
   bottom: 0 !important;
   background-color: rgba(0, 0, 0, 0.98) !important;
-  z-index: 20000 !important; 
+  z-index: 55000 !important; 
   display: flex;
   flex-direction: column;
   padding: 40px;
@@ -1086,7 +1086,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10000;
+  z-index: 55000 !important;
   animation: fadeIn 0.3s ease-out;
 }
 
