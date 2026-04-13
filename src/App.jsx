@@ -240,8 +240,16 @@ function App() {
                   setAudioInitialized(true);
                   SoundEngine.init();
                   SoundEngine.transitionTo('EXPLORING');
-                  setGameState('EXPLORING');
-                  setActiveDialog({ ...scenarioData.opening, currentPage: 0, bgImage: TitleBg, isStory: true });
+                  // 即座に EXPLORING にせず、ダイアログが終わってから遷移させる
+                  setActiveDialog({ 
+                    ...scenarioData.opening, 
+                    currentPage: 0, 
+                    bgImage: TitleBg, 
+                    isStory: true,
+                    onConfirm: () => {
+                      setGameState('EXPLORING');
+                    }
+                  });
                 }} style={{ 
                   padding: '15px 40px', 
                   fontSize: '1.4rem',
