@@ -25,7 +25,7 @@ const DialogManager = ({
           backgroundImage: activeDialog.bgImage ? `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.7)), radial-gradient(circle, transparent 20%, rgba(0,0,0,0.8) 100%), url(${activeDialog.bgImage})` : 'none',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          zIndex: 30000,
+          zIndex: 50000,
           display: 'flex',
           flexDirection: activeDialog.isStory ? 'column' : 'row',
           alignItems: 'center',
