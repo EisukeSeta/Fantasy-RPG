@@ -248,6 +248,15 @@ class HeianSoundEngine {
     if (!this.masterGain) return;
     this.masterGain.gain.setTargetAtTime(val, this.ctx.currentTime, 0.1);
   }
+
+  /**
+   * 消音設定
+   * @param {boolean} isMuted 
+   */
+  setMuted(isMuted) {
+    if (!this.masterGain) return;
+    this.masterGain.gain.setTargetAtTime(isMuted ? 0 : 0.5, this.ctx.currentTime, 0.1);
+  }
 }
 
 // シングルトンとしてエクスポート

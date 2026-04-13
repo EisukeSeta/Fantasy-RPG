@@ -1,36 +1,31 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { MAP_WIDTH, MAP_HEIGHT, DIRECTIONS } from '../data/mapData';
 import { BOSS_POS } from '../constants/gameData';
 import { ENEMY_LIST } from '../data/enemyData';
 import { getRandomEnemy } from '../logic/combat';
+import { useGame } from '../context/GameContext';
+import scenarioData from '../data/Scenario.json';
+import mapEventsData from '../data/MapEvents.json';
 
 /**
  * 迷宮内の移動・探索ロジックを管理するカスタムフック
  */
-export const useNavigation = (initialMap, initialPos, { 
-  gameState, 
-  activeDialog, 
-  bossDefeated, 
-  party, 
-  addMessage, 
-  setGameState, 
-  setEnemy, 
-  setIsShake, 
-  setActiveDialog,
-  setParty,
-  scenarioData,
-  mapEventsData
-}) => {
-  const [playerState, setPlayerState] = useState(initialPos);
-  const [mapData, setMapData] = useState(() => {
-    const m = [...initialMap.map(row => [...row])];
-    // 初期地点周辺を視認化
-    for(let dy=-1; dy<=1; dy++) for(let dx=-1; dx<=1; dx++){
-      const tx=initialPos.x+dx, ty=initialPos.y+dy; 
-      if(tx>=0 && tx<MAP_WIDTH && ty>=0 && ty<MAP_HEIGHT) m[ty][tx].visited=true;
-    }
-    return m;
-  });
+export const useNavigation = () => {
+  const {
+    gameState, setGameState,
+    playerState, setPlayerState,
+    party, setParty,
+    mapData, setMapData,
+    bossDefeated,
+    setEnemy,
+    activeDialog, setActiveDialog,
+    setIsShake,
+    setMessages
+  } = useGame();
+
+  const addMessage = useCallback((msg, type = 'normal') => {
+    setMessages(prev => [...prev, { text: msg, type }].slice(-30));
+  }, [setMessages]);
 
   const processMove = useCallback((type) => {
     if (activeDialog || gameState !== 'EXPLORING') return;
@@ -151,7 +146,7 @@ export const useNavigation = (initialMap, initialPos, {
         }
       }
     }
-  }, [playerState, mapData, gameState, activeDialog, bossDefeated, party, addMessage, setGameState, setEnemy, setIsShake, setActiveDialog, setParty, scenarioData, mapEventsData]);
+  }, [playerState, mapData, gameState, activeDialog, bossDefeated, party, addMessage, setGameState, setEnemy, setIsShake, setActiveDialog, setParty, setMapData, setPlayerState]);
 
   return {
     playerState,

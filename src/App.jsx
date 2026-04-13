@@ -21,26 +21,34 @@ import mapEventsData from './data/MapEvents.json';
 
 import { useNavigation } from './hooks/useNavigation';
 import { useCombat } from './hooks/useCombat';
+import { useGame } from './context/GameContext';
 
 function App() {
-  const [gameState, setGameState] = useState('TITLE'); 
-  const [messages, setMessages] = useState([{ text: scenarioData.events.gameStart, type: 'event' }]);
+  const {
+    gameState, setGameState,
+    messages, setMessages,
+    playerState, setPlayerState,
+    party, setParty,
+    mapData, setMapData,
+    bossDefeated,
+    enemy, setEnemy,
+    activeDialog, setActiveDialog,
+    combatInterjection, setCombatInterjection,
+    isShake,
+    visualEffects,
+    flashColor,
+    displayShake,
+    triggerVisualEffect,
+    isMuted, setIsMuted,
+    handleRestart
+  } = useGame();
+
   const [isAudioInitialized, setAudioInitialized] = useState(false);
   const [volume] = useState(0.5);
-  const [isMuted, setIsMuted] = useState(isDebug);
-  const [isShake, setIsShake] = useState(false);
-  const [party, setParty] = useState(charactersData.map(c => ({ ...c })));
-  const [bossDefeated, setBossDefeated] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [showStatus, setShowStatus] = useState(false);
   const [showDebug, setShowDebug] = useState(isDebug);
-  const [visualEffects, setVisualEffects] = useState([]); // { id, target, value, type }
-  const [flashColor, setFlashColor] = useState(null); // 'red', etc.
-  const [displayShake, setDisplayShake] = useState(null); // 'normal', 'heavy'
-  const [enemy, setEnemy] = useState(null);
-  const [activeDialog, setActiveDialog] = useState(null); // 開始時にダイアログは表示しない
-  const [forceLoot, setForceLoot] = useState(false);
-  const [combatInterjection, setCombatInterjection] = useState(null); // { member, quotes, currentPage, onClose }
+  const forceLoot = false;
 
   const isForceMobile = (typeof window !== 'undefined' && (window.innerWidth <= 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent))) || new URLSearchParams(window.location.search).get('mobile') === '1';
 
@@ -53,37 +61,12 @@ function App() {
       if (msg.includes('這い出た') || msg.includes('震撼') || msg.includes('気配') || msg.includes('立ちはだかった')) type = 'event'; 
     }
     setMessages(prev => [...prev, { text: msg, type }].slice(-30));
-  }, []);
-
-  const triggerVisualEffect = useCallback((target, value, type, effectStyle = 'normal') => {
-    const id = Date.now() + Math.random();
-    setVisualEffects(prev => [...prev, { id, target, value, type }]);
-    setTimeout(() => {
-      setVisualEffects(prev => prev.filter(e => e.id !== id));
-    }, 800);
-
-    if (type === 'damage' && target.startsWith('party')) {
-      setFlashColor('red');
-      setTimeout(() => setFlashColor(null), 400);
-      setDisplayShake(effectStyle === 'heavy' ? 'heavy' : 'normal');
-      setTimeout(() => setDisplayShake(null), 400);
-    } else if (type === 'damage' && target === 'enemy') {
-      setDisplayShake('normal');
-      setTimeout(() => setDisplayShake(null), 300);
-    }
-  }, []);
+  }, [setMessages]);
 
   // --- 理の分権 (Hooks) ---
   const { 
-    playerState, 
-    setPlayerState, 
-    mapData, 
-    setMapData, 
     processMove 
-  } = useNavigation(generateMap(), { x: 1, y: 1, dir: DIRECTIONS.S }, {
-    gameState, activeDialog, bossDefeated, party, addMessage, 
-    setGameState, setEnemy, setIsShake, setActiveDialog, setParty, scenarioData, mapEventsData
-  });
+  } = useNavigation();
 
   const {
     activeBattler,
@@ -94,12 +77,7 @@ function App() {
     setShowSpells,
     handleFight,
     castSpell
-  } = useCombat({
-    gameState, setGameState, party, setParty, enemy, setEnemy, 
-    addMessage, triggerVisualEffect, scenarioData, balanceData, 
-    setPlayerState, setMapData, setActiveDialog, setBossDefeated, forceLoot, activeDialog,
-    combatInterjection, setCombatInterjection
-  });
+  } = useCombat();
 
   // 音響の理
   const initAudio = useCallback(() => {
@@ -124,18 +102,6 @@ function App() {
     };
     window.addEventListener('keydown', hk); return () => window.removeEventListener('keydown', hk);
   }, [gameState, activeDialog, processMove]);
-
-  const handleRestart = useCallback(() => {
-    setGameState('EXPLORING');
-    setPlayerState({ x: 0, y: 0, dir: DIRECTIONS.S });
-    setParty(charactersData.map(c => ({ ...c, items: [] })));
-    setMapData(generateMap());
-    setMessages([{ text: scenarioData.events.gameStart, type: 'event' }]);
-    setBossDefeated(false);
-    setActiveDialog(null);
-    setEnemy(null);
-    SoundEngine.transitionTo('EXPLORING');
-  }, [setPlayerState, setParty, setMapData, setMessages, setBossDefeated, setGameState, setActiveDialog, setEnemy]);
 
   const partyInDanger = party.some(m => m.hp > 0 && (m.hp <= m.maxHp * 0.2 || m.hp === 1));
 
