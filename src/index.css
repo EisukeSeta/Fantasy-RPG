@@ -54,21 +54,20 @@ body {
   flex-direction: column;
   box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
   box-sizing: border-box;
-  margin-top: 20px;
-  overflow: visible;
-
+  margin-top: 25px; /* 表題のための余白 */
+  overflow: visible !important;
 }
 
 .window-title {
   position: absolute;
-  top: -12px;
-  left: 20px;
+  top: -14px; /* 少し上に浮かせ、より「銘」としての威厳を出す */
+  left: 15px;
   background: #000;
-  padding: 2px 12px;
+  padding: 2px 14px;
   font-size: 0.85rem;
   color: var(--primary-gold);
   border: 1px solid var(--primary-gold);
-  z-index: 10;
+  z-index: 100 !important;
   text-shadow: 0 0 5px rgba(184, 154, 66, 0.5);
 }
 
@@ -139,9 +138,9 @@ body {
   box-shadow: inset 0 0 5px rgba(255,255,255,0.02);
 }
 .map-cell.visited.wall { 
-  background: #555 !important; 
-  border: 1px solid #777 !important; 
-  box-shadow: 0 0 3px rgba(0,0,0,0.5);
+  background: #666 !important; 
+  border: 1px solid #888 !important; 
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
 }
 .map-cell.player { background: #221; position: relative; border: 1px solid var(--primary-gold); }
 .player-icon { font-size: 12px; color: var(--primary-gold); transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1); display: inline-block; }
