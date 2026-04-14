@@ -37,7 +37,6 @@ function App() {
     visualEffects,
     flashColor,
     displayShake,
-    displayShake,
     isMuted, setIsMuted,
     handleRestart,
     saveGame,
@@ -200,44 +199,41 @@ function App() {
               </p>
               
               <div style={{ marginTop: '60px', display: 'flex', flexDirection: 'column', gap: '15px', alignItems: 'center' }}>
-                <button className="dialog-btn" onClick={() => {
-                  setAudioInitialized(true);
-                  SoundEngine.init();
-                  SoundEngine.transitionTo('EXPLORING');
-                  setActiveDialog({ 
-                    ...scenarioData.opening, 
-                    currentPage: 0, 
-                    bgImage: TitleBg, 
-                    isStory: true,
-                    onConfirm: () => { setGameState('EXPLORING'); }
-                  });
-                }} style={{ 
-                  padding: '12px 40px', 
-                  fontSize: '1.2rem',
-                  width: '260px',
-                  boxShadow: '0 0 15px rgba(184, 154, 66, 0.4)'
-                }}>
-                  一から旅を始める
-                </button>
+                {localStorage.getItem('RASHOMON_SAVE_V1') ? (
+                  <>
+                    <button className="dialog-btn" onClick={() => {
+                      setAudioInitialized(true); SoundEngine.init(); SoundEngine.transitionTo('EXPLORING');
+                      setActiveDialog({ 
+                        ...scenarioData.opening, currentPage: 0, bgImage: TitleBg, isStory: true,
+                        onConfirm: () => { setGameState('EXPLORING'); }
+                      });
+                    }} style={{ padding: '12px 40px', fontSize: '1.2rem', width: '260px', boxShadow: '0 0 15px rgba(184, 154, 66, 0.4)' }}>
+                      一から旅を始める
+                    </button>
 
-                {localStorage.getItem('RASHOMON_SAVE_V1') && (
+                    <button className="dialog-btn" onClick={() => {
+                      const success = loadGame();
+                      if (success) {
+                        setAudioInitialized(true); SoundEngine.init(); SoundEngine.transitionTo('EXPLORING');
+                        setGameState('EXPLORING');
+                        addMessage("……途切れた意識の先、再び平安の闇が口を開く。", "event");
+                      }
+                    }} style={{ 
+                      padding: '12px 40px', fontSize: '1.2rem', width: '260px',
+                      backgroundColor: 'rgba(184, 154, 66, 0.1)', borderStyle: 'dashed'
+                    }}>
+                      過去の記憶を辿る
+                    </button>
+                  </>
+                ) : (
                   <button className="dialog-btn" onClick={() => {
-                    const success = loadGame();
-                    if (success) {
-                      setAudioInitialized(true);
-                      SoundEngine.init();
-                      SoundEngine.transitionTo('EXPLORING');
-                      setGameState('EXPLORING');
-                      addMessage("……途切れた意識の先、再び平安の闇が口を開く。", "event");
-                    }
-                  }} style={{ 
-                    padding: '12px 40px', 
-                    fontSize: '1.2rem',
-                    width: '260px',
-                    backgroundColor: 'rgba(184, 154, 66, 0.1)',
-                    borderStyle: 'dashed'
-                  }}>
-                    過去の記憶を辿る
+                    setAudioInitialized(true); SoundEngine.init(); SoundEngine.transitionTo('EXPLORING');
+                    setActiveDialog({ 
+                      ...scenarioData.opening, currentPage: 0, bgImage: TitleBg, isStory: true,
+                      onConfirm: () => { setGameState('EXPLORING'); }
+                    });
+                  }} style={{ padding: '15px 40px', fontSize: '1.4rem', width: '300px', boxShadow: '0 0 20px rgba(184, 154, 66, 0.5)' }}>
+                    旅を始める
                   </button>
                 )}
               </div>

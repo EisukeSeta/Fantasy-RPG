@@ -26,7 +26,7 @@ export const SpellGrimoire = ({ isOpen, onClose }) => {
     <div className="grimoire-overlay" onClick={onClose}>
       <div className="grimoire-window window" onClick={e => e.stopPropagation()}>
         <div className="window-title grimoire-title">魔導教典 - 術式の理</div>
-        <button className="back-button" onClick={onClose}>戻る</button>
+        <button className="back-button" onClick={onClose}>閉じる</button>
         
         {/* 指導者の肖像 */}
         <div className="job-head">
