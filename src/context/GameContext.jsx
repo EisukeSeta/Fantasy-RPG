@@ -1,11 +1,10 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
+import { GameContext } from './GameContextInstance';
 import scenarioData from '../data/Scenario.json';
 import charactersData from '../data/Characters.json';
 import { DIRECTIONS, MAP_WIDTH, MAP_HEIGHT, generateMap } from '../data/mapData';
 import SoundEngine from '../utils/SoundEngine';
 import { isDebug } from '../constants/gameData';
-
-const GameContext = createContext();
 
 /**
  * 都の理（状態管理）を司る心臓。
@@ -132,10 +131,4 @@ export const GameProvider = ({ children }) => {
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
-};
-
-export const useGame = () => {
-  const context = useContext(GameContext);
-  if (!context) throw new Error('useGame must be used within a GameProvider');
-  return context;
 };

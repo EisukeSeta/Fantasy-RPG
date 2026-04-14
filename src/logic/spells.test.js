@@ -6,13 +6,12 @@ import { calculateSpellEffect } from './spells';
  */
 describe('spells.js: 魔道の理の検証', () => {
 
-  it('攻撃魔法(ATTACK)の効果量が、minDmg〜maxDmg の範囲に収まること', () => {
+  it('攻撃魔法(ATTACK)の効果量が、術者レベル補正を含めた範囲に収まること', () => {
     const fireSpell = { type: 'ATTACK', minDmg: 20, maxDmg: 40 };
-    const caster = { mp: 10, int: 10 }; // 将来的に知力(int)なども考慮可能
-    
+    const caster = { lv: 1 };
     const res = calculateSpellEffect(fireSpell, caster);
-    expect(res.value).toBeGreaterThanOrEqual(20);
-    expect(res.value).toBeLessThanOrEqual(40);
+    expect(res.value).toBeGreaterThanOrEqual(22); // 20 * 1.1
+    expect(res.value).toBeLessThanOrEqual(44);   // 40 * 1.1
   });
 
   it('術者のレベルに応じて威力が補正されること', () => {

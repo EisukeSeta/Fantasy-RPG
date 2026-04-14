@@ -3,7 +3,7 @@ import { MAP_WIDTH, MAP_HEIGHT, DIRECTIONS } from '../data/mapData';
 import { BOSS_POS, GAME_SETTINGS } from '../constants/gameData';
 import { ENEMY_LIST } from '../data/enemyData';
 import { getRandomEnemy } from '../logic/combat';
-import { useGame } from '../context/GameContext';
+import { useGame } from './useGame';
 import scenarioData from '../data/Scenario.json';
 import mapEventsData from '../data/MapEvents.json';
 

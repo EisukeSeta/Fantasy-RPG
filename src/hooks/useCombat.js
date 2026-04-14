@@ -6,7 +6,7 @@ import { DIRECTIONS, MAP_WIDTH, MAP_HEIGHT } from '../data/mapData';
 import { BOSS_POS, GAME_SETTINGS } from '../constants/gameData';
 import { calculateSpellEffect } from '../logic/spells';
 import itemsData from '../data/Items.json';
-import { useGame } from '../context/GameContext';
+import { useGame } from './useGame';
 import scenarioData from '../data/Scenario.json';
 import balanceData from '../data/Balance.json';
 
@@ -49,7 +49,7 @@ export const useCombat = () => {
       addMessage(`${m.name}${scenarioData.ui.levelUp.replace('%LV%', m.lv)}`, 'level_up');
     }
     return m;
-  }, [addMessage, balanceData, scenarioData]);
+  }, [addMessage]);
 
   const endBattle = useCallback((won) => {
     if (won) {
@@ -186,7 +186,7 @@ export const useCombat = () => {
     setActiveBattler(0); 
     setBattleTurn(0); 
     setShowSpells(null);
-  }, [enemy, addMessage, handleLevelUp, setGameState, setEnemy, setParty, setActiveDialog, setBossDefeated, setPlayerState, setMapData, forceLoot, setCombatInterjection, party, triggerVisualEffect]);
+  }, [enemy, addMessage, handleLevelUp, setGameState, setEnemy, setParty, setActiveDialog, setBossDefeated, setPlayerState, setMapData, setCombatInterjection, party, forceLoot]);
 
   // --- 実効能力値の計算（パッシブ効果反映：勲章の霊力） ---
   const getEffectiveStats = useCallback((member) => {
@@ -279,7 +279,7 @@ export const useCombat = () => {
         setBattleTurn(prev => prev + 1);
       }, GAME_SETTINGS.DELAYS.ENEMY_TURN);
     }
-  }, [gameState, party, activeBattler, enemy, addMessage, endBattle, triggerVisualEffect, setEnemy, setParty, isAutoBattle, setCombatInterjection, getEffectiveStats]);
+  }, [gameState, party, activeBattler, enemy, addMessage, endBattle, triggerVisualEffect, setEnemy, setParty, isAutoBattle, setCombatInterjection, getEffectiveStats, setActiveBattler, setBattleTurn]);
 
   const castSpell = useCallback((spell) => {
     if (gameState !== 'BATTLE' || !enemy) return;
@@ -324,7 +324,7 @@ export const useCombat = () => {
         handleFight();
       }
     }
-  }, [party, activeBattler, enemy, addMessage, endBattle, gameState, handleFight, triggerVisualEffect, setParty, setEnemy]);
+  }, [party, activeBattler, enemy, addMessage, endBattle, gameState, handleFight, triggerVisualEffect, setParty, setEnemy, getEffectiveStats]);
 
   // オートバトル・ループ
   useEffect(() => {
