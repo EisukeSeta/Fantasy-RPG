@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { MAP_WIDTH, MAP_HEIGHT, DIRECTIONS } from '../data/mapData';
-import { BOSS_POS } from '../constants/gameData';
+import { BOSS_POS, GAME_SETTINGS } from '../constants/gameData';
 import { ENEMY_LIST } from '../data/enemyData';
 import { getRandomEnemy } from '../logic/combat';
 import { useGame } from '../context/GameContext';
@@ -24,7 +24,7 @@ export const useNavigation = () => {
   } = useGame();
 
   const addMessage = useCallback((msg, type = 'normal') => {
-    setMessages(prev => [...prev, { text: msg, type }].slice(-30));
+    setMessages(prev => [...prev, { text: msg, type }].slice(-GAME_SETTINGS.LOG_CAPACITY));
   }, [setMessages]);
 
   const processMove = useCallback((type) => {
@@ -108,8 +108,8 @@ export const useNavigation = () => {
           return;
         }
 
-        // エンカウント判定 (15%)
-        if (Math.random() < 0.15) {
+        // エンカウント判定
+        if (Math.random() < GAME_SETTINGS.ENCOUNTER_RATE) {
           const lSum = party.reduce((s, m) => s + m.lv, 0); 
           const e = getRandomEnemy(lSum);
           setEnemy({ ...e, hp: e.maxHp }); 

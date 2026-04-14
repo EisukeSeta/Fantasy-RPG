@@ -13,7 +13,7 @@
  *   - { value: 効果数値, type: 術の種類, statusEffect: 付与される状態 }
  */
 
-export const calculateSpellEffect = (spell, caster) => {
+export const calculateSpellEffect = (spell, _caster) => { // eslint-disable-line no-unused-vars
   const { type } = spell;
   let value = 0;
   let statusEffect = spell.statusEffect || null;

@@ -3,7 +3,8 @@ import { calculateHitAndDamage, SPELLS } from '../logic/combat';
 import { getRequiredExp } from '../logic/growth';
 import SoundEngine from '../utils/SoundEngine';
 import { DIRECTIONS, MAP_WIDTH, MAP_HEIGHT } from '../data/mapData';
-import { BOSS_POS } from '../constants/gameData';
+import { BOSS_POS, GAME_SETTINGS } from '../constants/gameData';
+import { calculateSpellEffect } from '../logic/spells';
 import itemsData from '../data/Items.json';
 import { useGame } from '../context/GameContext';
 import scenarioData from '../data/Scenario.json';
@@ -27,7 +28,7 @@ export const useCombat = () => {
   } = useGame();
 
   const addMessage = useCallback((msg, type = 'normal') => {
-    setMessages(prev => [...prev, { text: msg, type }].slice(-30));
+    setMessages(prev => [...prev, { text: msg, type }].slice(-GAME_SETTINGS.LOG_CAPACITY));
   }, [setMessages]);
 
   const forceLoot = false; // 必要に応じて Context へ移行
@@ -63,7 +64,7 @@ export const useCombat = () => {
             currentPage: 0,
             isStory: true,
             bgImage: enemy.image // 戦っていたボスの姿を背景に残す
-          }), 1500);
+          }), GAME_SETTINGS.DELAYS.VICTORY_BOSS);
           // ボス討伐成功時に階段（出口）を設置
           setMapData(prev => {
             const next = [...prev.map(row => [...row])];
@@ -126,7 +127,7 @@ export const useCombat = () => {
                   setGameState('EXPLORING'); 
                   setEnemy(null); 
                   setShowVictory(false);
-                }, 1500);
+                }, GAME_SETTINGS.DELAYS.VICTORY_NORMAL);
               }
             });
             return enemy.isBoss;
@@ -137,7 +138,7 @@ export const useCombat = () => {
           setGameState('EXPLORING'); 
           setEnemy(null); 
           setShowVictory(false);
-        }, 1200);
+        }, GAME_SETTINGS.DELAYS.VICTORY_NORMAL);
 
         return enemy.isBoss;
     } else {
@@ -276,7 +277,7 @@ export const useCombat = () => {
         
     setActiveBattler(party.findIndex(m => m.hp > 0));
         setBattleTurn(prev => prev + 1);
-      }, 500);
+      }, GAME_SETTINGS.DELAYS.ENEMY_TURN);
     }
   }, [gameState, party, activeBattler, enemy, addMessage, endBattle, triggerVisualEffect, setEnemy, setParty, isAutoBattle, setCombatInterjection, getEffectiveStats]);
 
@@ -292,14 +293,17 @@ export const useCombat = () => {
     // 術名の言霊を放つ
     triggerVisualEffect('enemy', spell.name, 'action');
     
+    // 魔道の理（spells.js）を用いて効果を算出
+    const effectRes = calculateSpellEffect(spell, attacker);
+    
     if (spell.type === 'ATTACK') {
-      const dmg = spell.minDmg + Math.floor(Math.random()*(spell.maxDmg-spell.minDmg));
+      const dmg = effectRes.value;
       addMessage(`${spell.name}${scenarioData.battle.spellAttack.replace('%ENEMY%', enemy.name).replace('%DMG%', dmg)}`); 
       nextE.hp -= dmg;
       triggerVisualEffect('enemy', `-${dmg}`, 'damage');
     } else if (spell.type === 'HEAL') {
       const target = nextP.filter(m => m.hp > 0).sort((a,b) => a.hp - b.hp)[0];
-      const heal = spell.minHeal + Math.floor(Math.random()*(spell.maxHeal-spell.minHeal));
+      const heal = effectRes.value;
       target.hp = Math.min(target.maxHp, target.hp + heal);
       addMessage(`${spell.name}${scenarioData.battle.spellHeal.replace('%TARGET%', target.name).replace('%HEAL%', heal)}`, 'heal');
       triggerVisualEffect(`party_${nextP.findIndex(m => m.name === target.name)}`, `+${heal}`, 'heal');
@@ -336,7 +340,7 @@ export const useCombat = () => {
         const spells = (SPELLS[a.jobKey] || []).filter(s => s.lv <= a.lv && a.mp >= s.mp);
         if (isStrong && spells.length > 0) castSpell(spells[spells.length - 1]);
         else handleFight();
-      }, 800);
+      }, GAME_SETTINGS.DELAYS.AUTO_BATTLE);
       return () => clearTimeout(t);
     }
   }, [isAutoBattle, gameState, enemy, party, activeBattler, handleFight, castSpell, battleTurn, activeDialog, combatInterjection]);

@@ -80,8 +80,8 @@ function simulateBattle(party, enemy) {
         target.hp = Math.min(target.maxHp, target.hp + heal);
         p[i].mp -= spellToUse.mp;
       } else {
-        const result = calculateHitAndDamage(p[i].ac, p[i].minDmg, p[i].maxDmg, e.ac);
-        if (result.hit) e.hp -= result.damage;
+        const res = calculateHitAndDamage(p[i].ac, p[i].minDmg, p[i].maxDmg, e.ac);
+        if (res.hit) e.hp -= res.damage;
       }
       if (e.hp <= 0) break;
     }

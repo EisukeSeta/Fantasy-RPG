@@ -18,7 +18,6 @@ import ushioniImg from '../assets/enemies/ushioni.png';
 import nueImg from '../assets/enemies/nue.png';
 
 // Data Imports (JSON)
-import balanceData from '../data/Balance.json';
 
 export const CHAR_IMAGES = { 
   "abe_seimei.png": abeImg, 
@@ -41,7 +40,28 @@ export const ENEMY_IMAGES = {
 
 export const varGold = '#f0e68c';
 export const ICON_MAPPING = { "shrine": "⛩️", "well": "井", "scroll": "📜" };
-export const BOSS_POS = balanceData.map.bossPos;
+
+// 迷宮の理（定数定義）
+export const MAP_WIDTH = 25;
+export const MAP_HEIGHT = 21;
+export const BOSS_POS = { x: 23, y: 19 };
+
+/**
+ * 【平安の理】ゲームバランス定数
+ */
+export const GAME_SETTINGS = {
+  ENCOUNTER_RATE: 0.15,      // 遭遇率 (15%)
+  LOG_CAPACITY: 30,          // 消息（ログ）の最大保持数
+  
+  // 演出の速度（ミリ秒）
+  DELAYS: {
+    VICTORY_BOSS: 1500,     // ボス調伏後の余韻
+    VICTORY_NORMAL: 1200,   // 通常戦勝利後の余韻
+    ENEMY_TURN: 500,        // 敵の反撃開始
+    AUTO_BATTLE: 800,       // オートバトルの間隔
+    SHAKE_DURATION: 300     // 震動の継続時間
+  }
+};
 
 export const isDebug = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debug') === 'true';
 
