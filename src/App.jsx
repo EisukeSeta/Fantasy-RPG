@@ -40,7 +40,8 @@ function App() {
     isMuted, setIsMuted,
     handleRestart,
     saveGame,
-    loadGame
+    loadGame,
+    showGrimoire, setShowGrimoire
   } = useGame();
 
   const [isAudioInitialized, setAudioInitialized] = useState(false);
@@ -48,7 +49,6 @@ function App() {
   const [showMap, setShowMap] = useState(false);
   const [showStatus, setShowStatus] = useState(false);
   const [showDebug, setShowDebug] = useState(isDebug);
-  const [showGrimoire, setShowGrimoire] = useState(false);
   const [forceLoot, setForceLoot] = useState(false);
 
   const isForceMobile = (typeof window !== 'undefined' && (window.innerWidth <= 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent))) || new URLSearchParams(window.location.search).get('mobile') === '1';
@@ -103,7 +103,7 @@ function App() {
       else if (e.key.toLowerCase() === 'k') setShowGrimoire(prev => !prev);
     };
     window.addEventListener('keydown', hk); return () => window.removeEventListener('keydown', hk);
-  }, [gameState, activeDialog, processMove]);
+  }, [gameState, activeDialog, processMove, setShowGrimoire]);
 
   const partyInDanger = party.some(m => m.hp > 0 && (m.hp <= m.maxHp * 0.2 || m.hp === 1));
 

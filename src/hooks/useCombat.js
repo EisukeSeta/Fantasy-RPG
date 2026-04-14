@@ -24,8 +24,11 @@ export const useCombat = () => {
     setMapData,
     activeDialog, setActiveDialog,
     combatInterjection, setCombatInterjection,
+    showSpells,
+    setShowSpells,
     triggerVisualEffect,
-    setMessages
+    setMessages,
+    showGrimoire
   } = useGame();
 
   const addMessage = useCallback((msg, type = 'normal') => {
@@ -37,7 +40,6 @@ export const useCombat = () => {
   const [battleTurn, setBattleTurn] = useState(0);
   const [isAutoBattle, setIsAutoBattle] = useState(true);
   const [showVictory, setShowVictory] = useState(false);
-  const [showSpells, setShowSpells] = useState(null);
 
   const handleLevelUp = useCallback((member) => {
     let m = { ...member };
@@ -193,7 +195,7 @@ export const useCombat = () => {
     setActiveBattler(0); 
     setBattleTurn(0); 
     setShowSpells(null);
-  }, [enemy, addMessage, handleLevelUp, setGameState, setEnemy, setParty, setActiveDialog, setBossDefeated, setPlayerState, setMapData, setCombatInterjection, party, forceLoot]);
+  }, [enemy, addMessage, handleLevelUp, setGameState, setEnemy, setParty, setActiveDialog, setBossDefeated, setPlayerState, setMapData, setCombatInterjection, party, forceLoot, setShowSpells]);
 
   // --- 実効能力値の計算（パッシブ効果反映：勲章の霊力） ---
   const getEffectiveStats = useCallback((member) => {
@@ -419,11 +421,11 @@ export const useCombat = () => {
         handleFight();
       }
     }
-  }, [party, activeBattler, enemy, addMessage, endBattle, gameState, handleFight, triggerVisualEffect, setParty, setEnemy, getEffectiveStats]);
+  }, [party, activeBattler, enemy, addMessage, endBattle, gameState, handleFight, triggerVisualEffect, setParty, setEnemy, getEffectiveStats, setShowSpells]);
 
   // オートバトル・ループ
   useEffect(() => {
-    if (isAutoBattle && gameState === 'BATTLE' && enemy && !activeDialog && !combatInterjection) {
+    if (isAutoBattle && gameState === 'BATTLE' && enemy && !activeDialog && !combatInterjection && !showGrimoire) {
       const a = party[activeBattler];
       if (!a || a.hp <= 0) {
         const nextIdx = party.findIndex(m => m.hp > 0);
@@ -449,7 +451,7 @@ export const useCombat = () => {
       }, GAME_SETTINGS.DELAYS.AUTO_BATTLE);
       return () => clearTimeout(t);
     }
-  }, [isAutoBattle, gameState, enemy, party, activeBattler, handleFight, castSpell, battleTurn, activeDialog, combatInterjection]);
+  }, [isAutoBattle, gameState, enemy, party, activeBattler, handleFight, castSpell, battleTurn, activeDialog, combatInterjection, showGrimoire]);
 
   // オート戦闘の最後の一人修正のために battleTurn を監視
   useEffect(() => {

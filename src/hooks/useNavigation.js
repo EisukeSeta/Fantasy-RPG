@@ -140,8 +140,8 @@ export const useNavigation = () => {
             isStory: isNarrative
           });
           if (event.isHeal) { 
-            // 復活する者たちの言霊を拾う
-            const resurrected = party.filter(m => m.hp <= 0 || (m.statusEffects && m.statusEffects.length > 0));
+            // 癒やしと復活を待つ者たちの言霊を拾う（HPが最大でない者を対象とする）
+            const resurrected = party.filter(m => m.hp < m.maxHp || (m.statusEffects && m.statusEffects.length > 0));
 
             setParty(p => p.map(m => ({ 
                 ...m, 

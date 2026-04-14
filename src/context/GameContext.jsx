@@ -4,7 +4,7 @@ import scenarioData from '../data/Scenario.json';
 import charactersData from '../data/Characters.json';
 import { DIRECTIONS, MAP_WIDTH, MAP_HEIGHT, generateMap } from '../data/mapData';
 import SoundEngine from '../utils/SoundEngine';
-import { isDebug } from '../constants/gameData';
+import { isDebug, GAME_SETTINGS } from '../constants/gameData';
 
 const SAVE_KEY = 'RASHOMON_SAVE_V1';
 
@@ -39,6 +39,9 @@ export const GameProvider = ({ children }) => {
   
   // 音響
   const [isMuted, setIsMuted] = useState(isDebug);
+  
+  // 閲覧（一時停止）の理
+  const [showGrimoire, setShowGrimoire] = useState(false);
 
   // --- 記憶の理（Save/Load） ---
 
@@ -124,15 +127,37 @@ export const GameProvider = ({ children }) => {
 
   const handleResurrection = useCallback(() => {
     console.log("⛩️ 【再起の儀】を執り行います。");
+    
+    // 復活する者たちの魂を特定（HPが最大でない者を救い主として扱う）
+    const resurrected = party.filter(m => m.hp < m.maxHp || (m.statusEffects && m.statusEffects.length > 0));
+
     setGameState('EXPLORING');
     setPlayerState({ x: 0, y: 0, dir: DIRECTIONS.S });
     setBossDefeated(false);
     setEnemy(null);
     SoundEngine.transitionTo('EXPLORING');
-    setParty(charactersData.map(c => ({ ...c, hp: c.maxHp, mp: c.maxMp, status: '平安', items: [] })));
+    
+    // パーティを全快
+    setParty(charactersData.map(c => ({ 
+      ...c, 
+      hp: c.maxHp, 
+      mp: c.maxMp, 
+      status: '平安', 
+      items: [] 
+    })));
+    
     setMapData(generateMap());
     setMessages([{ text: scenarioData.events.gameStart, type: 'event' }]);
     
+    // 復活のメッセージを余韻をもって表示
+    resurrected.forEach((m, idx) => {
+      if (m.resurrectionMessage) {
+        setTimeout(() => {
+          setMessages(prev => [...prev, { text: `${m.name}：「${m.resurrectionMessage}」`, type: 'level_up' }].slice(-GAME_SETTINGS.LOG_CAPACITY));
+        }, (idx + 1) * 800 + 1000); // 1秒待ってから順次
+      }
+    });
+
     setActiveDialog({
       title: "【再起の儀】",
       speaker: charactersData[0]?.id || "abe_seimei", 
@@ -141,7 +166,7 @@ export const GameProvider = ({ children }) => {
       type: 'narration',
       isStory: true
     });
-  }, [setGameState, setPlayerState, setParty, setMapData, setMessages, setBossDefeated, setEnemy, setActiveDialog]);
+  }, [setGameState, setPlayerState, setParty, setMapData, setMessages, setBossDefeated, setEnemy, setActiveDialog, party]);
 
   const value = {
     gameState, setGameState,
@@ -161,6 +186,7 @@ export const GameProvider = ({ children }) => {
     triggerVisualEffect,
     isMuted, setIsMuted,
     toggleMute,
+    showGrimoire, setShowGrimoire,
     saveGame, // 呪文を公開
     loadGame,
     handleRestart: handleResurrection 
