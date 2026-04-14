@@ -1,5 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
-import { generateMap, DIRECTIONS, MAP_WIDTH, MAP_HEIGHT } from './data/mapData';
+import { useState, useCallback, useEffect } from 'react';
 import TitleBg from './images/闇夜の平安京.png';
 import packageJson from '../package.json';
 import { ENEMY_LIST } from './data/enemyData';
@@ -9,20 +8,19 @@ import SoundEngine from './utils/SoundEngine';
 
 import { 
   BOSS_POS, 
-  isDebug,
-  CHAR_IMAGES,
-  DIALOG_SPEAKERS
+  isDebug
 } from './constants/gameData';
-
-import balanceData from './data/Balance.json';
+import { DIRECTIONS } from './data/mapData';
 import scenarioData from './data/Scenario.json';
-import charactersData from './data/Characters.json';
 import mapEventsData from './data/MapEvents.json';
 
 import { useNavigation } from './hooks/useNavigation';
 import { useCombat } from './hooks/useCombat';
 import { useGame } from './context/GameContext';
 
+/**
+ * 羅生門 RPG: メインアプリケーション
+ */
 function App() {
   const {
     gameState, setGameState,
@@ -30,7 +28,7 @@ function App() {
     playerState, setPlayerState,
     party, setParty,
     mapData, setMapData,
-    bossDefeated,
+    bossDefeated, setBossDefeated,
     enemy, setEnemy,
     activeDialog, setActiveDialog,
     combatInterjection, setCombatInterjection,
@@ -38,7 +36,6 @@ function App() {
     visualEffects,
     flashColor,
     displayShake,
-    triggerVisualEffect,
     isMuted, setIsMuted,
     handleRestart
   } = useGame();
@@ -48,7 +45,7 @@ function App() {
   const [showMap, setShowMap] = useState(false);
   const [showStatus, setShowStatus] = useState(false);
   const [showDebug, setShowDebug] = useState(isDebug);
-  const forceLoot = false;
+  const [forceLoot, setForceLoot] = useState(false);
 
   const isForceMobile = (typeof window !== 'undefined' && (window.innerWidth <= 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent))) || new URLSearchParams(window.location.search).get('mobile') === '1';
 
