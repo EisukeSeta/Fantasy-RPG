@@ -42,9 +42,9 @@ export const varGold = '#f0e68c';
 export const ICON_MAPPING = { "shrine": "⛩️", "well": "井", "scroll": "📜" };
 
 // 迷宮の理（定数定義）
-export const MAP_WIDTH = 25;
-export const MAP_HEIGHT = 21;
-export const BOSS_POS = { x: 23, y: 19 };
+export const MAP_WIDTH = 10;
+export const MAP_HEIGHT = 8;
+export const BOSS_POS = { x: 8, y: 6 };
 
 /**
  * 【平安の理】ゲームバランス定数

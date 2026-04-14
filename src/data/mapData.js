@@ -1,7 +1,7 @@
 // src/data/mapData.js
 import balanceData from './Balance.json';
 
-// 10x10 ダンジョンのアスキーアート表現 (ベース)
+// 10x8 ダンジョンのアスキーアート表現
 const asciiMap = [
   "+-+-+-+-+-+-+-+-+-+-+",
   "| |       |         |",
@@ -22,12 +22,12 @@ const asciiMap = [
   "+-+-+-+-+-+-+-+-+-+-+"
 ];
 
-export const MAP_WIDTH = balanceData.map.width;  // 25
-export const MAP_HEIGHT = balanceData.map.height; // 21
+export const MAP_WIDTH = balanceData.map.width;  // 10
+export const MAP_HEIGHT = balanceData.map.height; // 8
 
 /**
  * 迷宮の地図を生成する。
- * AAの範囲外は「広間」として生成し、外周は必ず壁で囲む。
+ * 正確にアスキーアートから 10x8 の情報を抽出する。
  */
 export function generateMap() {
   const map = [];
@@ -35,24 +35,14 @@ export function generateMap() {
   for (let y = 0; y < MAP_HEIGHT; y++) {
     const row = [];
     for (let x = 0; x < MAP_WIDTH; x++) {
-      let n = false, s = false, e = false, w = false;
-
-      // AAの範囲内であればAAから取得
+      // セルの中心点は y*2+1, x*2+1
       const asciiY = y * 2 + 1;
       const asciiX = x * 2 + 1;
       
-      if (asciiY < asciiMap.length && asciiX < asciiMap[0].length) {
-        n = asciiMap[asciiY - 1][asciiX] === '-';
-        s = asciiMap[asciiY + 1] ? (asciiMap[asciiY + 1][asciiX] === '-') : true;
-        w = asciiMap[asciiY][asciiX - 1] === '|';
-        e = asciiMap[asciiY][asciiX + 1] === '|';
-      }
-
-      // 外周の壁を保証 (鵺が外へ逃げぬよう、プレイヤーが落ちぬよう)
-      if (y === 0) n = true;
-      if (y === MAP_HEIGHT - 1) s = true;
-      if (x === 0) w = true;
-      if (x === MAP_WIDTH - 1) e = true;
+      const n = asciiMap[asciiY - 1][asciiX] === '-';
+      const s = asciiMap[asciiY + 1][asciiX] === '-';
+      const w = asciiMap[asciiY][asciiX - 1] === '|';
+      const e = asciiMap[asciiY][asciiX + 1] === '|';
       
       row.push({
         x, y,
