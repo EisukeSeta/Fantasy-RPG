@@ -60,6 +60,8 @@
 | `party` | object[] | 上記「隊員データ」の配列 | 必須 |
 | `mapData` | object[][] | 塗りつぶした迷宮の記憶 | 必須 |
 | `bossDefeated` | boolean | 首魁調伏の記録 | 必須 |
+| `encounteredEnemies` | number[] | 遭遇した怪異のID配列 | 必須 |
+| `defeatedEnemies` | number[] | 調伏した怪異のID配列 | 必須 |
 
 ---
 

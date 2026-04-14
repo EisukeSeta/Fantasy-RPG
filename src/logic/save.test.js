@@ -25,6 +25,8 @@ describe('セーブデータの構造整合性テスト', () => {
     ],
     mapData: [[{ x: 0, y: 0, visited: true }]],
     bossDefeated: false,
+    encounteredEnemies: [1],
+    defeatedEnemies: [1],
     saveVersion: 'V1'
   };
 
@@ -35,6 +37,8 @@ describe('セーブデータの構造整合性テスト', () => {
     expect(keys).toContain('party');
     expect(keys).toContain('mapData');
     expect(keys).toContain('bossDefeated');
+    expect(keys).toContain('encounteredEnemies');
+    expect(keys).toContain('defeatedEnemies');
   });
 
   it('パーティメンバーが正しい構造を維持していること', () => {

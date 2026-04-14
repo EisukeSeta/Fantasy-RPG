@@ -9,7 +9,8 @@ import { varGold } from '../../constants/gameData';
 export const MessageLog = ({ 
   messages, 
   isForceMobile,
-  setShowGrimoire
+  setShowGrimoire,
+  setShowArchives
 }) => {
   const logRef = useRef(null);
 
@@ -33,26 +34,48 @@ export const MessageLog = ({
         alignItems: 'center' 
       }}>
         <span style={{ color: varGold, fontSize: '0.75rem', letterSpacing: '2px' }}>救済の言行録</span>
-        {setShowGrimoire && (
-           <button 
-             onClick={() => setShowGrimoire(true)}
-             style={{
-               background: 'transparent',
-               border: `1px solid ${varGold}`,
-               color: varGold,
-               fontSize: '0.7rem',
-               padding: '2px 8px',
-               cursor: 'pointer',
-               borderRadius: '2px',
-               transition: 'all 0.2s'
-             }}
-             title="魔道術の一覧を表示 (Key: K)"
-             onMouseOver={(e) => { e.target.style.background = varGold; e.target.style.color = '#000'; }}
-             onMouseOut={(e) => { e.target.style.background = 'transparent'; e.target.style.color = varGold; }}
-           >
-             🏮 術聖典
-           </button>
-        )}
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {setShowArchives && (
+             <button 
+               onClick={() => setShowArchives(true)}
+               style={{
+                 background: 'transparent',
+                 border: `1px solid ${varGold}`,
+                 color: varGold,
+                 fontSize: '0.7rem',
+                 padding: '2px 8px',
+                 cursor: 'pointer',
+                 borderRadius: '2px',
+                 transition: 'all 0.2s'
+               }}
+               title="遭遇・討伐した怪異と武勲の一覧 (Key: V)"
+               onMouseOver={(e) => { e.target.style.background = varGold; e.target.style.color = '#000'; }}
+               onMouseOut={(e) => { e.target.style.background = 'transparent'; e.target.style.color = varGold; }}
+             >
+               📜 図録
+             </button>
+          )}
+          {setShowGrimoire && (
+             <button 
+               onClick={() => setShowGrimoire(true)}
+               style={{
+                 background: 'transparent',
+                 border: `1px solid ${varGold}`,
+                 color: varGold,
+                 fontSize: '0.7rem',
+                 padding: '2px 8px',
+                 cursor: 'pointer',
+                 borderRadius: '2px',
+                 transition: 'all 0.2s'
+               }}
+               title="魔道術の一覧を表示 (Key: K)"
+               onMouseOver={(e) => { e.target.style.background = varGold; e.target.style.color = '#000'; }}
+               onMouseOut={(e) => { e.target.style.background = 'transparent'; e.target.style.color = varGold; }}
+             >
+               🏮 術聖典
+             </button>
+          )}
+        </div>
       </div>
       <div 
         className={containerClass} 

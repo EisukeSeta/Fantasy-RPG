@@ -4,6 +4,8 @@ import packageJson from '../package.json';
 import { ENEMY_LIST } from './data/enemyData';
 import GameArea from './components/layout/GameArea';
 import DialogManager from './components/ui/DialogManager';
+import { GrimoireView } from './components/ui/GrimoireView';
+import { ArchivesView } from './components/ui/ArchivesView';
 import SoundEngine from './utils/SoundEngine';
 
 import { 
@@ -50,6 +52,7 @@ function App() {
   const [showStatus, setShowStatus] = useState(false);
   const [showDebug, setShowDebug] = useState(isDebug);
   const [forceLoot, setForceLoot] = useState(false);
+  const [showArchives, setShowArchives] = useState(false);
 
   const isForceMobile = (typeof window !== 'undefined' && (window.innerWidth <= 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent))) || new URLSearchParams(window.location.search).get('mobile') === '1';
 
@@ -101,9 +104,10 @@ function App() {
       else if (e.key === 'a' || e.key === 'ArrowLeft') processMove('TURN_LEFT');
       else if (e.key === 'd' || e.key === 'ArrowRight') processMove('TURN_RIGHT');
       else if (e.key.toLowerCase() === 'k') setShowGrimoire(prev => !prev);
+      else if (e.key.toLowerCase() === 'v') setShowArchives(prev => !prev);
     };
     window.addEventListener('keydown', hk); return () => window.removeEventListener('keydown', hk);
-  }, [gameState, activeDialog, processMove, setShowGrimoire]);
+  }, [gameState, activeDialog, processMove, setShowGrimoire, setShowArchives]);
 
   const partyInDanger = party.some(m => m.hp > 0 && (m.hp <= m.maxHp * 0.2 || m.hp === 1));
 
@@ -160,6 +164,11 @@ function App() {
       )}
 
       <div className={`game-container ${isForceMobile ? 'layout-mobile' : ''} ${isShake || displayShake === 'normal' ? 'shake-anim' : ''} ${displayShake === 'heavy' ? 'shake-heavy' : ''} ${partyInDanger ? 'danger-state' : ''}`}>
+        {/* 都の図録と武勲（オーバーレイ） */}
+        {showArchives && <ArchivesView onClose={() => setShowArchives(false)} />}
+
+        {/* 術聖典（オーバーレイ） */}
+        {showGrimoire && <GrimoireView onClose={() => setShowGrimoire(false)} />}
         <SpellGrimoire isOpen={showGrimoire} onClose={() => setShowGrimoire(false)} />
         {/* 閃光エフェクト */}
         {flashColor === 'red' && <div className="flash-red"></div>}

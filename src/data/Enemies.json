@@ -1,12 +1,12 @@
 [
-  { "id": 1, "name": "餓鬼（がき）", "minHp": 4, "maxHp": 8, "ac": 9, "minDmg": 2, "maxDmg": 3, "exp": 80, "image": "gaki.png" },
-  { "id": 2, "name": "骸骨（がいこつ）", "minHp": 10, "maxHp": 18, "ac": 7, "minDmg": 4, "maxDmg": 7, "exp": 120, "image": "gaikotsu.png", "drops": [{ "itemId": 1, "rate": 0.08 }] },
-  { "id": 3, "name": "鉄鼠（てっそ）", "minHp": 8, "maxHp": 15, "ac": 8, "minDmg": 3, "maxDmg": 5, "exp": 100, "image": "tessatsu.png", "drops": [{ "itemId": 3, "rate": 0.05 }] },
-  { "id": 4, "name": "人魂（ひとだま）", "minHp": 5, "maxHp": 12, "ac": 10, "minDmg": 1, "maxDmg": 6, "exp": 90, "image": "hitodama.png" },
-  { "id": 5, "name": "輪入道（わにゅうどう）", "minHp": 25, "maxHp": 45, "ac": 5, "minDmg": 8, "maxDmg": 15, "exp": 350, "image": "wanyudo.png", "drops": [{ "itemId": 1, "rate": 0.15 }] },
-  { "id": 6, "name": "濡れ女（ぬれおんな）", "minHp": 20, "maxHp": 35, "ac": 6, "minDmg": 6, "maxDmg": 12, "exp": 300, "image": "nureonna.png", "statusEffect": "POISON", "drops": [{ "itemId": 2, "rate": 0.10 }] },
-  { "id": 7, "name": "青坊主（あおぼうず）", "minHp": 30, "maxHp": 50, "ac": 4, "minDmg": 10, "maxDmg": 20, "exp": 450, "image": "aobozu.png", "drops": [{ "itemId": 2, "rate": 0.20 }] },
-  { "id": 8, "name": "土蜘蛛（つちぐも）", "minHp": 50, "maxHp": 80, "ac": 4, "minDmg": 15, "maxDmg": 25, "exp": 800, "image": "tsuchigumo.png", "statusEffect": "POISON", "drops": [{ "itemId": 1, "rate": 0.20 }, { "itemId": 3, "rate": 0.10 }] },
-  { "id": 9, "name": "牛鬼（うしおに）", "minHp": 100, "maxHp": 180, "ac": 2, "minDmg": 25, "maxDmg": 50, "exp": 1500, "image": "ushioni.png", "statusEffect": "PARALYZED", "drops": [{ "itemId": 1, "rate": 0.30 }, { "itemId": 3, "rate": 0.20 }] },
-  { "id": 10, "name": "鵺（ぬえ）", "minHp": 100, "maxHp": 160, "ac": 5, "minDmg": 20, "maxDmg": 40, "exp": 5000, "image": "nue.png", "isBoss": true, "drops": [{ "itemId": 100, "rate": 1.0 }] }
+  { "id": 1, "name": "餓鬼（がき）", "minHp": 4, "maxHp": 8, "ac": 9, "minDmg": 2, "maxDmg": 3, "exp": 80, "image": "gaki.png", "flavor": "生前の強欲の報いにより、常に飢えと渇きに苦しむ亡者。腹は膨らみ、喉は針のように細い。" },
+  { "id": 2, "name": "骸骨（がいこつ）", "minHp": 10, "maxHp": 18, "ac": 7, "minDmg": 4, "maxDmg": 7, "exp": 120, "image": "gaikotsu.png", "drops": [{ "itemId": 1, "rate": 0.08 }], "flavor": "戦場に打ち捨てられた骸が、無念の情によって動く。骨の軋む音は、死者の嘆きとも聞こえる。" },
+  { "id": 3, "name": "鉄鼠（てっそ）", "minHp": 8, "maxHp": 15, "ac": 8, "minDmg": 3, "maxDmg": 5, "exp": 100, "image": "tessatsu.png", "drops": [{ "itemId": 3, "rate": 0.05 }], "flavor": "高僧の怨念が巨大な鼠と化した怪異。その歯は鉄をも噛み砕き、経典を食い荒らすという。" },
+  { "id": 4, "name": "人魂（ひとだま）", "minHp": 5, "maxHp": 12, "ac": 10, "minDmg": 1, "maxDmg": 6, "exp": 90, "image": "hitodama.png", "flavor": "死者の体から抜け出した魂が、蒼白く燃え上がる姿。触れる者に死の冷気をもたらす。" },
+  { "id": 5, "name": "輪入道（わにゅうどう）", "minHp": 25, "maxHp": 45, "ac": 5, "minDmg": 8, "maxDmg": 15, "exp": 350, "image": "wanyudo.png", "drops": [{ "itemId": 1, "rate": 0.15 }], "flavor": "燃え盛る車輪の中央に、恐ろしい男の顔が浮かぶ。その姿を見た者の魂を奪い去ると恐れられる。" },
+  { "id": 6, "name": "濡れ女（ぬれおんな）", "minHp": 20, "maxHp": 35, "ac": 6, "minDmg": 6, "maxDmg": 12, "exp": 300, "image": "nureonna.png", "statusEffect": "POISON", "drops": [{ "itemId": 2, "rate": 0.10 }], "flavor": "蛇の体に女の首を持つ怪異。水辺に現れ、鋭い毒牙と長い髪で獲物を絡め取る。" },
+  { "id": 7, "name": "青坊主（あおぼうず）", "minHp": 30, "maxHp": 50, "ac": 4, "minDmg": 10, "maxDmg": 20, "exp": 450, "image": "aobozu.png", "drops": [{ "itemId": 2, "rate": 0.20 }], "flavor": "巨大な青い法師の姿をした怪異。その一つ目に睨まれた者は、金縛りに遭い、動くことが叶わぬ。" },
+  { "id": 8, "name": "土蜘蛛（つちぐも）", "minHp": 50, "maxHp": 80, "ac": 4, "minDmg": 15, "maxDmg": 25, "exp": 800, "image": "tsuchigumo.png", "statusEffect": "POISON", "drops": [{ "itemId": 1, "rate": 0.20 }, { "itemId": 3, "rate": 0.10 }], "flavor": "都に仇なす巨大な蜘蛛の怪。糸を吐いて動きを封じ、猛毒を持って勇士を苦しめる。" },
+  { "id": 9, "name": "牛鬼（うしおに）", "minHp": 100, "maxHp": 180, "ac": 2, "minDmg": 25, "maxDmg": 50, "exp": 1500, "image": "ushioni.png", "statusEffect": "PARALYZED", "drops": [{ "itemId": 1, "rate": 0.30 }, { "itemId": 3, "rate": 0.20 }], "flavor": "牛の頭に蜘蛛の体を持つ、残忍極まりない巨怪。その咆哮は大地を震わせ、影を踏まれた者は動けなくなる。" },
+  { "id": 10, "name": "鵺（ぬえ）", "minHp": 100, "maxHp": 160, "ac": 5, "minDmg": 20, "maxDmg": 40, "exp": 5000, "image": "nue.png", "isBoss": true, "drops": [{ "itemId": 100, "rate": 1.0 }], "flavor": "猿の顔、虎の手足、蛇の尾を持つ伝説の怪物。黒煙と共に現れ、都の夜に不吉な鳴き声を響かせる。" }
 ]

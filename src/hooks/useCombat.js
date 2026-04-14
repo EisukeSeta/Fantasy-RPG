@@ -28,7 +28,9 @@ export const useCombat = () => {
     setShowSpells,
     triggerVisualEffect,
     setMessages,
-    showGrimoire
+    showGrimoire,
+    encounteredEnemies, setEncounteredEnemies,
+    defeatedEnemies, setDefeatedEnemies
   } = useGame();
 
   const addMessage = useCallback((msg, type = 'normal') => {
@@ -54,6 +56,16 @@ export const useCombat = () => {
     return m;
   }, [addMessage]);
 
+  // 図録：遭遇記録
+  useEffect(() => {
+    if (gameState === 'BATTLE' && enemy && enemy.id) {
+      if (!encounteredEnemies.includes(enemy.id)) {
+        setEncounteredEnemies(prev => [...prev, enemy.id]);
+        addMessage(`……怪異【${enemy.name}】が図録に姿を現した……`, 'event');
+      }
+    }
+  }, [gameState, enemy, encounteredEnemies, setEncounteredEnemies, addMessage]);
+
   const endBattle = useCallback((won) => {
     if (won) {
         // 戦闘終了時の浄化：毒は自然治癒するが、麻痺は残る
@@ -64,6 +76,12 @@ export const useCombat = () => {
         
         setShowVictory(true);
         addMessage(`${enemy.name}${scenarioData.battle.defeat}`, 'level_up');
+
+        // 図録：討伐記録
+        if (enemy.id && !defeatedEnemies.includes(enemy.id)) {
+          setDefeatedEnemies(prev => [...prev, enemy.id]);
+          addMessage(`……怪異【${enemy.name}】の正体が都の図録に刻まれた……`, 'event');
+        }
         
         if (enemy.isBoss) { 
           setBossDefeated(true);
@@ -195,7 +213,7 @@ export const useCombat = () => {
     setActiveBattler(0); 
     setBattleTurn(0); 
     setShowSpells(null);
-  }, [enemy, addMessage, handleLevelUp, setGameState, setEnemy, setParty, setActiveDialog, setBossDefeated, setPlayerState, setMapData, setCombatInterjection, party, forceLoot, setShowSpells]);
+  }, [enemy, addMessage, handleLevelUp, setGameState, setEnemy, setParty, setActiveDialog, setBossDefeated, setPlayerState, setMapData, setCombatInterjection, party, forceLoot, setShowSpells, defeatedEnemies, setDefeatedEnemies]);
 
   // --- 実効能力値の計算（パッシブ効果反映：勲章の霊力） ---
   const getEffectiveStats = useCallback((member) => {

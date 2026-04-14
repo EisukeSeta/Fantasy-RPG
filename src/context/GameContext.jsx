@@ -22,6 +22,9 @@ export const GameProvider = ({ children }) => {
   const [party, setParty] = useState(charactersData.map(c => ({ ...c, items: [] })));
   const [mapData, setMapData] = useState(generateMap());
   const [bossDefeated, setBossDefeated] = useState(false);
+  const [encounteredEnemies, setEncounteredEnemies] = useState([]);
+  const [defeatedEnemies, setDefeatedEnemies] = useState([]);
+  const [showGrimoire, setShowGrimoire] = useState(false);
   
   // 戦闘
   const [enemy, setEnemy] = useState(null);
@@ -39,9 +42,6 @@ export const GameProvider = ({ children }) => {
   
   // 音響
   const [isMuted, setIsMuted] = useState(isDebug);
-  
-  // 閲覧（一時停止）の理
-  const [showGrimoire, setShowGrimoire] = useState(false);
 
   // --- 記憶の理（Save/Load） ---
 
@@ -55,6 +55,8 @@ export const GameProvider = ({ children }) => {
         party,
         mapData: mapData.map(row => row.map(cell => ({ ...cell }))), // 参照切り
         bossDefeated,
+        encounteredEnemies,
+        defeatedEnemies,
         messages: messages.slice(-10), // 重すぎないよう直近10件
         timestamp: Date.now()
       };
@@ -65,7 +67,7 @@ export const GameProvider = ({ children }) => {
       console.error("❌ 記録に失敗しました：", e);
       return false;
     }
-  }, [playerState, party, mapData, bossDefeated, messages]);
+  }, [playerState, party, mapData, bossDefeated, messages, encounteredEnemies, defeatedEnemies]);
 
   /**
    * 相起の術式 (Load)
@@ -80,7 +82,9 @@ export const GameProvider = ({ children }) => {
       setPlayerState(data.playerState);
       setParty(data.party);
       setMapData(data.mapData);
-      setBossDefeated(data.bossDefeated);
+      setBossDefeated(data.bossDefeated || false);
+      setEncounteredEnemies(data.encounteredEnemies || []);
+      setDefeatedEnemies(data.defeatedEnemies || []);
       if (data.messages) setMessages(data.messages);
       
       // 記憶の消去（次はない）
