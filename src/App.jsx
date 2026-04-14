@@ -37,8 +37,11 @@ function App() {
     visualEffects,
     flashColor,
     displayShake,
+    displayShake,
     isMuted, setIsMuted,
-    handleRestart
+    handleRestart,
+    saveGame,
+    loadGame
   } = useGame();
 
   const [isAudioInitialized, setAudioInitialized] = useState(false);
@@ -196,37 +199,48 @@ function App() {
                 羅生門編・第一章
               </p>
               
-              <div style={{ marginTop: '60px', display: 'flex', justifyContent: 'center' }}>
+              <div style={{ marginTop: '60px', display: 'flex', flexDirection: 'column', gap: '15px', alignItems: 'center' }}>
                 <button className="dialog-btn" onClick={() => {
                   setAudioInitialized(true);
                   SoundEngine.init();
                   SoundEngine.transitionTo('EXPLORING');
-                  // 即座に EXPLORING にせず、ダイアログが終わってから遷移させる
                   setActiveDialog({ 
                     ...scenarioData.opening, 
                     currentPage: 0, 
                     bgImage: TitleBg, 
                     isStory: true,
-                    onConfirm: () => {
-                      setGameState('EXPLORING');
-                    }
+                    onConfirm: () => { setGameState('EXPLORING'); }
                   });
                 }} style={{ 
-                  padding: '15px 40px', 
-                  fontSize: '1.4rem',
+                  padding: '12px 40px', 
+                  fontSize: '1.2rem',
+                  width: '260px',
                   boxShadow: '0 0 15px rgba(184, 154, 66, 0.4)'
                 }}>
-                  魂の旅を始める
+                  一から旅を始める
                 </button>
-              </div>
 
-              {bossDefeated && (
-                <div style={{ marginTop: '30px' }}>
-                  <button className="dialog-btn" onClick={() => window.location.reload()} style={{ opacity: 0.7 }}>
-                    再び都を救う（転生）
+                {localStorage.getItem('RASHOMON_SAVE_V1') && (
+                  <button className="dialog-btn" onClick={() => {
+                    const success = loadGame();
+                    if (success) {
+                      setAudioInitialized(true);
+                      SoundEngine.init();
+                      SoundEngine.transitionTo('EXPLORING');
+                      setGameState('EXPLORING');
+                      addMessage("……途切れた意識の先、再び平安の闇が口を開く。", "event");
+                    }
+                  }} style={{ 
+                    padding: '12px 40px', 
+                    fontSize: '1.2rem',
+                    width: '260px',
+                    backgroundColor: 'rgba(184, 154, 66, 0.1)',
+                    borderStyle: 'dashed'
+                  }}>
+                    過去の記憶を辿る
                   </button>
-                </div>
-              )}
+                )}
+              </div>
               
               <div style={{ marginTop: '40px', color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem' }}>
                 &copy; Antigravity RPG System - Rashomon v{packageJson.version}
@@ -264,6 +278,7 @@ function App() {
         messages={messages}
         mapEventsData={mapEventsData}
         setShowGrimoire={setShowGrimoire}
+        saveGame={saveGame}
       />
 
       <DialogManager 

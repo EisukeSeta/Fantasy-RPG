@@ -22,7 +22,8 @@ export const ControlPanel = ({
   setShowSpells,
   setShowStatus,
   setShowMap,
-  scenarioData
+  scenarioData,
+  saveGame
 }) => {
   const currentHero = party[activeBattler];
 
@@ -33,7 +34,7 @@ export const ControlPanel = ({
         <div className="mobile-utility-btns" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '5px', padding: '6px 5px', background: '#111', borderBottom: '1px solid #333' }}>
           <button className="dialog-btn" onClick={() => setShowMap(true)}>🗺️ 迷宮図</button>
           <button className="dialog-btn" onClick={() => setShowStatus(true)}>👥 隊員証</button>
-          <button className="dialog-btn" onClick={() => addMessage(scenarioData.ui.saveComplete, 'level_up')}>💾 記録</button>
+          <button className="dialog-btn" onClick={() => { saveGame(); addMessage(scenarioData.ui.saveComplete, 'level_up'); }}>💾 記録</button>
           <button className="dialog-btn" onClick={() => setIsMuted(!isMuted)}>{isMuted ? '🔇' : '🔊'}</button>
         </div>
 
@@ -89,7 +90,7 @@ export const ControlPanel = ({
         
         {/* システム系ボタン */}
         <div style={{ width: '120px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
-          <button className="save-btn" style={{ height: '50px' }} onClick={() => addMessage(scenarioData.ui.saveComplete, 'level_up')}>{scenarioData.ui.save}</button>
+          <button className="save-btn" style={{ height: '50px' }} onClick={() => { saveGame(); addMessage(scenarioData.ui.saveComplete, 'level_up'); }}>{scenarioData.ui.save}</button>
           <button className="save-btn" style={{ height: '50px' }} onClick={() => setIsMuted(!isMuted)}>{isMuted ? scenarioData.ui.bgmOff : scenarioData.ui.bgmOn}</button>
         </div>
 

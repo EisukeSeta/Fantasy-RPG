@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { GameContext } from './GameContextInstance';
 import scenarioData from '../data/Scenario.json';
 import charactersData from '../data/Characters.json';
@@ -6,8 +6,11 @@ import { DIRECTIONS, MAP_WIDTH, MAP_HEIGHT, generateMap } from '../data/mapData'
 import SoundEngine from '../utils/SoundEngine';
 import { isDebug } from '../constants/gameData';
 
+const SAVE_KEY = 'RASHOMON_SAVE_V1';
+
 /**
  * 都の理（状態管理）を司る心臓。
+ * 記録（セーブ）と想起（ロード）の術式を司る。
  */
 export const GameProvider = ({ children }) => {
   // --- 基本状態 ---
@@ -30,18 +33,71 @@ export const GameProvider = ({ children }) => {
   const [isShake, setIsShake] = useState(false);
   
   // 視覚演出（エフェクト）の理
-  const [visualEffects, setVisualEffects] = useState([]); // { id, target, value, type }
-  const [flashColor, setFlashColor] = useState(null); // 'red', etc.
-  const [displayShake, setDisplayShake] = useState(null); // 'normal', 'heavy'
+  const [visualEffects, setVisualEffects] = useState([]); 
+  const [flashColor, setFlashColor] = useState(null); 
+  const [displayShake, setDisplayShake] = useState(null); 
   
   // 音響
   const [isMuted, setIsMuted] = useState(isDebug);
 
-  // --- 共通アクション ---
+  // --- 記憶の理（Save/Load） ---
 
   /**
-   * 視覚演出の起動
+   * 記録の術式 (Save)
    */
+  const saveGame = useCallback(() => {
+    try {
+      const saveData = {
+        playerState,
+        party,
+        mapData: mapData.map(row => row.map(cell => ({ ...cell }))), // 参照切り
+        bossDefeated,
+        messages: messages.slice(-10), // 重すぎないよう直近10件
+        timestamp: Date.now()
+      };
+      localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+      console.log("💾 都の記録を完了しました。");
+      return true;
+    } catch (e) {
+      console.error("❌ 記録に失敗しました：", e);
+      return false;
+    }
+  }, [playerState, party, mapData, bossDefeated, messages]);
+
+  /**
+   * 相起の術式 (Load)
+   * 【一期一会】読み込みに成功した瞬間に記録は消滅し、新たな人生が始まる。
+   */
+  const loadGame = useCallback(() => {
+    try {
+      const stored = localStorage.getItem(SAVE_KEY);
+      if (!stored) return false;
+      const data = JSON.parse(stored);
+      
+      setPlayerState(data.playerState);
+      setParty(data.party);
+      setMapData(data.mapData);
+      setBossDefeated(data.bossDefeated);
+      if (data.messages) setMessages(data.messages);
+      
+      // 記憶の消去（次はない）
+      localStorage.removeItem(SAVE_KEY);
+      
+      console.log("⛩️ 過去の記憶を呼び戻しました。この記録はこれにて消失します。");
+      return true;
+    } catch (e) {
+      console.error("❌ 想起に失敗しました：", e);
+      return false;
+    }
+  }, []);
+
+  // 起動時の自動ロードは廃止し、タイトル画面での選択に委ねる
+  useEffect(() => {
+    // loadGame(); 
+  }, []);
+
+  // --- 共通アクション ---
+
   const triggerVisualEffect = useCallback((target, value, type, effectStyle = 'normal') => {
     const id = Date.now() + Math.random();
     setVisualEffects(prev => [...prev, { id, target, value, type }]);
@@ -60,50 +116,25 @@ export const GameProvider = ({ children }) => {
     }
   }, []);
   
-  /** 
-   * 都の音響を沈める（消音）
-   */
   const toggleMute = useCallback(() => {
     const nextMuted = !isMuted;
     setIsMuted(nextMuted);
     SoundEngine.setMuted(nextMuted);
   }, [isMuted]);
 
-  /**
-   * 探索の再開（再起の儀）
-   */
-  /**
-   * 探索の再開（再起の儀）
-   */
-  /**
-   * 再起の儀（黄泉からの帰還）
-   */
   const handleResurrection = useCallback(() => {
     console.log("⛩️ 【再起の儀】を執り行います。");
-    
-    // 状態の初期化
     setGameState('EXPLORING');
     setPlayerState({ x: 0, y: 0, dir: DIRECTIONS.S });
     setBossDefeated(false);
     setEnemy(null);
     SoundEngine.transitionTo('EXPLORING');
-    
-    // パーティを初期状態（Characters.json）に基づいて完全浄化
-    setParty(charactersData.map(c => ({ 
-      ...c, 
-      hp: c.maxHp, 
-      mp: c.maxMp, 
-      status: '平安', 
-      items: [] 
-    })));
-
+    setParty(charactersData.map(c => ({ ...c, hp: c.maxHp, mp: c.maxMp, status: '平安', items: [] })));
     setMapData(generateMap());
     setMessages([{ text: scenarioData.events.gameStart, type: 'event' }]);
     
-    // 安堵の独白を演出
-    const leaderName = charactersData[0]?.name || "晴明";
     setActiveDialog({
-      speaker: leaderName,
+      speaker: charactersData[0]?.name || "晴明",
       text: "……戻ったのか。この社の風、御神木の香りがする。息を吹き返した心地よ……。",
       type: 'narration'
     });
@@ -127,7 +158,9 @@ export const GameProvider = ({ children }) => {
     triggerVisualEffect,
     isMuted, setIsMuted,
     toggleMute,
-    handleRestart: handleResurrection // handleRestart としても公開（互換用）
+    saveGame, // 呪文を公開
+    loadGame,
+    handleRestart: handleResurrection 
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
