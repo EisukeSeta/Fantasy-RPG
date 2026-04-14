@@ -121,7 +121,7 @@ function App() {
                 })()}
              </p>
              <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
-               <button className="dialog-btn" onClick={handleRestart}>物語を再び辿る</button>
+               <button className="dialog-btn" onClick={() => { console.log("⛩️ 再起の道へ"); handleRestart(); }}>物語を再び辿る</button>
                <button className="dialog-btn" style={{ opacity: 0.6 }} onClick={() => setGameState('FINISHED')}>終了</button>
              </div>
           </div>

@@ -73,17 +73,42 @@ export const GameProvider = ({ children }) => {
   /**
    * 探索の再開（再起の儀）
    */
-  const handleRestart = useCallback(() => {
+  /**
+   * 探索の再開（再起の儀）
+   */
+  /**
+   * 再起の儀（黄泉からの帰還）
+   */
+  const handleResurrection = useCallback(() => {
+    console.log("⛩️ 【再起の儀】を執り行います。");
+    
+    // 状態の初期化
     setGameState('EXPLORING');
     setPlayerState({ x: 0, y: 0, dir: DIRECTIONS.S });
-    setParty(charactersData.map(c => ({ ...c, items: [] })));
-    setMapData(generateMap());
-    setMessages([{ text: scenarioData.events.gameStart, type: 'event' }]);
     setBossDefeated(false);
-    setActiveDialog(null);
     setEnemy(null);
     SoundEngine.transitionTo('EXPLORING');
-  }, []);
+    
+    // パーティを初期状態（Characters.json）に基づいて完全浄化
+    setParty(charactersData.map(c => ({ 
+      ...c, 
+      hp: c.maxHp, 
+      mp: c.maxMp, 
+      status: '平安', 
+      items: [] 
+    })));
+
+    setMapData(generateMap());
+    setMessages([{ text: scenarioData.events.gameStart, type: 'event' }]);
+    
+    // 安堵の独白を演出
+    const leaderName = charactersData[0]?.name || "晴明";
+    setActiveDialog({
+      speaker: leaderName,
+      text: "……戻ったのか。この社の風、御神木の香りがする。息を吹き返した心地よ……。",
+      type: 'narration'
+    });
+  }, [setGameState, setPlayerState, setParty, setMapData, setMessages, setBossDefeated, setEnemy, setActiveDialog]);
 
   const value = {
     gameState, setGameState,
@@ -103,7 +128,7 @@ export const GameProvider = ({ children }) => {
     triggerVisualEffect,
     isMuted, setIsMuted,
     toggleMute,
-    handleRestart
+    handleRestart: handleResurrection // handleRestart としても公開（互換用）
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
