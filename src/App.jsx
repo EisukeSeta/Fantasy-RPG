@@ -126,7 +126,18 @@ function App() {
                 })()}
              </p>
              <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
-               <button className="dialog-btn" onClick={() => { console.log("⛩️ 再起の道へ"); handleRestart(); }}>物語を再び辿る</button>
+               <button className="dialog-btn" onClick={() => { 
+                 console.log("⛩️ 再起の道へ"); 
+                 handleRestart(); 
+                 setActiveDialog({
+                   title: "【再起の儀】",
+                   speaker: "abe_seimei",
+                   pages: ["……戻ったのか。この社の風、御神木の香りがする。息を吹き返した心地よ……。"],
+                   currentPage: 0,
+                   bgImage: TitleBg,
+                   isStory: true
+                 });
+               }}>物語を再び辿る</button>
                <button className="dialog-btn" style={{ opacity: 0.6 }} onClick={() => setGameState('FINISHED')}>終了</button>
              </div>
           </div>

@@ -134,9 +134,12 @@ export const GameProvider = ({ children }) => {
     setMessages([{ text: scenarioData.events.gameStart, type: 'event' }]);
     
     setActiveDialog({
-      speaker: charactersData[0]?.name || "晴明",
-      text: "……戻ったのか。この社の風、御神木の香りがする。息を吹き返した心地よ……。",
-      type: 'narration'
+      title: "【再起の儀】",
+      speaker: charactersData[0]?.id || "abe_seimei", 
+      pages: ["……戻ったのか。この社の風、御神木の香りがする。息を吹き返した心地よ……。"],
+      currentPage: 0,
+      type: 'narration',
+      isStory: true
     });
   }, [setGameState, setPlayerState, setParty, setMapData, setMessages, setBossDefeated, setEnemy, setActiveDialog]);
 
