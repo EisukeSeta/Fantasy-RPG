@@ -20,7 +20,8 @@ export const useNavigation = () => {
     setEnemy,
     activeDialog, setActiveDialog,
     setIsShake,
-    setMessages
+    setMessages,
+    setCombatInterjection
   } = useGame();
 
   const addMessage = useCallback((msg, type = 'normal') => {
@@ -152,19 +153,33 @@ export const useNavigation = () => {
             }))); 
             addMessage(`【${event.name}】の静寂にて隊員の穢れは浄化され、生命と霊力が再び漲った。`, 'heal'); 
 
-            // 復活のメッセージを表示（少し遅らせて余韻を出す）
-            resurrected.forEach((m, idx) => {
-                if (m.resurrectionMessage) {
-                    setTimeout(() => {
-                        addMessage(`${m.name}：「${m.resurrectionMessage}」`, 'level_up');
-                    }, (idx + 1) * 600);
-                }
-            });
+            // 復活のメッセージを順次ウィンドウで表示する（独白の連鎖）
+            const showNextResMsg = (list) => {
+              if (list.length === 0) return;
+              const [current, ...remaining] = list;
+              if (current.resurrectionMessage) {
+                setCombatInterjection({
+                  member: current,
+                  quotes: [{ text: current.resurrectionMessage }],
+                  currentPage: 0,
+                  onClose: () => {
+                    // 次の者の独白へ
+                    setTimeout(() => showNextResMsg(remaining), 300);
+                  }
+                });
+              } else {
+                showNextResMsg(remaining);
+              }
+            };
+            
+            if (resurrected.length > 0) {
+              setTimeout(() => showNextResMsg(resurrected), 800);
+            }
           }
         }
       }
     }
-  }, [playerState, mapData, gameState, activeDialog, bossDefeated, party, addMessage, setGameState, setEnemy, setIsShake, setActiveDialog, setParty, setMapData, setPlayerState]);
+  }, [playerState, mapData, gameState, activeDialog, bossDefeated, party, addMessage, setGameState, setEnemy, setIsShake, setActiveDialog, setParty, setMapData, setPlayerState, setCombatInterjection]);
 
   return {
     playerState,

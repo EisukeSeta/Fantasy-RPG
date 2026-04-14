@@ -149,14 +149,27 @@ export const GameProvider = ({ children }) => {
     setMapData(generateMap());
     setMessages([{ text: scenarioData.events.gameStart, type: 'event' }]);
     
-    // 復活のメッセージを余韻をもって表示
-    resurrected.forEach((m, idx) => {
-      if (m.resurrectionMessage) {
-        setTimeout(() => {
-          setMessages(prev => [...prev, { text: `${m.name}：「${m.resurrectionMessage}」`, type: 'level_up' }].slice(-GAME_SETTINGS.LOG_CAPACITY));
-        }, (idx + 1) * 800 + 1000); // 1秒待ってから順次
+    // 復活のメッセージを余韻をもって表示（独白の連鎖）
+    const showNextResMsg = (list) => {
+      if (list.length === 0) return;
+      const [current, ...remaining] = list;
+      if (current.resurrectionMessage) {
+        setCombatInterjection({
+          member: current,
+          quotes: [{ text: current.resurrectionMessage }],
+          currentPage: 0,
+          onClose: () => {
+            setTimeout(() => showNextResMsg(remaining), 400);
+          }
+        });
+      } else {
+        showNextResMsg(remaining);
       }
-    });
+    };
+
+    if (resurrected.length > 0) {
+      setTimeout(() => showNextResMsg(resurrected), 1200);
+    }
 
     setActiveDialog({
       title: "【再起の儀】",

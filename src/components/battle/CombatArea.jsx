@@ -55,8 +55,15 @@ export const CombatArea = ({
       )}
 
       {/* 敵の情報表示 */}
-      <div className={enemy.isBoss ? 'boss-name' : 'enemy-name'}>
-        {enemy.isBoss ? `*** ${enemy.name} ***` : enemy.name}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+        <div className={enemy.isBoss ? 'boss-name' : 'enemy-name'}>
+          {enemy.isBoss ? `*** ${enemy.name} ***` : enemy.name}
+        </div>
+        {/* 敵の状態異常表示 */}
+        <div style={{ display: 'flex', gap: '5px', fontSize: '1.4rem' }}>
+          {enemy.statusEffects?.includes('POISON') && <span title="毒" style={{ filter: 'drop-shadow(0 0 5px #8a2be2)' }}>💜</span>}
+          {enemy.statusEffects?.includes('PARALYZED') && <span title="麻痺" style={{ filter: 'drop-shadow(0 0 5px #ffff00)' }}>⚡</span>}
+        </div>
       </div>
       
       <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', width: '100%' }}>

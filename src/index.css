@@ -97,6 +97,32 @@ body {
   transform: translateX(5px);
 }
 
+/* 状態異常：禍々しき気配と震え */
+.status-poison-pulse {
+  border-color: #8a2be2 !important;
+  box-shadow: inset 0 0 15px rgba(138, 43, 226, 0.4), 0 0 10px rgba(138, 43, 226, 0.3) !important;
+  animation: poisonAura 2s infinite ease-in-out;
+}
+
+@keyframes poisonAura {
+  0%, 100% { background: rgba(138, 43, 226, 0.05); }
+  50% { background: rgba(138, 43, 226, 0.15); }
+}
+
+.status-paralyze-pulse {
+  border-color: #ffff00 !important;
+  box-shadow: inset 0 0 15px rgba(255, 255, 0, 0.2) !important;
+  animation: paralyzeShake 0.1s infinite;
+}
+
+@keyframes paralyzeShake {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(1px, -1px); }
+  50% { transform: translate(-1px, 1px); }
+  75% { transform: translate(1px, 1px); }
+  100% { transform: translate(-1px, -1px); }
+}
+
 .hp-bar-container, .mp-bar-container, .xp-bar-container {
   height: 8px;
   background: #110;
