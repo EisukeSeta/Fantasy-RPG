@@ -38,13 +38,15 @@ export const ENEMY_IMAGES = {
   "nue.png": nueImg 
 };
 
+import balanceData from '../data/Balance.json';
+
 export const varGold = '#f0e68c';
 export const ICON_MAPPING = { "shrine": "⛩️", "well": "井", "scroll": "📜" };
 
-// 迷宮の理（定数定義）
-export const MAP_WIDTH = 10;
-export const MAP_HEIGHT = 8;
-export const BOSS_POS = { x: 8, y: 6 };
+// 迷宮の理（定数定義：Balance.json をマスターとする）
+export const MAP_WIDTH = balanceData.map.width;
+export const MAP_HEIGHT = balanceData.map.height;
+export const BOSS_POS = balanceData.map.bossPos;
 
 /**
  * 【平安の理】ゲームバランス定数
