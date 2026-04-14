@@ -50,9 +50,14 @@ export const CharacterCard = ({
   if (variant === 'sidebar') {
     return (
       <div 
-        className={`status-item ${isActive ? 'active-battler' : ''}`} 
+        className={`status-item ${isActive ? 'active-battler' : ''} ${m.statusEffects?.includes('POISON') ? 'status-poison-pulse' : ''} ${m.statusEffects?.includes('PARALYZED') ? 'status-paralyze-pulse' : ''}`} 
         style={{ opacity: m.hp <= 0 ? 0.4 : 1, position: 'relative', overflow: 'visible' }}
       >
+        {/* 状態異常表示 */}
+        <div className="status-indicators" style={{ position: 'absolute', top: '-8px', left: '10px', display: 'flex', gap: '4px', zIndex: 10 }}>
+          {m.statusEffects?.includes('POISON') && <span title="毒" style={{ filter: 'drop-shadow(0 0 4px #8a2be2)' }}>💜</span>}
+          {m.statusEffects?.includes('PARALYZED') && <span title="麻痺" style={{ filter: 'drop-shadow(0 0 4px #ffff00)' }}>⚡</span>}
+        </div>
         {visualEffects.filter(e => e.target === `party_${i}`).map(e => (
           <div 
             key={e.id} 
@@ -117,7 +122,12 @@ export const CharacterCard = ({
 
   // ミニ版 (スマホダッシュボード)
   return (
-    <div className={`mini-member-card ${isActive ? 'active-member' : ''}`} style={{ position: 'relative' }}>
+    <div className={`mini-member-card ${isActive ? 'active-member' : ''} ${m.statusEffects?.includes('POISON') ? 'status-poison-pulse' : ''} ${m.statusEffects?.includes('PARALYZED') ? 'status-paralyze-pulse' : ''}`} style={{ position: 'relative' }}>
+      {/* モバイル版状態異常 */}
+      <div className="mini-status-indicators" style={{ position: 'absolute', top: '-10px', left: '0', display: 'flex', fontSize: '0.8rem' }}>
+        {m.statusEffects?.includes('POISON') && <span>💜</span>}
+        {m.statusEffects?.includes('PARALYZED') && <span>⚡</span>}
+      </div>
       {visualEffects.filter(e => e.target === `party_${i}`).map(e => (
         <div key={e.id} className={`popup-number ${e.type === 'damage' ? 'popup-damage' : 'popup-heal'}`} style={{ fontSize: '1.2rem' }}>
           {e.value}

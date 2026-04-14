@@ -40,6 +40,12 @@ export const calculateSpellEffect = (spell, caster) => {
     case 'STATUS':
       // 状態魔法: ダメージはないが、状態変化を伴う
       value = 0;
+      statusEffect = spell.statusType || null; 
+      break;
+
+    case 'CURE':
+      // 浄化魔法: 状態異常の解除
+      value = 0;
       break;
 
     default:

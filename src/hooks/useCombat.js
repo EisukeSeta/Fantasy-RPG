@@ -54,6 +54,12 @@ export const useCombat = () => {
 
   const endBattle = useCallback((won) => {
     if (won) {
+        // 戦闘終了時の浄化：毒は自然治癒するが、麻痺は残る
+        setParty(p => p.map(m => ({
+          ...m,
+          statusEffects: m.statusEffects ? m.statusEffects.filter(eff => eff !== 'POISON') : []
+        })));
+        
         setShowVictory(true);
         addMessage(`${enemy.name}${scenarioData.battle.defeat}`, 'level_up');
         
@@ -269,6 +275,14 @@ export const useCombat = () => {
       setTimeout(() => {
         const alive = party.filter(m => m.hp > 0);
         if (alive.length === 0) return;
+
+        // --- 敵の行動判定（業） ---
+        const ability = checkActionAbility(enemy);
+        if (!ability.canAction) {
+            addMessage(ability.message);
+            setBattleTurn(prev => prev + 1);
+            return;
+        }
         
         const baseTarget = alive[Math.floor(Math.random() * alive.length)];
         const target = getEffectiveStats(baseTarget);
@@ -376,6 +390,18 @@ export const useCombat = () => {
       target.hp = Math.min(target.maxHp, target.hp + heal);
       addMessage(`${spell.name}${scenarioData.battle.spellHeal.replace('%TARGET%', target.name).replace('%HEAL%', heal)}`, 'heal');
       triggerVisualEffect(`party_${nextP.findIndex(m => m.name === target.name)}`, `+${heal}`, 'heal');
+    } else if (spell.type === 'CURE') {
+      // 浄化の理：パーティ全員の状態異常を消し去る
+      nextP = nextP.map(m => ({ ...m, statusEffects: [] }));
+      addMessage(`${spell.name}：真言の光がパーティ全員の穢れを浄化した！`, 'level_up');
+      triggerVisualEffect('party_all', '浄化', 'heal');
+    } else if (spell.type === 'STATUS' && effectRes.statusEffect) {
+      // 付与の理：敵に状態異常を与える
+      if (!nextE.statusEffects) nextE.statusEffects = [];
+      if (!nextE.statusEffects.includes(effectRes.statusEffect)) {
+          nextE.statusEffects.push(effectRes.statusEffect);
+          addMessage(`${enemy.name}を${effectRes.statusEffect === 'PARALYZED' ? '麻痺' : '毒'}に陥れた！`, 'level_up');
+      }
     }
     
     setParty(nextP); 
@@ -405,8 +431,19 @@ export const useCombat = () => {
         return;
       }
       const t = setTimeout(() => {
-        const isStrong = enemy.isBoss || enemy.hp > 50;
         const spells = (SPELLS[a.jobKey] || []).filter(s => s.lv <= a.lv && a.mp >= s.mp);
+        
+        // --- 救済者（NISOU）の高度な判断 ---
+        const statusVictim = party.find(m => m.hp > 0 && m.statusEffects && m.statusEffects.length > 0);
+        if (a.jobKey === 'NISOU' && statusVictim) {
+           const cureSpell = spells.find(s => s.type === 'CURE');
+           if (cureSpell) {
+             castSpell(cureSpell);
+             return;
+           }
+        }
+
+        const isStrong = enemy.isBoss || enemy.hp > 50;
         if (isStrong && spells.length > 0) castSpell(spells[spells.length - 1]);
         else handleFight();
       }, GAME_SETTINGS.DELAYS.AUTO_BATTLE);

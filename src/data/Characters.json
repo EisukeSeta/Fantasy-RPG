@@ -16,8 +16,10 @@
     "minDmg": 8,
     "maxDmg": 15,
     "status": "平安",
+    "statusEffects": [],
     "image": "watanabe_tsuna.png",
-    "items": []
+    "items": [],
+    "resurrectionMessage": "都の守護、まだ終わらぬ……。主殿、お導きを。"
   },
   {
     "id": "Sei",
@@ -36,8 +38,10 @@
     "minDmg": 1,
     "maxDmg": 4,
     "status": "平安",
+    "statusEffects": [],
     "image": "abe_seimei.png",
-    "items": []
+    "items": [],
+    "resurrectionMessage": "理より外れるとは、不覚。再び式を操りましょう。"
   },
   {
     "id": "Bik",
@@ -56,7 +60,9 @@
     "minDmg": 2,
     "maxDmg": 6,
     "status": "平安",
+    "statusEffects": [],
     "image": "yaobikuni.png",
-    "items": []
+    "items": [],
+    "resurrectionMessage": "まだ、この世で成すべき功徳があるのです。参りましょう。"
   }
 ]

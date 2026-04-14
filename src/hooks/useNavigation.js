@@ -140,8 +140,26 @@ export const useNavigation = () => {
             isStory: isNarrative
           });
           if (event.isHeal) { 
-            setParty(p => p.map(m => ({ ...m, hp: m.maxHp, mp: m.maxMp, status: '平安' }))); 
-            addMessage(`【${event.name}】の静寂にて隊員の心身が癒やされ、生命と霊力が再び漲った。`, 'heal'); 
+            // 復活する者たちの言霊を拾う
+            const resurrected = party.filter(m => m.hp <= 0 || (m.statusEffects && m.statusEffects.length > 0));
+
+            setParty(p => p.map(m => ({ 
+                ...m, 
+                hp: m.maxHp, 
+                mp: m.maxMp, 
+                status: '平安', 
+                statusEffects: [] 
+            }))); 
+            addMessage(`【${event.name}】の静寂にて隊員の穢れは浄化され、生命と霊力が再び漲った。`, 'heal'); 
+
+            // 復活のメッセージを表示（少し遅らせて余韻を出す）
+            resurrected.forEach((m, idx) => {
+                if (m.resurrectionMessage) {
+                    setTimeout(() => {
+                        addMessage(`${m.name}：「${m.resurrectionMessage}」`, 'level_up');
+                    }, (idx + 1) * 600);
+                }
+            });
           }
         }
       }

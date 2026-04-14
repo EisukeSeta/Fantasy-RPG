@@ -1342,3 +1342,29 @@ body {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
 }
+
+/* --- 🏺 業の共鳴（状態異常の視覚演出） --- */
+@keyframes poison-pulse {
+  0% { background: rgba(138, 43, 226, 0.05); border-color: #333; }
+  50% { background: rgba(138, 43, 226, 0.25); border-color: #8a2be2; box-shadow: 0 0 15px rgba(138, 43, 226, 0.4); }
+  100% { background: rgba(138, 43, 226, 0.05); border-color: #333; }
+}
+
+@keyframes paralyze-pulse {
+  0% { background: rgba(255, 255, 0, 0.05); border-color: #333; }
+  50% { background: rgba(255, 255, 0, 0.2); border-color: #ffff00; box-shadow: 0 0 15px rgba(255, 255, 0, 0.3); }
+  100% { background: rgba(255, 255, 0, 0.05); border-color: #333; }
+}
+
+.status-poison-pulse {
+  animation: poison-pulse 2s infinite ease-in-out !important;
+}
+
+.status-paralyze-pulse {
+  animation: paralyze-pulse 1.5s infinite ease-in-out !important;
+}
+
+/* 危険状態(HP1)との重なりを調整 */
+.danger-blink.status-poison-pulse, .danger-blink.status-paralyze-pulse {
+  animation-duration: 0.5s;
+}
