@@ -17,6 +17,7 @@ import mapEventsData from './data/MapEvents.json';
 import { useNavigation } from './hooks/useNavigation';
 import { useCombat } from './hooks/useCombat';
 import { useGame } from './hooks/useGame';
+import { SpellGrimoire } from './components/ui/SpellGrimoire';
 
 /**
  * 羅生門 RPG: メインアプリケーション
@@ -45,6 +46,7 @@ function App() {
   const [showMap, setShowMap] = useState(false);
   const [showStatus, setShowStatus] = useState(false);
   const [showDebug, setShowDebug] = useState(isDebug);
+  const [showGrimoire, setShowGrimoire] = useState(false);
   const [forceLoot, setForceLoot] = useState(false);
 
   const isForceMobile = (typeof window !== 'undefined' && (window.innerWidth <= 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent))) || new URLSearchParams(window.location.search).get('mobile') === '1';
@@ -96,6 +98,7 @@ function App() {
       else if (e.key === 's' || e.key === 'ArrowDown') processMove('BACKWARD');
       else if (e.key === 'a' || e.key === 'ArrowLeft') processMove('TURN_LEFT');
       else if (e.key === 'd' || e.key === 'ArrowRight') processMove('TURN_RIGHT');
+      else if (e.key.toLowerCase() === 'k') setShowGrimoire(prev => !prev);
     };
     window.addEventListener('keydown', hk); return () => window.removeEventListener('keydown', hk);
   }, [gameState, activeDialog, processMove]);
@@ -144,6 +147,7 @@ function App() {
       )}
 
       <div className={`game-container ${isForceMobile ? 'layout-mobile' : ''} ${isShake || displayShake === 'normal' ? 'shake-anim' : ''} ${displayShake === 'heavy' ? 'shake-heavy' : ''} ${partyInDanger ? 'danger-state' : ''}`}>
+        <SpellGrimoire isOpen={showGrimoire} onClose={() => setShowGrimoire(false)} />
         {/* 閃光エフェクト */}
         {flashColor === 'red' && <div className="flash-red"></div>}
         
@@ -259,6 +263,7 @@ function App() {
         scenarioData={scenarioData}
         messages={messages}
         mapEventsData={mapEventsData}
+        setShowGrimoire={setShowGrimoire}
       />
 
       <DialogManager 

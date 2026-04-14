@@ -38,7 +38,8 @@ const GameArea = ({
   setShowMap,
   scenarioData,
   messages,
-  mapEventsData
+  mapEventsData,
+  setShowGrimoire
 }) => {
   if (gameState !== 'EXPLORING' && gameState !== 'BATTLE') return null;
 
@@ -153,6 +154,7 @@ const GameArea = ({
             <MessageLog 
               messages={messages}
               isForceMobile={isForceMobile}
+              setShowGrimoire={setShowGrimoire}
             />
           </div>
         </>
@@ -185,6 +187,7 @@ const GameArea = ({
             <MessageLog 
               messages={messages}
               isForceMobile={isForceMobile}
+              setShowGrimoire={setShowGrimoire}
             />
           </div>
         </div>
