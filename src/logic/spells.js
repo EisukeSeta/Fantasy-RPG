@@ -13,20 +13,23 @@
  *   - { value: 効果数値, type: 術の種類, statusEffect: 付与される状態 }
  */
 
-export const calculateSpellEffect = (spell, _caster) => { // eslint-disable-line no-unused-vars
+export const calculateSpellEffect = (spell, caster) => {
   const { type } = spell;
   let value = 0;
   let statusEffect = spell.statusEffect || null;
 
+  // 術者レベルによる威力補正（Lv1ごとに+10%）
+  const lvBonus = 1 + ((caster?.lv || 1) * 0.1);
+
   switch (type) {
     case 'ATTACK':
       // 攻撃魔法: 指定範囲内でのダメージ算出
-      value = Math.floor(Math.random() * (spell.maxDmg - spell.minDmg + 1)) + spell.minDmg;
+      value = Math.floor((Math.floor(Math.random() * (spell.maxDmg - spell.minDmg + 1)) + spell.minDmg) * lvBonus);
       break;
 
     case 'HEAL':
       // 回復魔法: 指定範囲内での回復量算出
-      value = Math.floor(Math.random() * (spell.maxHeal - spell.minHeal + 1)) + spell.minHeal;
+      value = Math.floor((Math.floor(Math.random() * (spell.maxHeal - spell.minHeal + 1)) + spell.minHeal) * lvBonus);
       break;
 
     case 'BUFF':
