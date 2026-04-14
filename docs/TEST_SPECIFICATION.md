@@ -1,0 +1,53 @@
+# ⛩️ 平安魔道伝 羅生門編：テスト仕様聖典 (TEST_SPECIFICATION)
+
+都の理を検証するための「法（テスト）」と、その拠り所となる「雛形（テストデータ）」の因果関係をここに記す。
+
+## 📜 聖域の定義 (Test Data Sanctuary)
+
+以下のデータは、メインプログラムでの参照有無に関わらず、都の監査（ユニットテスト）を維持するために不可欠な資産である。これらを改変・削除する際は、必ず関連するテストの調律を同時に行うこと。
+
+### 1. マスターデータ (Primary Data)
+| データファイル | 参照しているテスト | 重要度 | 備考 |
+| :--- | :--- | :--- | :--- |
+| `src/data/Characters.json` | `growth.test.js` | 最重要 | 初期レベル、最大HP/MPの定義が成長計算の期待値に直結 |
+| `src/data/Balance.json` | `growth.test.js`, `status.js` | 最重要 | 経験値テーブル、毒ダメージ等の定数定義 |
+| `src/data/Items.json` | (将来の combat.test) | 重要 | 武勲によるパッシブ補正の検証に必要 |
+
+### 2. 術式の理 (Logic Definitions)
+| ファイル | 参照しているテスト | 備考 |
+| :--- | :--- | :--- |
+| `src/logic/combat.js` | `combat.test.js` | 命中・ダメージ計算式の根幹 |
+| `src/logic/growth.js` | `growth.test.js` | 位階上昇のアルゴリズム |
+| `src/logic/spells.js` | `spells.test.js` | 術ごとの威力・効果の定義 |
+| `src/logic/status.js` | `status.test.js` | 状態異常（業）の判定ロジック |
+
+---
+
+## 🛠️ 監査の作法 (Test Procedures)
+
+都の理を更新した際は、以下の手順で監査を執り行う。
+
+1. **全件監査**: 
+   ```bash
+   npm test
+   ```
+2. **モジュール別監査**:
+   ```bash
+   npx vitest run src/logic/status.test.js
+   ```
+
+---
+
+## 🎭 模擬データ (Mocks) の流儀
+
+都の理には、運（Math.random）などの不確定要素が含まれる。テストにおいてはこれらを Mock（擬似化）し、決定論的な検証を行う。
+
+- **Math.random**: `vi.spyOn(Math, 'random')` により、確率判定（命中、麻痺等）の閾値を操作する。
+- **データ依存の排除**: 可能な限り、テストケース内で最小限の Object を定義し、外部 JSON への過度な依存を避ける（脆いテストの防止）。
+
+---
+
+## ⚠️ 禁忌事項 (Precautions)
+
+- **無断削除**: テストで使われている JSON プロパティを「コードで使っていないから」という理由で削除してはならない。
+- **期待値の隠蔽**: テスト結果が壊れた際、原因を究明せずに期待値を書き換えて「合格」させてはならない。

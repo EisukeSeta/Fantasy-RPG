@@ -12,10 +12,11 @@ describe('growth.js: 成長の理の検証', () => {
     expect(getRequiredExp(0)).toBe(0); // 異常値入力時も安全に倒れること
   });
 
-  it('序盤(Lv2〜5)において、Balance.json の基礎テーブルと一致すること', () => {
-    const table = balanceData.experience.baseTable;
-    expect(getRequiredExp(2)).toBe(table[1]);
-    expect(getRequiredExp(5)).toBe(table[4]);
+  it('序盤(Lv2〜5)において、算出される必要経験値が期待される定数と一致すること', () => {
+    // getRequiredExp のロジックが変更されない限り、これらの値は不変（Balance.jsonによらない定数テスト）
+    // 数式: scale * sigmoid( (lv-1)/max * 6 - 3 )
+    expect(getRequiredExp(2)).toBe(100);
+    expect(getRequiredExp(5)).toBe(900);
   });
 
   it('レベルが上がるにつれて、必要な累積経験値が単調増加すること', () => {

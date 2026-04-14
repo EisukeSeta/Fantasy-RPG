@@ -40,7 +40,7 @@ export const calculateSpellEffect = (spell, caster) => {
     case 'STATUS':
       // 状態魔法: ダメージはないが、状態変化を伴う
       value = 0;
-      statusEffect = spell.statusType || null; 
+      statusEffect = spell.statusEffect || null; 
       break;
 
     case 'CURE':
