@@ -5,6 +5,7 @@
 
 import { getRandomEnemy, calculateHitAndDamage, SPELLS } from '../src/logic/combat.js';
 import { getRequiredExp } from '../src/logic/growth.js';
+import { calculateSpellEffect } from '../src/logic/spells.js';
 
 // JSON loading for Node.js
 import { readFile } from 'node:fs/promises';
@@ -13,6 +14,36 @@ const loadJSON = async (path) => JSON.parse(await readFile(new URL(path, import.
 const balanceData = await loadJSON('../src/data/Balance.json');
 const charactersData = await loadJSON('../src/data/Characters.json');
 const enemiesData = await loadJSON('../src/data/Enemies.json');
+
+/**
+ * 🏺 都の心拍（ベンチマーク）：計算エンジンの瞬発力を計測
+ */
+function runBenchmark() {
+  const ITERATIONS = 100000;
+  console.log(`\n--- 🏺 都の心拍（ベンチマーク：${ITERATIONS.toLocaleString()}回試行） ---`);
+
+  // 1. 合戦の理（物理攻撃）の計測
+  let start = performance.now();
+  for (let i = 0; i < ITERATIONS; i++) {
+    calculateHitAndDamage(20, 10, 20, 15);
+  }
+  let end = performance.now();
+  const combatTime = (end - start).toFixed(2);
+  console.log(`🗡️ 合戦ロジック (物理): ${combatTime}ms`);
+
+  // 2. 魔道の理（術計算）の計測
+  const fireSpell = { type: 'ATTACK', minDmg: 20, maxDmg: 40 };
+  const caster = { lv: 10 };
+  start = performance.now();
+  for (let i = 0; i < ITERATIONS; i++) {
+    calculateSpellEffect(fireSpell, caster);
+  }
+  end = performance.now();
+  const spellTime = (end - start).toFixed(2);
+  console.log(`🏮 魔道の理 (術式): ${spellTime}ms`);
+  
+  return { combatTime, spellTime };
+}
 
 // --- Emulator Settings ---
 const SIM_RUNS = 1000; 
@@ -150,6 +181,7 @@ function runOneGame() {
 }
 
 // --- Run Simulation Loop ---
+runBenchmark();
 console.log(`\n--- 平安魔道伝 真・自動バランステスト v3.4 (${SIM_RUNS} 試行 ${MOBILE_MODE ? '[モバイル]' : '[PC]'}) ---`);
 let stats = { won: 0, totalWipeouts: 0, totalLv: 0, totalBattles: 0, totalTime: 0 };
 
