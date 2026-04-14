@@ -7,6 +7,7 @@ import { BOSS_POS, GAME_SETTINGS } from '../constants/gameData';
 import { calculateSpellEffect } from '../logic/spells';
 import itemsData from '../data/Items.json';
 import { useGame } from './useGame';
+import { applyStatusEffects, checkActionAbility } from '../logic/status';
 import scenarioData from '../data/Scenario.json';
 import balanceData from '../data/Balance.json';
 
@@ -210,7 +211,38 @@ export const useCombat = () => {
   const handleFight = useCallback(() => {
     if (gameState !== 'BATTLE' || !enemy) return;
     
-    const attacker = getEffectiveStats(party[activeBattler]);
+    // 業（特殊状態）：継続ダメージの処理
+    const poisonRes = applyStatusEffects(party[activeBattler]);
+    if (poisonRes.messages.length > 0) {
+      poisonRes.messages.forEach(msg => addMessage(msg, 'damage_party'));
+      setParty(p => p.map((m, i) => i === activeBattler ? poisonRes.updatedActor : m));
+      triggerVisualEffect(`party_${activeBattler}`, `-${Math.abs(party[activeBattler].hp - poisonRes.updatedActor.hp)}`, 'damage');
+    }
+    
+    // 更新されたステートを反映した actor で以降の処理を行う
+    const currentActor = poisonRes.updatedActor;
+    if (currentActor.hp <= 0) {
+       // 毒で討死した場合、行動不能
+       setBattleTurn(prev => prev + 1);
+       return;
+    }
+
+    // 業（特殊状態）：行動判定
+    const ability = checkActionAbility(currentActor);
+    if (!ability.canAction) {
+      addMessage(ability.message, 'damage_party');
+      // 行動不能時は次の者の番へ（または敵の番へ）
+      const nextIdx = party.findIndex((m, i) => i > activeBattler && m.hp > 0);
+      if (nextIdx !== -1) {
+        setActiveBattler(nextIdx);
+        setBattleTurn(prev => prev + 1);
+      } else {
+        // 敵の反撃ターンのトリガー
+        setBattleTurn(prev => prev + 1);
+      }
+      return;
+    }
+    const attacker = getEffectiveStats(currentActor);
     const res = calculateHitAndDamage(attacker.ac, attacker.minDmg, attacker.maxDmg, enemy.ac);
     let nEh = enemy.hp;
 
@@ -246,7 +278,20 @@ export const useCombat = () => {
         if (eRes.hit) {
           addMessage(`${enemy.name}${scenarioData.battle.counter} ${target.name}${scenarioData.battle.wound.replace('%DMG%', eRes.damage)}`, 'damage_party');
           const nextHP = Math.max(0, target.hp - eRes.damage);
-          setParty(p => p.map(m => m.name === target.name ? { ...m, hp: nextHP, status: nextHP === 0 ? '討死' : '平安' } : m));
+          
+          // --- 状態異常の付与 ---
+          let nextStatusEffects = target.statusEffects || [];
+          if (enemy.statusEffect && !nextStatusEffects.includes(enemy.statusEffect)) {
+            nextStatusEffects = [...nextStatusEffects, enemy.statusEffect];
+            addMessage(`${target.name}は${enemy.statusEffect === 'POISON' ? '毒' : '麻痺'}に侵された！`, 'damage_party');
+          }
+
+          setParty(p => p.map(m => m.name === target.name ? { 
+            ...m, 
+            hp: nextHP, 
+            status: nextHP === 0 ? '討死' : '平安',
+            statusEffects: nextHP === 0 ? [] : nextStatusEffects // 討死時は解除
+          } : m));
           triggerVisualEffect(`party_${targetIdx}`, `-${eRes.damage}`, 'damage');
           
           // --- 散り際の余韻（合戦専用：デス・インタージェクション） ---
@@ -283,7 +328,31 @@ export const useCombat = () => {
 
   const castSpell = useCallback((spell) => {
     if (gameState !== 'BATTLE' || !enemy) return;
-    const attacker = getEffectiveStats(party[activeBattler]);
+
+    // 業（特殊状態）：継続ダメージの処理
+    const poisonRes = applyStatusEffects(party[activeBattler]);
+    if (poisonRes.messages.length > 0) {
+      poisonRes.messages.forEach(msg => addMessage(msg, 'damage_party'));
+      setParty(p => p.map((m, i) => i === activeBattler ? poisonRes.updatedActor : m));
+      triggerVisualEffect(`party_${activeBattler}`, `-${Math.abs(party[activeBattler].hp - poisonRes.updatedActor.hp)}`, 'damage');
+    }
+    
+    const currentActor = poisonRes.updatedActor;
+    if (currentActor.hp <= 0) {
+       setBattleTurn(prev => prev + 1);
+       return;
+    }
+
+    // 業（特殊状態）による行動判定
+    const ability = checkActionAbility(currentActor);
+    if (!ability.canAction) {
+      addMessage(ability.message, 'damage_party');
+      // 行動不能時はターンのみ進める
+      setBattleTurn(prev => prev + 1);
+      return;
+    }
+
+    const attacker = getEffectiveStats(currentActor);
     if (attacker.mp < spell.mp) { addMessage(scenarioData.battle.noMana); return; }
     
     let nextP = [...party]; 

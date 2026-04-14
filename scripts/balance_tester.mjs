@@ -6,6 +6,7 @@
 import { getRandomEnemy, calculateHitAndDamage, SPELLS } from '../src/logic/combat.js';
 import { getRequiredExp } from '../src/logic/growth.js';
 import { calculateSpellEffect } from '../src/logic/spells.js';
+import { applyStatusEffects, checkActionAbility } from '../src/logic/status.js';
 
 // JSON loading for Node.js
 import { readFile } from 'node:fs/promises';
@@ -81,7 +82,7 @@ function handleLevelUp(member) {
 
 // --- Combat Logic ---
 function simulateBattle(party, enemy) {
-  let p = party.map(m => ({ ...m }));
+  let p = party.map(m => ({ ...m, statusEffects: m.statusEffects || [] }));
   let e = { ...enemy };
   let rounds = 0;
 
@@ -93,6 +94,15 @@ function simulateBattle(party, enemy) {
     for (let i = 0; i < p.length; i++) {
       if (p[i].hp <= 0) continue;
       
+      // 業（特殊状態）：継続ダメージ
+      const poisonRes = applyStatusEffects(p[i]);
+      p[i] = poisonRes.updatedActor;
+      if (p[i].hp <= 0) continue;
+
+      // 業（特殊状態）：行動判定
+      const ability = checkActionAbility(p[i]);
+      if (!ability.canAction) continue;
+
       let action = 'ATTACK';
       let spellToUse = null;
 
@@ -120,10 +130,20 @@ function simulateBattle(party, enemy) {
 
     // Enemy Turn
     const aliveTargets = p.filter(m => m.hp > 0);
+    if (aliveTargets.length === 0) break;
     const target = aliveTargets[Math.floor(Math.random() * aliveTargets.length)];
     const res = calculateHitAndDamage(e.ac, e.minDmg, e.maxDmg, target.ac);
-    if (res.hit) target.hp = Math.max(0, target.hp - res.damage);
+    if (res.hit) {
+      target.hp = Math.max(0, target.hp - res.damage);
+      // 状態異常の付与
+      if (e.statusEffect && !target.statusEffects.includes(e.statusEffect)) {
+        target.statusEffects.push(e.statusEffect);
+      }
+    }
   }
+
+  // 戦闘終了時に状態異常を浄化（平安モード）
+  p.forEach(m => m.statusEffects = []);
 
   return { won: e.hp <= 0, party: p, rounds };
 }
