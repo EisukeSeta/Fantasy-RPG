@@ -5,6 +5,7 @@ import charactersData from '../data/Characters.json';
 import { DIRECTIONS, MAP_WIDTH, MAP_HEIGHT, generateMap } from '../data/mapData';
 import SoundEngine from '../utils/SoundEngine';
 import { isDebug, GAME_SETTINGS } from '../constants/gameData';
+import { DEBUG_SEEDS } from '../utils/debugData';
 
 const SAVE_KEY = 'RASHOMON_SAVE_V1';
 
@@ -98,9 +99,24 @@ export const GameProvider = ({ children }) => {
     }
   }, []);
 
-  // 起動時の自動ロードは廃止し、タイトル画面での選択に委ねる
+  // 起動時の自動ロードおよびシード注入の理
   useEffect(() => {
-    // loadGame(); 
+    const params = new URLSearchParams(window.location.search);
+    const seedKey = params.get('seed');
+    
+    if (seedKey && DEBUG_SEEDS[seedKey]) {
+      console.log(`⛩️ 神速の理：シード【${seedKey}】を注入します。`);
+      const data = DEBUG_SEEDS[seedKey];
+      
+      setPlayerState(data.playerState);
+      setParty(data.party);
+      if (data.mapData) setMapData(data.mapData);
+      setBossDefeated(data.bossDefeated || false);
+      setEncounteredEnemies(data.encounteredEnemies || []);
+      setDefeatedEnemies(data.defeatedEnemies || []);
+      setGameState('EXPLORING'); // 即座に冒険へ
+      SoundEngine.transitionTo('EXPLORING');
+    }
   }, []);
 
   // --- 共通アクション ---
@@ -204,9 +220,11 @@ export const GameProvider = ({ children }) => {
     isMuted, setIsMuted,
     toggleMute,
     showGrimoire, setShowGrimoire,
-    saveGame, // 呪文を公開
+    saveGame, 
     loadGame,
-    handleRestart: handleResurrection 
+    handleRestart: handleResurrection,
+    encounteredEnemies, setEncounteredEnemies,
+    defeatedEnemies, setDefeatedEnemies
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

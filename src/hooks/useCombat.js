@@ -59,8 +59,9 @@ export const useCombat = () => {
   // 図録：遭遇記録
   useEffect(() => {
     if (gameState === 'BATTLE' && enemy && enemy.id) {
-      if (!encounteredEnemies.includes(enemy.id)) {
-        setEncounteredEnemies(prev => [...prev, enemy.id]);
+      const encountered = encounteredEnemies || [];
+      if (!encountered.includes(enemy.id)) {
+        setEncounteredEnemies(prev => [...(prev || []), enemy.id]);
         addMessage(`……怪異【${enemy.name}】が図録に姿を現した……`, 'event');
       }
     }
@@ -78,8 +79,9 @@ export const useCombat = () => {
         addMessage(`${enemy.name}${scenarioData.battle.defeat}`, 'level_up');
 
         // 図録：討伐記録
-        if (enemy.id && !defeatedEnemies.includes(enemy.id)) {
-          setDefeatedEnemies(prev => [...prev, enemy.id]);
+        const defeated = defeatedEnemies || [];
+        if (enemy.id && !defeated.includes(enemy.id)) {
+          setDefeatedEnemies(prev => [...(prev || []), enemy.id]);
           addMessage(`……怪異【${enemy.name}】の正体が都の図録に刻まれた……`, 'event');
         }
         

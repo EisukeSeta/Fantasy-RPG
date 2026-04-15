@@ -1,6 +1,6 @@
 // src/components/ui/ArchivesView.jsx
 import React, { useState } from 'react';
-import { useGame } from '../../context/GameContext';
+import { useGame } from '../../hooks/useGame';
 import enemiesData from '../../data/Enemies.json';
 import itemsData from '../../data/Items.json';
 import { ENEMY_IMAGES, varGold } from '../../constants/gameData';
@@ -10,7 +10,7 @@ export const ArchivesView = ({ onClose }) => {
   const [selectedEnemy, setSelectedEnemy] = useState(enemiesData[0]);
 
   // 武勲（勲章）の合算ボーナス計算
-  const totalBonuses = party.reduce((acc, m) => {
+  const totalBonuses = (party || []).reduce((acc, m) => {
     (m.items || []).forEach(itemId => {
       const item = itemsData.find(it => it.id === itemId);
       if (item && item.effect) {
@@ -43,8 +43,8 @@ export const ArchivesView = ({ onClose }) => {
         <div style={{ flex: 1, border: '1px solid #333', padding: '10px', overflowY: 'auto', background: 'rgba(255,255,255,0.03)' }}>
           <h3 style={{ color: varGold, borderBottom: '1px solid #444', paddingBottom: '5px' }}>【怪異図録】</h3>
           {enemiesData.map(en => {
-            const isEncountered = encounteredEnemies.includes(en.id);
-            const isDefeated = defeatedEnemies.includes(en.id);
+            const isEncountered = (encounteredEnemies || []).includes(en.id);
+            const isDefeated = (defeatedEnemies || []).includes(en.id);
             return (
               <div 
                 key={en.id} 
@@ -67,7 +67,7 @@ export const ArchivesView = ({ onClose }) => {
         <div style={{ flex: 2, border: '1px solid #333', padding: '20px', display: 'flex', flexDirection: 'column', background: 'rgba(0,0,0,0.4)', position: 'relative' }}>
           {selectedEnemy && (
             <>
-              {encounteredEnemies.includes(selectedEnemy.id) ? (
+              {(encounteredEnemies || []).includes(selectedEnemy.id) ? (
                 <>
                   <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
                     <div style={{ width: '150px', height: '150px', border: `1px solid ${varGold}`, padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#050505' }}>
@@ -75,7 +75,7 @@ export const ArchivesView = ({ onClose }) => {
                     </div>
                     <div>
                       <h3 style={{ fontSize: '2rem', margin: '0 0 10px 0', color: varGold }}>{selectedEnemy.name}</h3>
-                      {defeatedEnemies.includes(selectedEnemy.id) ? (
+                      {(defeatedEnemies || []).includes(selectedEnemy.id) ? (
                         <div style={{ fontSize: '0.9rem', color: '#ccc', gridTemplateColumns: '1fr 1fr', display: 'grid', gap: '5px 20px' }}>
                           <span>生命：{selectedEnemy.minHp}-{selectedEnemy.maxHp}</span>
                           <span>回避：{selectedEnemy.ac}</span>
@@ -90,7 +90,7 @@ export const ArchivesView = ({ onClose }) => {
                   <div style={{ flex: 1, borderTop: '1px solid #333', paddingTop: '15px' }}>
                     <h4 style={{ color: varGold, margin: '0 0 10px 0' }}>《由来》</h4>
                     <p style={{ lineHeight: '1.8', fontSize: '1.1rem', color: '#ddd' }}>
-                      {defeatedEnemies.includes(selectedEnemy.id) ? selectedEnemy.flavor : '（……この怪異の正体は未だ不明である……）'}
+                      {(defeatedEnemies || []).includes(selectedEnemy.id) ? selectedEnemy.flavor : '（……この怪異の正体は未だ不明である……）'}
                     </p>
                   </div>
                 </>
