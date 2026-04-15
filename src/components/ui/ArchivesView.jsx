@@ -44,7 +44,7 @@ export const ArchivesView = ({ onClose }) => {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '20px', height: '100%' }}>
+      <div style={{ display: 'flex', gap: '20px', height: '400px', minHeight: '300px' }}>
         
         {/* 左側：怪異一覧 */}
         <div style={{ flex: 1, border: '1px solid #333', padding: '10px', overflowY: 'auto', background: 'rgba(255,255,255,0.03)' }}>
