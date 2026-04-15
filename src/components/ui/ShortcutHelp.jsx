@@ -46,7 +46,7 @@ export const ShortcutHelp = ({ onClose }) => {
             cursor: 'pointer', fontFamily: 'inherit'
           }}
         >
-          承知いたした
+          閉じる
         </button>
       </div>
       <style>{`

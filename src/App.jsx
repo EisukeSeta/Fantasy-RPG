@@ -96,17 +96,47 @@ function App() {
 
   useEffect(() => {
     const hk = (e) => {
-      if (gameState !== 'EXPLORING' || activeDialog) return;
+      if (gameState !== 'EXPLORING' && gameState !== 'BATTLE') return;
+      if (activeDialog) return;
+
+      const key = e.key.toLowerCase();
+      
+      // 他の画面を閉じるヘルパー
+      const closeOthers = (keep) => {
+        if (keep !== 'K') setShowGrimoire(false);
+        if (keep !== 'V') setShowArchives(false);
+        if (keep !== 'H') setShowShortcutHelp(false);
+        if (keep !== 'C') setShowStatus(false);
+        if (keep !== 'M') setShowMap(false);
+      };
+
       if (e.key === 'w' || e.key === 'ArrowUp') processMove('FORWARD');
       else if (e.key === 's' || e.key === 'ArrowDown') processMove('BACKWARD');
       else if (e.key === 'a' || e.key === 'ArrowLeft') processMove('TURN_LEFT');
       else if (e.key === 'd' || e.key === 'ArrowRight') processMove('TURN_RIGHT');
-      else if (e.key.toLowerCase() === 'k') setShowGrimoire(prev => !prev);
-      else if (e.key.toLowerCase() === 'v') setShowArchives(prev => !prev);
-      else if (e.key.toLowerCase() === 'h' || e.key === '?') setShowShortcutHelp(prev => !prev);
+      else if (key === 'k') { 
+        closeOthers('K'); 
+        setShowGrimoire(prev => !prev); 
+      }
+      else if (key === 'v') { 
+        closeOthers('V'); 
+        setShowArchives(prev => !prev); 
+      }
+      else if (key === 'h' || e.key === '?') { 
+        closeOthers('H'); 
+        setShowShortcutHelp(prev => !prev); 
+      }
+      else if (key === 'c') {
+        closeOthers('C');
+        setShowStatus(prev => !prev);
+      }
+      else if (key === 'm') {
+        closeOthers('M');
+        setShowMap(prev => !prev);
+      }
     };
     window.addEventListener('keydown', hk); return () => window.removeEventListener('keydown', hk);
-  }, [gameState, activeDialog, processMove, setShowGrimoire, setShowArchives, setShowShortcutHelp]);
+  }, [gameState, activeDialog, processMove, setShowGrimoire, setShowArchives, setShowShortcutHelp, setShowStatus, setShowMap]);
 
   const partyInDanger = party.some(m => m.hp > 0 && (m.hp <= m.maxHp * 0.2 || m.hp === 1));
 
