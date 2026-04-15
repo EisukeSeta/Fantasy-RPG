@@ -1,16 +1,12 @@
+import React, { createContext, useContext, useState, useCallback } from 'react';
+
+const UIContext = createContext();
+
 /**
- * useUIState.js
- * 都の表示状態（オーバーレイ）を司る Hook。
- * 
- * 機能：
- * - 各種ビュー（図録、経典、地図、ステータス、ヘルプ）の開閉管理
- * - 排他的なトグル制御（一つを開いたら他を閉じる）
- * - キーボードから呼び出し可能な連動ロジックの提供
+ * 都の「見え方（UI状態）」を一元管理する器。
+ * 複数のコンポーネント間で表示状態を完全に同期する。
  */
-
-import { useState, useCallback } from 'react';
-
-export const useUIState = () => {
+export const UIProvider = ({ children }) => {
   const [showGrimoire, setShowGrimoire] = useState(false);
   const [showArchives, setShowArchives] = useState(false);
   const [archivesTab, setArchivesTab] = useState('ENEMIES');
@@ -27,7 +23,7 @@ export const useUIState = () => {
     setShowMap(false);
   }, []);
 
-  // 特定の画面を開く（他は閉じる）
+  // 特定の画面を開く（排他的制御）
   const openView = useCallback((viewKey, options = {}) => {
     closeAll();
     if (viewKey === 'GRIMOIRE') setShowGrimoire(true);
@@ -40,25 +36,23 @@ export const useUIState = () => {
     else if (viewKey === 'MAP') setShowMap(true);
   }, [closeAll]);
 
-  // 特定の画面をトグルする（開くなら他は閉じる、閉じるなら単に閉じる）
+  // トグル切り替え（開いていれば閉じ、閉じていれば開く。他は閉じる）
   const toggleView = useCallback((viewKey) => {
-    const setters = {
-      'GRIMOIRE': [showGrimoire, setShowGrimoire],
-      'ARCHIVES': [showArchives, setShowArchives],
-      'SHORTCUTS': [showShortcutHelp, setShowShortcutHelp],
-      'STATUS': [showStatus, setShowStatus],
-      'MAP': [showMap, setShowMap],
-    };
+    const isCurrentlyOpen = 
+      (viewKey === 'GRIMOIRE' && showGrimoire) ||
+      (viewKey === 'ARCHIVES' && showArchives) ||
+      (viewKey === 'SHORTCUTS' && showShortcutHelp) ||
+      (viewKey === 'STATUS' && showStatus) ||
+      (viewKey === 'MAP' && showMap);
 
-    const [currentVal, setter] = setters[viewKey];
-    if (currentVal) {
-      setter(false);
+    if (isCurrentlyOpen) {
+      closeAll();
     } else {
       openView(viewKey);
     }
-  }, [showGrimoire, showArchives, showShortcutHelp, showStatus, showMap, openView]);
+  }, [showGrimoire, showArchives, showShortcutHelp, showStatus, showMap, closeAll, openView]);
 
-  return {
+  const value = {
     showGrimoire, setShowGrimoire,
     showArchives, setShowArchives,
     archivesTab, setArchivesTab,
@@ -69,4 +63,17 @@ export const useUIState = () => {
     openView,
     toggleView
   };
+
+  return <UIContext.Provider value={value}>{children}</UIContext.Provider>;
+};
+
+/**
+ * 都の UI 状態を参照するためのフック
+ */
+export const useUIState = () => {
+  const context = useContext(UIContext);
+  if (!context) {
+    throw new Error('useUIState must be used within a UIProvider');
+  }
+  return context;
 };

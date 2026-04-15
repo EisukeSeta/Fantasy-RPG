@@ -25,7 +25,6 @@ export const GameProvider = ({ children }) => {
   const [bossDefeated, setBossDefeated] = useState(false);
   const [encounteredEnemies, setEncounteredEnemies] = useState([]);
   const [defeatedEnemies, setDefeatedEnemies] = useState([]);
-  const [showGrimoire, setShowGrimoire] = useState(false);
   
   // 戦闘
   const [enemy, setEnemy] = useState(null);
@@ -219,7 +218,6 @@ export const GameProvider = ({ children }) => {
     triggerVisualEffect,
     isMuted, setIsMuted,
     toggleMute,
-    showGrimoire, setShowGrimoire,
     saveGame, 
     loadGame,
     handleRestart: handleResurrection,

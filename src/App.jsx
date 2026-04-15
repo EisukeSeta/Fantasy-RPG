@@ -21,7 +21,7 @@ import mapEventsData from './data/MapEvents.json';
 import { useNavigation } from './hooks/useNavigation';
 import { useCombat } from './hooks/useCombat';
 import { useGame } from './hooks/useGame';
-import { useUIState } from './hooks/useUIState';
+import { useUIState } from './hooks/useUIState.jsx';
 
 /**
  * 羅生門 RPG: メインアプリケーション

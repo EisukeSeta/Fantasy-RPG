@@ -3,7 +3,7 @@ import React from 'react';
 import { CHAR_IMAGES, varGold } from '../../constants/gameData';
 import { getRequiredExp } from '../../logic/growth';
 import itemsData from '../../data/Items.json';
-import { useUIState } from '../../hooks/useUIState';
+import { useUIState } from '../../hooks/useUIState.jsx';
 
 /**
  * 個別の隊員情報を表示するカード部品
