@@ -41,6 +41,7 @@ const GameArea = ({
   mapEventsData,
   setShowGrimoire,
   setShowArchives,
+  setShowShortcutHelp,
   saveGame
 }) => {
   if (gameState !== 'EXPLORING' && gameState !== 'BATTLE') return null;
@@ -159,6 +160,7 @@ const GameArea = ({
               isForceMobile={isForceMobile}
               setShowGrimoire={setShowGrimoire}
               setShowArchives={setShowArchives}
+              setShowShortcutHelp={setShowShortcutHelp}
             />
           </div>
         </>
@@ -193,6 +195,7 @@ const GameArea = ({
               isForceMobile={isForceMobile}
               setShowGrimoire={setShowGrimoire}
               setShowArchives={setShowArchives}
+              setShowShortcutHelp={setShowShortcutHelp}
             />
           </div>
         </div>

@@ -7,6 +7,7 @@ import DialogManager from './components/ui/DialogManager';
 import { SpellGrimoire } from './components/ui/SpellGrimoire';
 import { ArchivesView } from './components/ui/ArchivesView';
 import { YugenOverlay } from './components/ui/YugenOverlay';
+import { ShortcutHelp } from './components/ui/ShortcutHelp';
 import SoundEngine from './utils/SoundEngine';
 
 import { 
@@ -55,6 +56,7 @@ function App() {
   const [showArchives, setShowArchives] = useState(false);
   const [yugenEnemy, setYugenEnemy] = useState(null);
   const [forceHit, setForceHit] = useState(false);
+  const [showShortcutHelp, setShowShortcutHelp] = useState(false);
 
   const isForceMobile = (typeof window !== 'undefined' && (window.innerWidth <= 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent))) || new URLSearchParams(window.location.search).get('mobile') === '1';
 
@@ -101,9 +103,10 @@ function App() {
       else if (e.key === 'd' || e.key === 'ArrowRight') processMove('TURN_RIGHT');
       else if (e.key.toLowerCase() === 'k') setShowGrimoire(prev => !prev);
       else if (e.key.toLowerCase() === 'v') setShowArchives(prev => !prev);
+      else if (e.key.toLowerCase() === 'h' || e.key === '?') setShowShortcutHelp(prev => !prev);
     };
     window.addEventListener('keydown', hk); return () => window.removeEventListener('keydown', hk);
-  }, [gameState, activeDialog, processMove, setShowGrimoire, setShowArchives]);
+  }, [gameState, activeDialog, processMove, setShowGrimoire, setShowArchives, setShowShortcutHelp]);
 
   const partyInDanger = party.some(m => m.hp > 0 && (m.hp <= m.maxHp * 0.2 || m.hp === 1));
 
@@ -150,6 +153,7 @@ function App() {
         {yugenEnemy && <YugenOverlay enemy={yugenEnemy} onClose={() => setYugenEnemy(null)} />}
         {showArchives && <ArchivesView onClose={() => setShowArchives(false)} />}
         {showGrimoire && <SpellGrimoire isOpen={showGrimoire} onClose={() => setShowGrimoire(false)} />}
+        {showShortcutHelp && <ShortcutHelp onClose={() => setShowShortcutHelp(false)} />}
         {flashColor === 'red' && <div className="flash-red"></div>}
         
         {gameState === 'TITLE' && (
@@ -179,7 +183,7 @@ function App() {
         processMove={processMove} enemy={enemy} showVictory={showVictory} isAutoBattle={isAutoBattle} setIsAutoBattle={setIsAutoBattle}
         handleFight={handleFight} castSpell={castSpell} addMessage={addMessage} isMuted={isMuted} setIsMuted={setIsMuted}
         showSpells={showSpells} setShowSpells={setShowSpells} showMap={showMap} setShowMap={setShowMap} scenarioData={scenarioData}
-        messages={messages} mapEventsData={mapEventsData} setShowGrimoire={setShowGrimoire} setShowArchives={setShowArchives} saveGame={saveGame}
+        messages={messages} mapEventsData={mapEventsData} setShowGrimoire={setShowGrimoire} setShowArchives={setShowArchives} setShowShortcutHelp={setShowShortcutHelp} saveGame={saveGame}
       />
 
       <DialogManager gameState={gameState} activeDialog={activeDialog} setActiveDialog={setActiveDialog} combatInterjection={combatInterjection} setCombatInterjection={setCombatInterjection} />

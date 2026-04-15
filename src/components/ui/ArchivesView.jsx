@@ -8,6 +8,7 @@ import { ENEMY_IMAGES, varGold } from '../../constants/gameData';
 export const ArchivesView = ({ onClose }) => {
   const { encounteredEnemies, defeatedEnemies, party } = useGame();
   const [selectedEnemy, setSelectedEnemy] = useState(enemiesData[0]);
+  const [isZoomed, setIsZoomed] = useState(false);
 
   // 武勲（勲章）の合算ボーナス計算
   const totalBonuses = (party || []).reduce((acc, m) => {
@@ -28,6 +29,25 @@ export const ArchivesView = ({ onClose }) => {
       zIndex: 11000, display: 'flex', flexDirection: 'column', padding: '20px',
       fontFamily: "'Sawarabi Mincho', serif", color: '#fff', overflow: 'hidden'
     }}>
+      {/* 拡大表示オーバーレイ */}
+      {isZoomed && selectedEnemy && (
+        <div 
+          onClick={() => setIsZoomed(false)}
+          style={{
+            position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.95)',
+            zIndex: 12000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'zoom-out', animation: 'fadeIn 0.3s ease-out'
+          }}
+        >
+          <img 
+            src={ENEMY_IMAGES[selectedEnemy.image]} 
+            alt={selectedEnemy.name} 
+            style={{ maxHeight: '85%', maxWidth: '85%', objectFit: 'contain', filter: 'drop-shadow(0 0 20px rgba(184,154,66,0.3))' }} 
+          />
+          <div style={{ position: 'absolute', bottom: '40px', color: varGold, fontSize: '2rem', letterSpacing: '10px' }}>{selectedEnemy.name}</div>
+        </div>
+      )}
+
       {/* 標題 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `2px solid ${varGold}`, paddingBottom: '10px', marginBottom: '20px' }}>
         <h2 style={{ margin: 0, color: varGold, fontSize: '1.8rem', letterSpacing: '4px' }}>📜 都の図録と武勲</h2>
@@ -48,7 +68,7 @@ export const ArchivesView = ({ onClose }) => {
             return (
               <div 
                 key={en.id} 
-                onClick={() => setSelectedEnemy(en)}
+                onClick={() => { setSelectedEnemy(en); setIsZoomed(false); }}
                 style={{ 
                   padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #222',
                   backgroundColor: selectedEnemy?.id === en.id ? 'rgba(184, 154, 66, 0.15)' : 'transparent',
@@ -70,7 +90,14 @@ export const ArchivesView = ({ onClose }) => {
               {(encounteredEnemies || []).includes(selectedEnemy.id) ? (
                 <>
                   <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
-                    <div style={{ width: '150px', height: '150px', border: `1px solid ${varGold}`, padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#050505' }}>
+                    <div 
+                      onClick={() => setIsZoomed(true)}
+                      style={{ 
+                        width: '150px', height: '150px', border: `1px solid ${varGold}`, 
+                        padding: '10px', display: 'flex', alignItems: 'center', 
+                        justifyContent: 'center', background: '#050505', cursor: 'zoom-in' 
+                      }}
+                    >
                       <img src={ENEMY_IMAGES[selectedEnemy.image]} alt={selectedEnemy.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
                     </div>
                     <div>
@@ -114,6 +141,9 @@ export const ArchivesView = ({ onClose }) => {
             <div><span style={{ opacity: 0.7 }}>総霊力補正：</span><span style={{ color: varGold, fontWeight: 'bold' }}>+{totalBonuses.mgk}</span></div>
          </div>
       </div>
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      `}</style>
     </div>
   );
 };

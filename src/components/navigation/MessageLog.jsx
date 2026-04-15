@@ -10,7 +10,8 @@ export const MessageLog = ({
   messages, 
   isForceMobile,
   setShowGrimoire,
-  setShowArchives
+  setShowArchives,
+  setShowShortcutHelp
 }) => {
   const logRef = useRef(null);
 
@@ -55,26 +56,48 @@ export const MessageLog = ({
                📜 図録
              </button>
           )}
-          {setShowGrimoire && (
-             <button 
-               onClick={() => setShowGrimoire(true)}
-               style={{
-                 background: 'transparent',
-                 border: `1px solid ${varGold}`,
-                 color: varGold,
-                 fontSize: '0.7rem',
-                 padding: '2px 8px',
-                 cursor: 'pointer',
-                 borderRadius: '2px',
-                 transition: 'all 0.2s'
-               }}
-               title="魔道術の一覧を表示 (Key: K)"
-               onMouseOver={(e) => { e.target.style.background = varGold; e.target.style.color = '#000'; }}
-               onMouseOut={(e) => { e.target.style.background = 'transparent'; e.target.style.color = varGold; }}
-             >
-               🏮 術聖典
-             </button>
-          )}
+           {setShowGrimoire && (
+              <button 
+                onClick={() => setShowGrimoire(true)}
+                style={{
+                  background: 'transparent',
+                  border: `1px solid ${varGold}`,
+                  color: varGold,
+                  fontSize: '0.7rem',
+                  padding: '2px 8px',
+                  cursor: 'pointer',
+                  borderRadius: '2px',
+                  transition: 'all 0.2s'
+                }}
+                title="魔道術の一覧を表示 (Key: K)"
+                onMouseOver={(e) => { e.target.style.background = varGold; e.target.style.color = '#000'; }}
+                onMouseOut={(e) => { e.target.style.background = 'transparent'; e.target.style.color = varGold; }}
+              >
+                🏮 術聖典
+              </button>
+           )}
+           {setShowShortcutHelp && (
+              <button 
+                onClick={() => setShowShortcutHelp(true)}
+                style={{
+                  background: 'transparent',
+                  border: `1px solid ${varGold}`,
+                  color: varGold,
+                  fontSize: '0.8rem',
+                  padding: '1px 8px',
+                  cursor: 'pointer',
+                  borderRadius: '50%',
+                  transition: 'all 0.2s',
+                  fontWeight: 'bold',
+                  marginLeft: '4px'
+                }}
+                title="捷径（ショートカット）一覧 (Key: H / ?)"
+                onMouseOver={(e) => { e.target.style.background = varGold; e.target.style.color = '#000'; }}
+                onMouseOut={(e) => { e.target.style.background = 'transparent'; e.target.style.color = varGold; }}
+              >
+                ？
+              </button>
+           )}
         </div>
       </div>
       <div 
