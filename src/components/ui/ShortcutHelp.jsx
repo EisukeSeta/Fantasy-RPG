@@ -17,41 +17,26 @@ export const ShortcutHelp = ({ onClose }) => {
   ];
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)',
-      zIndex: 15000, display: 'flex', alignItems: 'center', justifyContent: 'center',
-      backdropFilter: 'blur(4px)', fontFamily: "'Sawarabi Mincho', serif"
-    }} onClick={onClose}>
-      <div style={{
-        background: '#0a0a0a', border: `1px solid ${varGold}`, padding: '40px',
-        maxWidth: '500px', width: '90%', boxShadow: '0 0 50px rgba(0,0,0,0.8)',
-        position: 'relative', animation: 'slideIn 0.3s ease-out'
-      }} onClick={e => e.stopPropagation()}>
-        <h2 style={{ color: varGold, borderBottom: `1px solid ${varGold}`, paddingBottom: '10px', marginTop: 0, letterSpacing: '4px' }}>⛩️ 都の捷径（ショートカット）</h2>
-        
-        <div style={{ marginTop: '20px' }}>
+    <div className="yugen-modal-overlay shortcut-help">
+      <div className="yugen-modal-header">
+        <h2 className="yugen-modal-title">⛩️ 都の捷径（ショートカット）</h2>
+        <button className="yugen-modal-close" onClick={onClose}>閉じる</button>
+      </div>
+      
+      <div className="yugen-modal-content">
+        <div style={{ marginTop: '20px', maxWidth: '600px' }}>
           {shortcuts.map(s => (
-            <div key={s.key} style={{ display: 'flex', marginBottom: '15px', borderBottom: '1px solid #222', paddingBottom: '8px' }}>
-              <div style={{ width: '80px', color: varGold, fontWeight: 'bold', fontSize: '1.2rem' }}>[ {s.key} ]</div>
-              <div style={{ flex: 1, color: '#eee' }}>{s.desc}</div>
+            <div key={s.key} style={{ display: 'flex', marginBottom: '20px', borderBottom: '1px solid rgba(184, 154, 66, 0.2)', paddingBottom: '12px' }}>
+              <div style={{ width: '120px', color: varGold, fontWeight: 'bold', fontSize: '1.4rem' }}>[ {s.key} ]</div>
+              <div style={{ flex: 1, color: '#eee', fontSize: '1.1rem', display: 'flex', alignItems: 'center' }}>{s.desc}</div>
             </div>
           ))}
         </div>
 
-        <button 
-          onClick={onClose}
-          style={{
-            marginTop: '20px', width: '100%', padding: '10px',
-            background: 'none', border: `1px solid ${varGold}`, color: varGold,
-            cursor: 'pointer', fontFamily: 'inherit'
-          }}
-        >
-          閉じる
-        </button>
+        <div style={{ marginTop: '40px', color: '#666', fontStyle: 'italic' }}>
+          ※ 捷径を重ねて押すことで、即座に別の理（画面）へと切り替えることが可能です。
+        </div>
       </div>
-      <style>{`
-        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-      `}</style>
     </div>
   );
 };
