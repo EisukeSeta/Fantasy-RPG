@@ -19,7 +19,7 @@ export const CharacterCard = ({
   gameState, 
   visualEffects
 }) => {
-  const { openView } = useUIState();
+  const { openView, setShowStatus } = useUIState();
   const isActive = gameState === 'BATTLE' && activeBattler === i;
 
   // 勲章（パッシブ強化）の補正合計を算出
@@ -34,6 +34,8 @@ export const CharacterCard = ({
   }, { atk: 0, ac: 0, mgk: 0 });
 
   const handleMedalClick = () => {
+    // アーカイブを開く前に、ステータス詳細（スマホ版）を閉じる
+    setShowStatus(false);
     openView('ARCHIVES', { tab: 'ACHIEVEMENTS' });
   };
   

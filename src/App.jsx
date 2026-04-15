@@ -163,10 +163,6 @@ function App() {
       )}
 
       <div className={`game-container ${isForceMobile ? 'layout-mobile' : ''} ${isShake || displayShake === 'normal' ? 'shake-anim' : ''} ${displayShake === 'heavy' ? 'shake-heavy' : ''} ${partyInDanger ? 'danger-state' : ''}`}>
-        {yugenEnemy && <YugenOverlay enemy={yugenEnemy} onClose={() => setYugenEnemy(null)} />}
-        {showArchives && <ArchivesView onClose={() => setShowArchives(false)} defaultTab={archivesTab} />}
-        {showGrimoire && <SpellGrimoire isOpen={showGrimoire} onClose={() => setShowGrimoire(false)} />}
-        {showShortcutHelp && <ShortcutHelp onClose={() => setShowShortcutHelp(false)} />}
         {flashColor === 'red' && <div className="flash-red"></div>}
         
         {gameState === 'TITLE' && (
@@ -200,6 +196,12 @@ function App() {
       />
 
       <DialogManager gameState={gameState} activeDialog={activeDialog} setActiveDialog={setActiveDialog} combatInterjection={combatInterjection} setCombatInterjection={setCombatInterjection} />
+
+      {/* --- 全画面モーダル UI（優先度最高） --- */}
+      {yugenEnemy && <YugenOverlay enemy={yugenEnemy} onClose={() => setYugenEnemy(null)} />}
+      {showArchives && <ArchivesView onClose={() => setShowArchives(false)} defaultTab={archivesTab} />}
+      {showGrimoire && <SpellGrimoire isOpen={showGrimoire} onClose={() => setShowGrimoire(false)} />}
+      {showShortcutHelp && <ShortcutHelp onClose={() => setShowShortcutHelp(false)} />}
 
       {isDebug && (
         <>
