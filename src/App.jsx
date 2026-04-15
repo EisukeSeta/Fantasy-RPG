@@ -50,9 +50,11 @@ function App() {
   const {
     showGrimoire, setShowGrimoire,
     showArchives, setShowArchives,
+    archivesTab,
     showShortcutHelp, setShowShortcutHelp,
     showStatus, setShowStatus,
     showMap, setShowMap,
+    openView,
     toggleView
   } = useUIState();
 
@@ -162,7 +164,7 @@ function App() {
 
       <div className={`game-container ${isForceMobile ? 'layout-mobile' : ''} ${isShake || displayShake === 'normal' ? 'shake-anim' : ''} ${displayShake === 'heavy' ? 'shake-heavy' : ''} ${partyInDanger ? 'danger-state' : ''}`}>
         {yugenEnemy && <YugenOverlay enemy={yugenEnemy} onClose={() => setYugenEnemy(null)} />}
-        {showArchives && <ArchivesView onClose={() => setShowArchives(false)} />}
+        {showArchives && <ArchivesView onClose={() => setShowArchives(false)} defaultTab={archivesTab} />}
         {showGrimoire && <SpellGrimoire isOpen={showGrimoire} onClose={() => setShowGrimoire(false)} />}
         {showShortcutHelp && <ShortcutHelp onClose={() => setShowShortcutHelp(false)} />}
         {flashColor === 'red' && <div className="flash-red"></div>}

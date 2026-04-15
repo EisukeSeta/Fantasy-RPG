@@ -3,6 +3,7 @@ import React from 'react';
 import { CHAR_IMAGES, varGold } from '../../constants/gameData';
 import { getRequiredExp } from '../../logic/growth';
 import itemsData from '../../data/Items.json';
+import { useUIState } from '../../hooks/useUIState';
 
 /**
  * 個別の隊員情報を表示するカード部品
@@ -16,9 +17,9 @@ export const CharacterCard = ({
   variant = 'sidebar', 
   activeBattler, 
   gameState, 
-  visualEffects,
-  setActiveDialog
+  visualEffects
 }) => {
+  const { openView } = useUIState();
   const isActive = gameState === 'BATTLE' && activeBattler === i;
 
   // 勲章（パッシブ強化）の補正合計を算出
@@ -32,18 +33,8 @@ export const CharacterCard = ({
     return acc;
   }, { atk: 0, ac: 0, mgk: 0 });
 
-  const showItemDetail = (item) => {
-    if (!setActiveDialog) return;
-    setActiveDialog({
-      title: `【${item.name}】`,
-      pages: [
-        item.flavor,
-        `《効能》\n${Object.entries(item.effect).map(([k, v]) => `${k.toUpperCase()} +${v}`).join(", ")}`
-      ],
-      currentPage: 0,
-      isStory: true,
-      bgImage: "src/images/闇夜の平安京.png"
-    });
+  const handleMedalClick = () => {
+    openView('ARCHIVES', { tab: 'ACHIEVEMENTS' });
   };
   
   // サイドバー版 (詳細)
@@ -101,7 +92,7 @@ export const CharacterCard = ({
                 <span 
                   key={item.id} 
                   title={item.name} 
-                  onClick={(e) => { e.stopPropagation(); showItemDetail(item); }}
+                  onClick={(e) => { e.stopPropagation(); handleMedalClick(); }}
                   style={{ 
                     fontSize: '1.2rem', 
                     cursor: 'pointer',
@@ -145,7 +136,11 @@ export const CharacterCard = ({
         }} /></div>
       </div>
       {/* モバイル版：右上に勲章を配置 */}
-      <div className="mini-medals" style={{ position: 'absolute', top: '-5px', right: '-5px', display: 'flex', gap: '2px' }}>
+      <div 
+        className="mini-medals" 
+        onClick={(e) => { e.stopPropagation(); handleMedalClick(); }}
+        style={{ position: 'absolute', top: '-5px', right: '-5px', display: 'flex', gap: '2px', cursor: 'pointer' }}
+      >
         {m.items && m.items.map(itemId => {
           const item = itemsData.find(it => it.id === itemId);
           return item ? (

@@ -13,6 +13,7 @@ import { useState, useCallback } from 'react';
 export const useUIState = () => {
   const [showGrimoire, setShowGrimoire] = useState(false);
   const [showArchives, setShowArchives] = useState(false);
+  const [archivesTab, setArchivesTab] = useState('ENEMIES');
   const [showShortcutHelp, setShowShortcutHelp] = useState(false);
   const [showStatus, setShowStatus] = useState(false);
   const [showMap, setShowMap] = useState(false);
@@ -27,10 +28,13 @@ export const useUIState = () => {
   }, []);
 
   // 特定の画面を開く（他は閉じる）
-  const openView = useCallback((viewKey) => {
+  const openView = useCallback((viewKey, options = {}) => {
     closeAll();
     if (viewKey === 'GRIMOIRE') setShowGrimoire(true);
-    else if (viewKey === 'ARCHIVES') setShowArchives(true);
+    else if (viewKey === 'ARCHIVES') {
+      setShowArchives(true);
+      if (options.tab) setArchivesTab(options.tab);
+    }
     else if (viewKey === 'SHORTCUTS') setShowShortcutHelp(true);
     else if (viewKey === 'STATUS') setShowStatus(true);
     else if (viewKey === 'MAP') setShowMap(true);
@@ -57,6 +61,7 @@ export const useUIState = () => {
   return {
     showGrimoire, setShowGrimoire,
     showArchives, setShowArchives,
+    archivesTab, setArchivesTab,
     showShortcutHelp, setShowShortcutHelp,
     showStatus, setShowStatus,
     showMap, setShowMap,

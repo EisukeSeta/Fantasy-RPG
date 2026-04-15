@@ -5,9 +5,9 @@ import itemsData from '../../data/Items.json';
 import { ENEMY_IMAGES, varGold } from '../../constants/gameData';
 import YugenModal from '../common/YugenModal';
 
-export const ArchivesView = ({ onClose }) => {
+export const ArchivesView = ({ onClose, defaultTab = 'ENEMIES' }) => {
   const { encounteredEnemies, defeatedEnemies, party } = useGame();
-  const [activeTab, setActiveTab] = useState('ENEMIES'); // 'ENEMIES' or 'ACHIEVEMENTS'
+  const [activeTab, setActiveTab] = useState(defaultTab); // 'ENEMIES' or 'ACHIEVEMENTS'
   const [selectedEnemy, setSelectedEnemy] = useState(enemiesData[0]);
   const [isZoomed, setIsZoomed] = useState(false);
 
@@ -161,14 +161,19 @@ export const ArchivesView = ({ onClose }) => {
               <h4 style={{ color: varGold, borderBottom: '1px solid #444', paddingBottom: '10px' }}>《獲得せし勲章の詳細》</h4>
               {allAcquiredItems.length > 0 ? (
                 allAcquiredItems.map(item => (
-                  <div key={item.id} style={{ marginBottom: '20px', padding: '10px', borderLeft: `3px solid ${varGold}`, background: 'rgba(255,255,255,0.02)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                      <span style={{ color: varGold, fontWeight: 'bold', fontSize: '1.1rem' }}>{item.name}</span>
-                      <span style={{ fontSize: '0.9rem', color: '#888' }}>
-                        ATK:{item.effect?.atk || 0} / AC:{item.effect?.ac || 0} / MGK:{item.effect?.mgk || 0}
-                      </span>
+                  <div key={item.id} style={{ marginBottom: '20px', padding: '15px', borderLeft: `4px solid ${varGold}`, background: 'rgba(255,255,255,0.02)', position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '2.5rem', filter: 'drop-shadow(0 0 10px rgba(184, 154, 66, 0.4))' }}>{item.icon}</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: varGold, fontWeight: 'bold', fontSize: '1.3rem', letterSpacing: '1px' }}>{item.name}</span>
+                          <span style={{ fontSize: '0.9rem', color: '#888', background: 'rgba(0,0,0,0.5)', padding: '2px 8px', borderRadius: '4px' }}>
+                            ATK:{item.effect?.atk || 0} / AC:{item.effect?.ac || 0} / MGK:{item.effect?.mgk || 0}
+                          </span>
+                        </div>
+                        <p style={{ margin: '5px 0 0 0', color: '#eee', fontSize: '1.1rem', lineHeight: '1.6' }}>{item.flavor || item.desc}</p>
+                      </div>
                     </div>
-                    <p style={{ margin: 0, color: '#ccc', fontSize: '1rem', lineHeight: '1.6' }}>{item.flavor || item.desc}</p>
                   </div>
                 ))
               ) : (
