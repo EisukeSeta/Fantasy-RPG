@@ -1,9 +1,9 @@
-// src/components/ui/ArchivesView.jsx
 import React, { useState } from 'react';
 import { useGame } from '../../hooks/useGame';
 import enemiesData from '../../data/Enemies.json';
 import itemsData from '../../data/Items.json';
 import { ENEMY_IMAGES, varGold } from '../../constants/gameData';
+import YugenModal from '../common/YugenModal';
 
 export const ArchivesView = ({ onClose }) => {
   const { encounteredEnemies, defeatedEnemies, party } = useGame();
@@ -24,7 +24,7 @@ export const ArchivesView = ({ onClose }) => {
   }, { atk: 0, ac: 0, mgk: 0 });
 
   return (
-    <div className="yugen-modal-overlay archives-view">
+    <YugenModal title="📜 都の図録と武勲" onClose={onClose} className="archives-view">
       {/* 拡大表示オーバーレイ (これだけはさらに上位のレイヤー) */}
       {isZoomed && selectedEnemy && (
         <div 
@@ -44,13 +44,7 @@ export const ArchivesView = ({ onClose }) => {
         </div>
       )}
 
-      {/* 標題 (統一構造) */}
-      <div className="yugen-modal-header">
-        <h2 className="yugen-modal-title">📜 都の図録と武勲</h2>
-        <button className="yugen-modal-close" onClick={onClose}>閉じる</button>
-      </div>
-
-      <div className="yugen-modal-content" style={{ display: 'flex', gap: '20px' }}>
+      <div style={{ display: 'flex', gap: '20px', height: '100%' }}>
         
         {/* 左側：怪異一覧 */}
         <div style={{ flex: 1, border: '1px solid #333', padding: '10px', overflowY: 'auto', background: 'rgba(255,255,255,0.03)' }}>
@@ -134,6 +128,6 @@ export const ArchivesView = ({ onClose }) => {
             <div><span style={{ opacity: 0.7 }}>総霊力補正：</span><span style={{ color: varGold, fontWeight: 'bold' }}>+{totalBonuses.mgk}</span></div>
          </div>
       </div>
-    </div>
+    </YugenModal>
   );
 };

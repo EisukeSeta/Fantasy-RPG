@@ -21,6 +21,7 @@ import mapEventsData from './data/MapEvents.json';
 import { useNavigation } from './hooks/useNavigation';
 import { useCombat } from './hooks/useCombat';
 import { useGame } from './hooks/useGame';
+import { useUIState } from './hooks/useUIState';
 
 /**
  * 羅生門 RPG: メインアプリケーション
@@ -43,20 +44,24 @@ function App() {
     isMuted, setIsMuted,
     handleRestart,
     saveGame,
-    loadGame,
-    showGrimoire, setShowGrimoire
+    loadGame
   } = useGame();
+
+  const {
+    showGrimoire, setShowGrimoire,
+    showArchives, setShowArchives,
+    showShortcutHelp, setShowShortcutHelp,
+    showStatus, setShowStatus,
+    showMap, setShowMap,
+    toggleView
+  } = useUIState();
 
   const [isAudioInitialized, setAudioInitialized] = useState(false);
   const [volume] = useState(0.5);
-  const [showMap, setShowMap] = useState(false);
-  const [showStatus, setShowStatus] = useState(false);
   const [showDebug, setShowDebug] = useState(isDebug);
   const [forceLoot, setForceLoot] = useState(false);
-  const [showArchives, setShowArchives] = useState(false);
   const [yugenEnemy, setYugenEnemy] = useState(null);
   const [forceHit, setForceHit] = useState(false);
-  const [showShortcutHelp, setShowShortcutHelp] = useState(false);
 
   const isForceMobile = (typeof window !== 'undefined' && (window.innerWidth <= 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent))) || new URLSearchParams(window.location.search).get('mobile') === '1';
 
@@ -101,42 +106,18 @@ function App() {
 
       const key = e.key.toLowerCase();
       
-      // 他の画面を閉じるヘルパー
-      const closeOthers = (keep) => {
-        if (keep !== 'K') setShowGrimoire(false);
-        if (keep !== 'V') setShowArchives(false);
-        if (keep !== 'H') setShowShortcutHelp(false);
-        if (keep !== 'C') setShowStatus(false);
-        if (keep !== 'M') setShowMap(false);
-      };
-
       if (e.key === 'w' || e.key === 'ArrowUp') processMove('FORWARD');
       else if (e.key === 's' || e.key === 'ArrowDown') processMove('BACKWARD');
       else if (e.key === 'a' || e.key === 'ArrowLeft') processMove('TURN_LEFT');
       else if (e.key === 'd' || e.key === 'ArrowRight') processMove('TURN_RIGHT');
-      else if (key === 'k') { 
-        closeOthers('K'); 
-        setShowGrimoire(prev => !prev); 
-      }
-      else if (key === 'v') { 
-        closeOthers('V'); 
-        setShowArchives(prev => !prev); 
-      }
-      else if (key === 'h' || e.key === '?') { 
-        closeOthers('H'); 
-        setShowShortcutHelp(prev => !prev); 
-      }
-      else if (key === 'c') {
-        closeOthers('C');
-        setShowStatus(prev => !prev);
-      }
-      else if (key === 'm') {
-        closeOthers('M');
-        setShowMap(prev => !prev);
-      }
+      else if (key === 'k') toggleView('GRIMOIRE');
+      else if (key === 'v') toggleView('ARCHIVES');
+      else if (key === 'h' || e.key === '?') toggleView('SHORTCUTS');
+      else if (key === 'c') toggleView('STATUS');
+      else if (key === 'm') toggleView('MAP');
     };
     window.addEventListener('keydown', hk); return () => window.removeEventListener('keydown', hk);
-  }, [gameState, activeDialog, processMove, setShowGrimoire, setShowArchives, setShowShortcutHelp, setShowStatus, setShowMap]);
+  }, [gameState, activeDialog, processMove, toggleView]);
 
   const partyInDanger = party.some(m => m.hp > 0 && (m.hp <= m.maxHp * 0.2 || m.hp === 1));
 
