@@ -6,6 +6,7 @@ import GameArea from './components/layout/GameArea';
 import DialogManager from './components/ui/DialogManager';
 import { SpellGrimoire } from './components/ui/SpellGrimoire';
 import { ArchivesView } from './components/ui/ArchivesView';
+import { YugenOverlay } from './components/ui/YugenOverlay';
 import SoundEngine from './utils/SoundEngine';
 
 import { 
@@ -52,6 +53,8 @@ function App() {
   const [showDebug, setShowDebug] = useState(isDebug);
   const [forceLoot, setForceLoot] = useState(false);
   const [showArchives, setShowArchives] = useState(false);
+  const [yugenEnemy, setYugenEnemy] = useState(null);
+  const [forceHit, setForceHit] = useState(false);
 
   const isForceMobile = (typeof window !== 'undefined' && (window.innerWidth <= 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent))) || new URLSearchParams(window.location.search).get('mobile') === '1';
 
@@ -76,7 +79,7 @@ function App() {
     setShowSpells,
     handleFight,
     castSpell
-  } = useCombat();
+  } = useCombat(setYugenEnemy);
 
   const initAudio = useCallback(() => {
     SoundEngine.init(); SoundEngine.setVolume(isMuted ? 0 : volume); SoundEngine.transitionTo(gameState);
@@ -144,8 +147,9 @@ function App() {
       )}
 
       <div className={`game-container ${isForceMobile ? 'layout-mobile' : ''} ${isShake || displayShake === 'normal' ? 'shake-anim' : ''} ${displayShake === 'heavy' ? 'shake-heavy' : ''} ${partyInDanger ? 'danger-state' : ''}`}>
+        {yugenEnemy && <YugenOverlay enemy={yugenEnemy} onClose={() => setYugenEnemy(null)} />}
         {showArchives && <ArchivesView onClose={() => setShowArchives(false)} />}
-        {showGrimoire && <SpellGrimoire onClose={() => setShowGrimoire(false)} />}
+        {showGrimoire && <SpellGrimoire isOpen={showGrimoire} onClose={() => setShowGrimoire(false)} />}
         {flashColor === 'red' && <div className="flash-red"></div>}
         
         {gameState === 'TITLE' && (
@@ -196,6 +200,7 @@ function App() {
               <button className="debug-btn" onClick={() => { const eid = prompt("怪異の番付(0-10)を入力せよ", "10"); const e = ENEMY_LIST[Number(eid)] || ENEMY_LIST[0]; setEnemy({ ...e, hp: e.maxHp }); setGameState('BATTLE'); addMessage("【" + e.name + "】を召喚。", "event"); }}>怪異召喚</button>
               <button className="debug-btn" onClick={() => { setBossDefeated(!bossDefeated); addMessage("因縁の変転：ボス討伐状態を " + (!bossDefeated) + " へ。", "event"); }}>ボスフラグ</button>
               <button className="debug-btn" onClick={() => { setForceLoot(!forceLoot); addMessage("武勲の理：ドロップ必中を " + (!forceLoot) + " へ。", "event"); }} style={{ color: forceLoot ? '#f1c40f' : '#666' }}>武勲必中: {forceLoot ? "ON" : "OFF"}</button>
+              <button className="debug-btn" onClick={() => { setForceHit(!forceHit); addMessage("神速の理：攻撃必中を " + (!forceHit) + " へ。", "event"); }} style={{ color: forceHit ? '#f1c40f' : '#666' }}>神速必中: {forceHit ? "ON" : "OFF"}</button>
             </div>
           )}
         </>

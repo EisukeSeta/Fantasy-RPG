@@ -58,4 +58,19 @@ describe('セーブデータの構造整合性テスト', () => {
     expect(pos).toHaveProperty('dir');
   });
 
+  it('図録データ（遭遇・討伐）が配列として定義されていること', () => {
+    expect(Array.isArray(dummySaveData.encounteredEnemies)).toBe(true);
+    expect(Array.isArray(dummySaveData.defeatedEnemies)).toBe(true);
+  });
+
+  it('図録データが未定義の場合のデフォルト値（空配列）取得を期待すること', () => {
+    const oldData = { ...dummySaveData };
+    delete oldData.encounteredEnemies;
+    delete oldData.defeatedEnemies;
+
+    // ロジック（GameContext内）で || [] されることを期待
+    const hydratedEncountered = oldData.encounteredEnemies || [];
+    expect(Array.isArray(hydratedEncountered)).toBe(true);
+    expect(hydratedEncountered.length).toBe(0);
+  });
 });

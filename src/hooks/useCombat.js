@@ -14,7 +14,7 @@ import balanceData from '../data/Balance.json';
 /**
  * 戦闘ロジックを管理するカスタムフック
  */
-export const useCombat = () => {
+export const useCombat = (onFirstDefeat, forceHit) => {
   const {
     gameState, setGameState,
     party, setParty,
@@ -83,6 +83,7 @@ export const useCombat = () => {
         if (enemy.id && !defeated.includes(enemy.id)) {
           setDefeatedEnemies(prev => [...(prev || []), enemy.id]);
           addMessage(`……怪異【${enemy.name}】の正体が都の図録に刻まれた……`, 'event');
+          if (onFirstDefeat) onFirstDefeat(enemy);
         }
         
         if (enemy.isBoss) { 
@@ -272,6 +273,8 @@ export const useCombat = () => {
     }
     const attacker = getEffectiveStats(currentActor);
     const res = calculateHitAndDamage(attacker.ac, attacker.minDmg, attacker.maxDmg, enemy.ac);
+    if (forceHit) res.hit = true; // 神速必中：理を捻じ曲げる
+    
     let nEh = enemy.hp;
 
     if (res.hit) { 
