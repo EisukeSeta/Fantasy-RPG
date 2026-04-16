@@ -4,16 +4,29 @@ import scenarioData from '../data/Scenario.json';
 import charactersData from '../data/Characters.json';
 import { DIRECTIONS, MAP_WIDTH, MAP_HEIGHT, generateMap } from '../data/mapData';
 import SoundEngine from '../utils/SoundEngine';
-import { isDebug, GAME_SETTINGS } from '../constants/gameData';
+import { GAME_SETTINGS } from '../constants/gameData';
 import { DEBUG_SEEDS } from '../utils/debugData';
-
-const SAVE_KEY = 'RASHOMON_SAVE_V1';
+import { useEffects } from './EffectContext.jsx';
+import { useAudio } from './AudioContext.jsx';
+import { useEncounter } from './EncounterContext.jsx';
+import { useSaveSystem } from './SaveContext.jsx';
 
 /**
  * 都の理（状態管理）を司る心臓。
- * 記録（セーブ）と想起（ロード）の術式を司る。
  */
 export const GameProvider = ({ children }) => {
+  // 分霊から力を借りる
+  const { 
+    visualEffects, setVisualEffects, 
+    flashColor, setFlashColor, 
+    displayShake, setDisplayShake, 
+    triggerVisualEffect 
+  } = useEffects();
+
+  const { isMuted, setIsMuted, toggleMute } = useAudio();
+  const { encounteredEnemies, setEncounteredEnemies, defeatedEnemies, setDefeatedEnemies } = useEncounter();
+  const { saveGame: _save, loadGame: _load } = useSaveSystem();
+
   // --- 基本状態 ---
   const [gameState, setGameState] = useState('TITLE'); 
   const [messages, setMessages] = useState([{ text: scenarioData.events.gameStart, type: 'event' }]);
@@ -23,8 +36,6 @@ export const GameProvider = ({ children }) => {
   const [party, setParty] = useState(charactersData.map(c => ({ ...c, items: [] })));
   const [mapData, setMapData] = useState(generateMap());
   const [bossDefeated, setBossDefeated] = useState(false);
-  const [encounteredEnemies, setEncounteredEnemies] = useState([]);
-  const [defeatedEnemies, setDefeatedEnemies] = useState([]);
   
   // 戦闘
   const [enemy, setEnemy] = useState(null);
@@ -35,68 +46,43 @@ export const GameProvider = ({ children }) => {
   const [combatInterjection, setCombatInterjection] = useState(null);
   const [isShake, setIsShake] = useState(false);
   
-  // 視覚演出（エフェクト）の理
-  const [visualEffects, setVisualEffects] = useState([]); 
-  const [flashColor, setFlashColor] = useState(null); 
-  const [displayShake, setDisplayShake] = useState(null); 
-  
-  // 音響
-  const [isMuted, setIsMuted] = useState(isDebug);
-
   // --- 記憶の理（Save/Load） ---
 
   /**
    * 記録の術式 (Save)
    */
+  /**
+   * 記録の術式 (Save)
+   */
   const saveGame = useCallback(() => {
-    try {
-      const saveData = {
-        playerState,
-        party,
-        mapData: mapData.map(row => row.map(cell => ({ ...cell }))), // 参照切り
-        bossDefeated,
-        encounteredEnemies,
-        defeatedEnemies,
-        messages: messages.slice(-10), // 重すぎないよう直近10件
-        timestamp: Date.now()
-      };
-      localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
-      console.log("💾 都の記録を完了しました。");
-      return true;
-    } catch (e) {
-      console.error("❌ 記録に失敗しました：", e);
-      return false;
-    }
-  }, [playerState, party, mapData, bossDefeated, messages, encounteredEnemies, defeatedEnemies]);
+    return _save({
+      playerState,
+      party,
+      mapData: mapData.map(row => row.map(cell => ({ ...cell }))),
+      bossDefeated,
+      encounteredEnemies,
+      defeatedEnemies,
+      messages: messages.slice(-10)
+    });
+  }, [_save, playerState, party, mapData, bossDefeated, encounteredEnemies, defeatedEnemies, messages]);
 
   /**
-   * 相起の術式 (Load)
-   * 【一期一会】読み込みに成功した瞬間に記録は消滅し、新たな人生が始まる。
+   * 想起の術式 (Load)
    */
   const loadGame = useCallback(() => {
-    try {
-      const stored = localStorage.getItem(SAVE_KEY);
-      if (!stored) return false;
-      const data = JSON.parse(stored);
-      
-      setPlayerState(data.playerState);
-      setParty(data.party);
-      setMapData(data.mapData);
-      setBossDefeated(data.bossDefeated || false);
-      setEncounteredEnemies(data.encounteredEnemies || []);
-      setDefeatedEnemies(data.defeatedEnemies || []);
-      if (data.messages) setMessages(data.messages);
-      
-      // 記憶の消去（次はない）
-      localStorage.removeItem(SAVE_KEY);
-      
-      console.log("⛩️ 過去の記憶を呼び戻しました。この記録はこれにて消失します。");
-      return true;
-    } catch (e) {
-      console.error("❌ 想起に失敗しました：", e);
-      return false;
-    }
-  }, []);
+    const data = _load();
+    if (!data) return false;
+
+    setPlayerState(data.playerState);
+    setParty(data.party);
+    setMapData(data.mapData);
+    setBossDefeated(data.bossDefeated || false);
+    setEncounteredEnemies(data.encounteredEnemies || []);
+    setDefeatedEnemies(data.defeatedEnemies || []);
+    if (data.messages) setMessages(data.messages);
+    
+    return true;
+  }, [_load, setEncounteredEnemies, setDefeatedEnemies]);
 
   // 起動時の自動ロードおよびシード注入の理
   /* eslint-disable react-hooks/set-state-in-effect */
@@ -118,33 +104,9 @@ export const GameProvider = ({ children }) => {
       setGameState('EXPLORING'); // 即座に冒険へ
       SoundEngine.transitionTo('EXPLORING');
     }
-  }, []);
+  }, [setEncounteredEnemies, setDefeatedEnemies]);
 
   // --- 共通アクション ---
-
-  const triggerVisualEffect = useCallback((target, value, type, effectStyle = 'normal') => {
-    const id = Date.now() + Math.random();
-    setVisualEffects(prev => [...prev, { id, target, value, type }]);
-    setTimeout(() => {
-      setVisualEffects(prev => prev.filter(e => e.id !== id));
-    }, 800);
-
-    if (type === 'damage' && target.startsWith('party')) {
-      setFlashColor('red');
-      setTimeout(() => setFlashColor(null), 400);
-      setDisplayShake(effectStyle === 'heavy' ? 'heavy' : 'normal');
-      setTimeout(() => setDisplayShake(null), 400);
-    } else if (type === 'damage' && target === 'enemy') {
-      setDisplayShake('normal');
-      setTimeout(() => setDisplayShake(null), 300);
-    }
-  }, []);
-  
-  const toggleMute = useCallback(() => {
-    const nextMuted = !isMuted;
-    setIsMuted(nextMuted);
-    SoundEngine.setMuted(nextMuted);
-  }, [isMuted]);
 
   const handleResurrection = useCallback(() => {
     console.log("⛩️ 【再起の儀】を執り行います。");
