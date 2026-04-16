@@ -1,6 +1,4 @@
-// src/components/ui/ShortcutHelp.jsx
 import React from 'react';
-import { varGold } from '../../constants/gameData';
 import YugenModal from '../common/YugenModal';
 
 /**

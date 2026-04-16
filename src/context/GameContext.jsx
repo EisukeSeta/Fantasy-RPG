@@ -99,10 +99,12 @@ export const GameProvider = ({ children }) => {
   }, []);
 
   // 起動時の自動ロードおよびシード注入の理
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const seedKey = params.get('seed');
     
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (seedKey && DEBUG_SEEDS[seedKey]) {
       console.log(`⛩️ 神速の理：シード【${seedKey}】を注入します。`);
       const data = DEBUG_SEEDS[seedKey];

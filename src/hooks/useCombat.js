@@ -216,7 +216,7 @@ export const useCombat = (onFirstDefeat, forceHit) => {
     setActiveBattler(0); 
     setBattleTurn(0); 
     setShowSpells(null);
-  }, [enemy, addMessage, handleLevelUp, setGameState, setEnemy, setParty, setActiveDialog, setBossDefeated, setPlayerState, setMapData, setCombatInterjection, party, forceLoot, setShowSpells, defeatedEnemies, setDefeatedEnemies]);
+  }, [enemy, addMessage, handleLevelUp, setGameState, setEnemy, setParty, setActiveDialog, setBossDefeated, setPlayerState, setMapData, setCombatInterjection, party, forceLoot, setShowSpells, defeatedEnemies, setDefeatedEnemies, onFirstDefeat]);
 
   // --- 実効能力値の計算（パッシブ効果反映：勲章の霊力） ---
   const getEffectiveStats = useCallback((member) => {
@@ -363,7 +363,7 @@ export const useCombat = (onFirstDefeat, forceHit) => {
         setBattleTurn(prev => prev + 1);
       }, GAME_SETTINGS.DELAYS.ENEMY_TURN);
     }
-  }, [gameState, party, activeBattler, enemy, addMessage, endBattle, triggerVisualEffect, setEnemy, setParty, isAutoBattle, setCombatInterjection, getEffectiveStats, setActiveBattler, setBattleTurn]);
+  }, [gameState, party, activeBattler, enemy, addMessage, endBattle, triggerVisualEffect, setEnemy, setParty, isAutoBattle, setCombatInterjection, getEffectiveStats, setActiveBattler, setBattleTurn, forceHit]);
 
   const castSpell = useCallback((spell) => {
     if (gameState !== 'BATTLE' || !enemy) return;

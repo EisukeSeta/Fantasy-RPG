@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
 const UIContext = createContext();
@@ -70,10 +71,10 @@ export const UIProvider = ({ children }) => {
 /**
  * 都の UI 状態を参照するためのフック
  */
-export const useUIState = () => {
+export function useUIState() {
   const context = useContext(UIContext);
   if (!context) {
     throw new Error('useUIState must be used within a UIProvider');
   }
   return context;
-};
+}

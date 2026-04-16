@@ -54,7 +54,6 @@ function App() {
     showShortcutHelp, setShowShortcutHelp,
     showStatus, setShowStatus,
     showMap, setShowMap,
-    openView,
     toggleView
   } = useUIState();
 
