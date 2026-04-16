@@ -12,18 +12,18 @@ import { SaveProvider } from './context/SaveContext.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <GameProvider>
-      <UIProvider>
-        <EffectProvider>
-          <AudioProvider>
-            <EncounterProvider>
-              <SaveProvider>
+    <UIProvider>
+      <EffectProvider>
+        <AudioProvider>
+          <EncounterProvider>
+            <SaveProvider>
+              <GameProvider>
                 <App />
-              </SaveProvider>
-            </EncounterProvider>
-          </AudioProvider>
-        </EffectProvider>
-      </UIProvider>
-    </GameProvider>
+              </GameProvider>
+            </SaveProvider>
+          </EncounterProvider>
+        </AudioProvider>
+      </EffectProvider>
+    </UIProvider>
   </StrictMode>,
 )
