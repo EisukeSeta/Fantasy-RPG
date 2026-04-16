@@ -76,7 +76,7 @@ export const CharacterCard = ({
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginTop: '4px', opacity: 0.9 }}>
-             <span>攻 {m.minDmg}-{m.maxDmg}{bonuses.atk > 0 && <span style={{ color: varGold }}> (+{bonuses.atk})</span>}</span>
+             <span>攻 {m.minDmg}-{m.maxDmg}{bonuses.atk !== 0 && <span style={{ color: varGold }}> ({bonuses.atk > 0 ? `+${bonuses.atk}` : bonuses.atk})</span>}</span>
              <span>避 {m.ac}{bonuses.ac !== 0 && <span style={{ color: varGold }}> ({bonuses.ac > 0 ? `+${bonuses.ac}` : bonuses.ac})</span>}</span>
           </div>
 

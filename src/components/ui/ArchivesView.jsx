@@ -168,7 +168,9 @@ export const ArchivesView = ({ onClose, defaultTab = 'ENEMIES' }) => {
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                           <span style={{ color: varGold, fontWeight: 'bold', fontSize: '1.3rem', letterSpacing: '1px' }}>{item.name}</span>
                           <span style={{ fontSize: '0.9rem', color: '#888', background: 'rgba(0,0,0,0.5)', padding: '2px 8px', borderRadius: '4px' }}>
-                            ATK:{item.effect?.atk || 0} / AC:{item.effect?.ac || 0} / MGK:{item.effect?.mgk || 0}
+                            ATK:{(item.effect?.atk || 0) > 0 ? `+${item.effect.atk}` : (item.effect?.atk || 0)} / 
+                            AC:{(item.effect?.ac || 0) > 0 ? `+${item.effect.ac}` : (item.effect?.ac || 0)} / 
+                            MGK:{(item.effect?.mgk || 0) > 0 ? `+${item.effect.mgk}` : (item.effect?.mgk || 0)}
                           </span>
                         </div>
                         <p style={{ margin: '5px 0 0 0', color: '#eee', fontSize: '1.1rem', lineHeight: '1.6' }}>{item.flavor || item.desc}</p>
