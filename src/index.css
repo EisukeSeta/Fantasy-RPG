@@ -216,15 +216,24 @@
 }
 
 .item-info {
-  display: flex; flex-direction: column; gap: 2px;
+  display: flex; flex-direction: column; gap: 4px;
 }
 
-.item-desc {
-  color: #fff; font-size: 1.2rem; font-weight: bold;
+.item-main {
+  display: flex; align-items: center; gap: 12px;
+}
+
+.item-icon {
+  font-size: 1.4rem; filter: drop-shadow(0 0 5px rgba(255,255,255,0.1));
+}
+
+.item-name {
+  color: var(--primary-gold); font-size: 1.3rem; font-weight: bold;
+  letter-spacing: 1.5px; text-shadow: 1px 1px 2px #000;
 }
 
 .item-sub {
-  color: #888; font-size: 0.9rem;
+  color: #999; font-size: 0.95rem; padding-left: 32px; /* アイコン分ずらす */
 }
 
 .shortcut-footer {
@@ -237,8 +246,9 @@
   .shortcut-grid { grid-template-columns: 1fr; }
   .key-cap { width: 70px; height: 35px; }
   .key-label { font-size: 0.9rem; }
-  .item-desc { font-size: 1rem; }
-  .item-sub { font-size: 0.8rem; }
+  .item-name { font-size: 1.1rem; }
+  .item-sub { font-size: 0.85rem; padding-left: 0; }
+  .item-main { gap: 8px; }
 }
 
 /* --- 原初の設定 --- */

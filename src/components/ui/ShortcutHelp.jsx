@@ -11,18 +11,18 @@ export const ShortcutHelp = ({ onClose }) => {
     {
       title: '《都の知恵と記録》',
       items: [
-        { key: 'V', desc: '都の図録・武勲録', sub: '怪異の記録と獲得した勲章' },
-        { key: 'K', desc: '魔導術経典', sub: '習得可能な術式の理' },
-        { key: 'M', desc: '迷宮図（地図）', sub: '現在地の俯瞰表示' },
-        { key: 'C', desc: '隊員之証', sub: '個々の能力と詳細ステータス' }
+        { key: 'V', icon: '📔', desc: '都の図録・武勲録', sub: '怪異の記録と獲得した称号、由緒ある勲章の一覧' },
+        { key: 'K', icon: '📜', desc: '魔導術経典', sub: '各職能が習得可能な術式とその理（ＭＰ）' },
+        { key: 'M', icon: '🗺️', desc: '迷宮図（地図）', sub: '現在地の俯瞰と踏破した都の地図' },
+        { key: 'C', icon: '👥', desc: '隊員之証', sub: '個々の秘められた能力と詳細なる身分' }
       ]
     },
     {
       title: '《迷宮の歩法と合戦》',
       items: [
-        { key: 'Space', desc: '決定 / 打ちかかり', sub: '選択や戦闘の開始' },
-        { key: 'Arrows', desc: '歩法（移動）', sub: '前後左右への進路' },
-        { key: 'H / ?', desc: '捷径（一覧表示）', sub: '現在開いているこの一覧' }
+        { key: 'Space', icon: '⚔️', desc: '決定 / 打ちかかり', sub: '選択の確定、あるいは合戦の火蓋を切る' },
+        { key: 'Arrows', icon: '👣', desc: '歩法（移動）', sub: '東西南北、都の闇を歩む進路の指示' },
+        { key: 'H / ?', icon: '❓', desc: '捷径（一覧）', sub: '現在開いているこの助け、理の再認' }
       ]
     }
   ];
@@ -48,7 +48,10 @@ export const ShortcutHelp = ({ onClose }) => {
                       <span className="key-label">{s.key}</span>
                     </div>
                     <div className="item-info">
-                      <span className="item-desc">{s.desc}</span>
+                      <div className="item-main">
+                        <span className="item-icon">{s.icon}</span>
+                        <span className="item-name">{s.desc}</span>
+                      </div>
                       <span className="item-sub">{s.sub}</span>
                     </div>
                   </div>
