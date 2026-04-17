@@ -64,21 +64,18 @@ const GameArea = ({
           {!isForceMobile && <span className="window-title">都の景色</span>}
           
           <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
-            <WireframeView mapData={mapData} playerPos={playerState} playerDir={playerState.dir} />
+            {gameState === 'EXPLORING' && (
+              <WireframeView mapData={mapData} playerPos={playerState} playerDir={playerState.dir} />
+            )}
+            {gameState === 'BATTLE' && (
+              <CombatArea 
+                enemy={enemy}
+                visualEffects={visualEffects}
+                showVictory={showVictory}
+                gameState={gameState}
+              />
+            )}
           </div>
-          {isForceMobile && (
-            <div 
-              style={{ position: 'absolute', inset: 0, zIndex: 5, cursor: 'pointer' }} 
-              onClick={() => processMove('FORWARD')} 
-              title="前進"
-            />
-          )}
-          <CombatArea 
-            enemy={enemy}
-            visualEffects={visualEffects}
-            showVictory={showVictory}
-            gameState={gameState}
-          />
           
           {isForceMobile && (
             <div className="mobile-status-dashboard">
