@@ -72,3 +72,12 @@ export const calculateHitAndDamage = (atkAc, minDmg, maxDmg, defAc) => {
   const damage = Math.max(1, Math.floor(baseDmg * (1 - reduction)));
   return { hit: true, damage, critical };
 };
+
+/**
+ * ターンベースの行動バリデーション（絶縁版）
+ */
+export const isValidAction = (lastActionTurn, currentTurn) => {
+  // 初回行動、またはターンが正しく進んでいる場合のみ許可
+  if (lastActionTurn === -1 || lastActionTurn === undefined || lastActionTurn === null) return true;
+  return lastActionTurn < currentTurn;
+};

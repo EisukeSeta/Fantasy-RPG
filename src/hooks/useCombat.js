@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect } from 'react';
-import { calculateHitAndDamage, SPELLS, getEffectiveStats } from '../logic/combat';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { calculateHitAndDamage, SPELLS, getEffectiveStats, isValidAction } from '../logic/combat';
 import { getRequiredExp } from '../logic/growth';
 import SoundEngine from '../utils/SoundEngine';
 import { DIRECTIONS } from '../data/mapData';
@@ -41,6 +41,8 @@ export const useCombat = (onFirstDefeat, forceHit) => {
   const [showVictory, setShowVictory] = useState(false);
   const [showSpells, setShowSpells] = useState(null);
   const [yugenEnemy, setYugenEnemy] = useState(null);
+  const lastActionTurnRef = useRef(-1);
+  const isThinkingRef = useRef(false); // 物理的絶縁用
 
   const handleLevelUp = useCallback((member) => {
     let m = { ...member };
@@ -61,6 +63,8 @@ export const useCombat = (onFirstDefeat, forceHit) => {
     setShowVictory(false);
     setCombatInterjection(null);
     setYugenEnemy(null);
+    lastActionTurnRef.current = -1;
+    isThinkingRef.current = false;
   }, [setGameState, setEnemy, setCombatInterjection]);
 
   const endBattle = useCallback((won) => {
@@ -190,7 +194,10 @@ export const useCombat = (onFirstDefeat, forceHit) => {
   }, [enemy, addMessage, handleLevelUp, setGameState, setEnemy, setParty, setActiveDialog, setBossDefeated, setPlayerState, setMapData, setCombatInterjection, party, forceLoot, defeatedEnemies, setDefeatedEnemies, onFirstDefeat, finalizeBattle]);
 
   const handleFight = useCallback(() => {
-    if (gameState !== 'BATTLE' || !enemy) return;
+    if (gameState !== 'BATTLE' || !enemy || showVictory) return;
+    if (!isValidAction(lastActionTurnRef.current, battleTurn)) return;
+    
+    isThinkingRef.current = true;
     
     const poisonRes = applyStatusEffects(party[activeBattler]);
     if (poisonRes.messages.length > 0) {
@@ -201,12 +208,14 @@ export const useCombat = (onFirstDefeat, forceHit) => {
     
     const currentActor = poisonRes.updatedActor;
     if (currentActor.hp <= 0) {
+       isThinkingRef.current = false;
        setBattleTurn(prev => prev + 1);
        return;
     }
 
     const ability = checkActionAbility(currentActor);
     if (!ability.canAction) {
+      isThinkingRef.current = false;
       addMessage(ability.message, 'damage_party');
       setBattleTurn(prev => prev + 1);
       return;
@@ -226,6 +235,7 @@ export const useCombat = (onFirstDefeat, forceHit) => {
     }
     
     if (nEh <= 0) { 
+      isThinkingRef.current = false;
       endBattle(true); 
       return; 
     }
@@ -279,19 +289,24 @@ export const useCombat = (onFirstDefeat, forceHit) => {
             }
           }
           if (party.every(m => (m.name === target.name ? nextHP : m.hp) <= 0)) {
+            isThinkingRef.current = false;
             endBattle(false);
           }
         } else {
           addMessage(`${target.name}${scenarioData.battle.evade}`);
         }
+        isThinkingRef.current = false;
         setActiveBattler(party.findIndex(m => m.hp > 0));
         setBattleTurn(prev => prev + 1);
       }, GAME_SETTINGS.DELAYS.ENEMY_TURN);
     }
-  }, [gameState, party, activeBattler, enemy, addMessage, endBattle, triggerVisualEffect, setEnemy, setParty, isAutoBattle, setCombatInterjection, setActiveBattler, setBattleTurn, forceHit]);
+  }, [gameState, party, activeBattler, enemy, addMessage, endBattle, triggerVisualEffect, setEnemy, setParty, isAutoBattle, setCombatInterjection, setActiveBattler, setBattleTurn, forceHit, showVictory]);
 
   const castSpell = useCallback((spell) => {
-    if (gameState !== 'BATTLE' || !enemy) return;
+    if (gameState !== 'BATTLE' || !enemy || showVictory) return;
+    if (!isValidAction(lastActionTurnRef.current, battleTurn)) return;
+
+    isThinkingRef.current = true;
     const poisonRes = applyStatusEffects(party[activeBattler]);
     if (poisonRes.messages.length > 0) {
       poisonRes.messages.forEach(msg => addMessage(msg, 'damage_party'));
@@ -299,16 +314,25 @@ export const useCombat = (onFirstDefeat, forceHit) => {
       triggerVisualEffect(`party_${activeBattler}`, `-${Math.abs(party[activeBattler].hp - poisonRes.updatedActor.hp)}`, 'damage');
     }
     const currentActor = poisonRes.updatedActor;
-    if (currentActor.hp <= 0) { setBattleTurn(prev => prev + 1); return; }
+    if (currentActor.hp <= 0) { 
+      isThinkingRef.current = false;
+      setBattleTurn(prev => prev + 1); 
+      return; 
+    }
     const ability = checkActionAbility(currentActor);
     if (!ability.canAction) {
+      isThinkingRef.current = false;
       addMessage(ability.message, 'damage_party');
       setBattleTurn(prev => prev + 1);
       return;
     }
 
     const attacker = getEffectiveStats(currentActor, itemsData);
-    if (attacker.mp < spell.mp) { addMessage(scenarioData.battle.noMana); return; }
+    if (attacker.mp < spell.mp) { 
+      isThinkingRef.current = false;
+      addMessage(scenarioData.battle.noMana); 
+      return; 
+    }
     
     let nextP = [...party]; 
     nextP[activeBattler].mp -= spell.mp;
@@ -343,40 +367,46 @@ export const useCombat = (onFirstDefeat, forceHit) => {
     setEnemy(nextE); 
     setShowSpells(null);
     if (nextE.hp <= 0) {
+      isThinkingRef.current = false;
       endBattle(true);
     } else {
       const nextIdx = nextP.findIndex((m, i) => i > activeBattler && m.hp > 0);
       if (nextIdx !== -1) {
+        isThinkingRef.current = false;
         setActiveBattler(nextIdx);
         setBattleTurn(prev => prev + 1);
       } else {
+        isThinkingRef.current = false;
         handleFight();
       }
     }
-  }, [party, activeBattler, enemy, addMessage, endBattle, gameState, handleFight, triggerVisualEffect, setParty, setEnemy, setShowSpells]);
+  }, [party, activeBattler, enemy, addMessage, endBattle, gameState, handleFight, triggerVisualEffect, setParty, setEnemy, setShowSpells, battleTurn, showVictory]);
 
   useEffect(() => {
-    if (isAutoBattle && gameState === 'BATTLE' && enemy && !activeDialog && !combatInterjection) {
+    if (isAutoBattle && gameState === 'BATTLE' && enemy && !showVictory && !activeDialog && !combatInterjection) {
+      if (isThinkingRef.current) return; // 二重思考防止
+
       const a = party[activeBattler];
-      if (!a || a.hp <= 0) {
-        const nextIdx = party.findIndex(m => m.hp > 0);
-        if (nextIdx !== -1) setTimeout(() => setActiveBattler(nextIdx), 0);
-        return;
-      }
+      if (!a || a.hp <= 0) return;
+
       const t = setTimeout(() => {
+        if (gameState !== 'BATTLE' || showVictory || activeDialog || combatInterjection) return;
+        
         const spells = (SPELLS[a.jobKey] || []).filter(s => s.lv <= a.lv && a.mp >= s.mp);
         const statusVictim = party.find(m => m.hp > 0 && m.statusEffects && m.statusEffects.length > 0);
+        
         if (a.jobKey === 'NISOU' && statusVictim) {
            const cureSpell = spells.find(s => s.type === 'CURE');
            if (cureSpell) { castSpell(cureSpell); return; }
         }
+        
         const isStrong = enemy.isBoss || enemy.hp > 50;
         if (isStrong && spells.length > 0) castSpell(spells[spells.length - 1]);
         else handleFight();
       }, GAME_SETTINGS.DELAYS.AUTO_BATTLE);
       return () => clearTimeout(t);
     }
-  }, [isAutoBattle, gameState, enemy, party, activeBattler, handleFight, castSpell, battleTurn, activeDialog, combatInterjection]);
+  }, [isAutoBattle, gameState, enemy, activeBattler, battleTurn, showVictory, activeDialog, combatInterjection, handleFight, castSpell, party]);
 
   return {
     activeBattler, setActiveBattler, battleTurn, setBattleTurn, isAutoBattle, setIsAutoBattle,

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { calculateHitAndDamage, getRandomEnemy, getEffectiveStats } from './combat';
+import { calculateHitAndDamage, getRandomEnemy, getEffectiveStats, isValidAction } from './combat';
 
 /**
  * 【合戦の理】自動検証（Unit Test）
@@ -81,6 +81,20 @@ describe('combat.js: 合戦の理の検証', () => {
       const res = getEffectiveStats(char, itemsData);
       expect(res.minDmg).toBe(17);
       expect(res.ac).toBe(9);
+    });
+  });
+
+  describe('isValidAction: 行動正当性の検分', () => {
+    it('初期状態(-1)では行動が許可されること', () => {
+      expect(isValidAction(-1, 0)).toBe(true);
+    });
+
+    it('ターンが進めば行動が許可されること', () => {
+      expect(isValidAction(0, 1)).toBe(true);
+    });
+
+    it('同一ターンの重複行動は弾かれること', () => {
+      expect(isValidAction(5, 5)).toBe(false);
     });
   });
 });
