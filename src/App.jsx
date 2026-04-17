@@ -89,7 +89,6 @@ function App() {
     handleFight,
     castSpell,
     yugenEnemy,
-    setYugenEnemy,
     finalizeBattle
   } = useCombat(null, forceHit);
 

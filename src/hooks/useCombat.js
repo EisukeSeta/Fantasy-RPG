@@ -26,8 +26,7 @@ export const useCombat = (onFirstDefeat, forceHit) => {
     combatInterjection, setCombatInterjection,
     triggerVisualEffect,
     setMessages,
-    defeatedEnemies, setDefeatedEnemies,
-    setYugenView
+    defeatedEnemies, setDefeatedEnemies
   } = useGame();
 
   const addMessage = useCallback((msg, type = 'normal') => {
@@ -191,7 +190,7 @@ export const useCombat = (onFirstDefeat, forceHit) => {
     }
     setActiveBattler(0); 
     setBattleTurn(0); 
-  }, [enemy, addMessage, handleLevelUp, setGameState, setEnemy, setParty, setActiveDialog, setBossDefeated, setPlayerState, setMapData, setCombatInterjection, party, forceLoot, defeatedEnemies, setDefeatedEnemies, onFirstDefeat, finalizeBattle]);
+  }, [enemy, addMessage, handleLevelUp, setGameState, setEnemy, setParty, setActiveDialog, setBossDefeated, setPlayerState, setMapData, setCombatInterjection, party, forceLoot, defeatedEnemies, setDefeatedEnemies, onFirstDefeat, finalizeBattle, setActiveBattler, setBattleTurn]);
 
   const handleFight = useCallback(() => {
     if (gameState !== 'BATTLE' || !enemy || showVictory) return;
@@ -293,7 +292,7 @@ export const useCombat = (onFirstDefeat, forceHit) => {
         setBattleTurn(prev => prev + 1);
       }, GAME_SETTINGS.DELAYS.ENEMY_TURN);
     }
-  }, [gameState, party, activeBattler, enemy, addMessage, endBattle, triggerVisualEffect, setEnemy, setParty, isAutoBattle, setCombatInterjection, setActiveBattler, setBattleTurn, forceHit, showVictory]);
+  }, [gameState, party, activeBattler, enemy, addMessage, endBattle, triggerVisualEffect, setEnemy, setParty, isAutoBattle, setCombatInterjection, setActiveBattler, setBattleTurn, forceHit, showVictory, battleTurn]);
 
   const castSpell = useCallback((spell) => {
     if (gameState !== 'BATTLE' || !enemy || showVictory) return;
