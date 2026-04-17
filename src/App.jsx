@@ -61,7 +61,6 @@ function App() {
   const [volume] = useState(0.5);
   const [showDebug, setShowDebug] = useState(isDebug);
   const [forceLoot, setForceLoot] = useState(false);
-  const [yugenEnemy, setYugenEnemy] = useState(null);
   const [forceHit, setForceHit] = useState(false);
 
   const isForceMobile = (typeof window !== 'undefined' && (window.innerWidth <= 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent))) || new URLSearchParams(window.location.search).get('mobile') === '1';
@@ -78,6 +77,8 @@ function App() {
   }, [setMessages]);
 
   const { processMove } = useNavigation();
+  
+  // useCombat から必要な状態とアクションを取得
   const {
     activeBattler,
     isAutoBattle,
@@ -86,8 +87,11 @@ function App() {
     showSpells,
     setShowSpells,
     handleFight,
-    castSpell
-  } = useCombat(setYugenEnemy);
+    castSpell,
+    yugenEnemy,
+    setYugenEnemy,
+    finalizeBattle
+  } = useCombat(null, forceHit);
 
   const initAudio = useCallback(() => {
     SoundEngine.init(); SoundEngine.setVolume(isMuted ? 0 : volume); SoundEngine.transitionTo(gameState);
@@ -197,7 +201,7 @@ function App() {
       <DialogManager gameState={gameState} activeDialog={activeDialog} setActiveDialog={setActiveDialog} combatInterjection={combatInterjection} setCombatInterjection={setCombatInterjection} />
 
       {/* --- 全画面モーダル UI（優先度最高） --- */}
-      {yugenEnemy && <YugenOverlay enemy={yugenEnemy} onClose={() => setYugenEnemy(null)} />}
+      {yugenEnemy && <YugenOverlay enemy={yugenEnemy} onClose={finalizeBattle} />}
       {showArchives && <ArchivesView onClose={() => setShowArchives(false)} defaultTab={archivesTab} />}
       {showGrimoire && <SpellGrimoire isOpen={showGrimoire} onClose={() => setShowGrimoire(false)} />}
       {showShortcutHelp && <ShortcutHelp onClose={() => setShowShortcutHelp(false)} />}
