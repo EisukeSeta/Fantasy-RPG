@@ -84,7 +84,7 @@ export const CharacterCard = ({
 
           {/* 武勲（個別ランク付）の表示 */}
           <div className="item-medals" style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
-            {m.items && m.items.map(itemId => {
+            {m.items && [...new Set(m.items)].map(itemId => {
               const item = itemsData.find(it => it.id === itemId);
               const rank = (m.medals && m.medals[itemId]) || 1;
               return item ? (
@@ -162,7 +162,7 @@ export const CharacterCard = ({
         onClick={(e) => { e.stopPropagation(); handleMedalClick(); }}
         style={{ position: 'absolute', top: '-5px', right: '-5px', display: 'flex', gap: '2px', cursor: 'pointer' }}
       >
-        {m.items && m.items.map(itemId => {
+        {m.items && [...new Set(m.items)].map(itemId => {
           const item = itemsData.find(it => it.id === itemId);
           const rank = (m.medals && m.medals[itemId]) || 1;
           return item ? (
