@@ -18,6 +18,7 @@
 | `exp` | number | 累積徳（経験値） | 厳禁 |
 | `status` | string | 状態（平安, 討死, 麻痺 等） | 厳禁 |
 | `items` | string[] | 所持している勲章（Item IDの配列） | 厳禁 |
+| `medals` | object | 個別武勲の霊格（{medalId: rank}） | 厳禁 |
 | `image` | string | 隊員の姿（画像パス） | 厳禁 |
 
 ---

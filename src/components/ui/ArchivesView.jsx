@@ -173,7 +173,22 @@ export const ArchivesView = ({ onClose, defaultTab = 'ENEMIES' }) => {
                             MGK:{(item.effect?.mgk || 0) > 0 ? `+${item.effect.mgk}` : (item.effect?.mgk || 0)}
                           </span>
                         </div>
-                        <p style={{ margin: '5px 0 0 0', color: '#eee', fontSize: '1.1rem', lineHeight: '1.6' }}>{item.flavor || item.desc}</p>
+                        <p style={{ margin: '5px 0 10px 0', color: '#eee', fontSize: '1.1rem', lineHeight: '1.6' }}>{item.flavor || item.desc}</p>
+                        
+                        {/* 隊員ごとの霊格（Rank）表示 */}
+                        <div style={{ display: 'flex', gap: '15px' }}>
+                          {party.map(m => {
+                            const rank = (m.medals && m.medals[item.id]) || 0;
+                            if (rank === 0) return null;
+                            return (
+                              <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '10px', border: `1px solid ${rank >= 10 ? varGold : '#444'}` }}>
+                                <span style={{ fontSize: '0.8rem' }}>{m.name.slice(0, 2)}:</span>
+                                <span style={{ color: rank >= 10 ? varGold : '#fff', fontWeight: 'bold' }}>Rank {rank}</span>
+                                {rank >= 10 && <span style={{ fontSize: '0.7rem' }}>✨</span>}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
                   </div>

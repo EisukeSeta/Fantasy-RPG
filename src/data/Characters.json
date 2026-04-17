@@ -19,6 +19,7 @@
     "statusEffects": [],
     "image": "watanabe_tsuna.png",
     "items": [],
+    "medals": {},
     "resurrectionMessage": "都の守護、まだ終わらぬ……。主殿、お導きを。"
   },
   {
@@ -41,6 +42,7 @@
     "statusEffects": [],
     "image": "abe_seimei.png",
     "items": [],
+    "medals": {},
     "resurrectionMessage": "理より外れるとは、不覚。再び式を操りましょう。"
   },
   {
@@ -63,6 +65,7 @@
     "statusEffects": [],
     "image": "yaobikuni.png",
     "items": [],
+    "medals": {},
     "resurrectionMessage": "まだ、この世で成すべき功徳があるのです。参りましょう。"
   }
 ]

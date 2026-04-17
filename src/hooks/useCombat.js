@@ -106,42 +106,51 @@ export const useCombat = (onFirstDefeat, forceHit) => {
           });
         }
         
-        // --- 武勲のドリップロジック ---
-        let droppedItem = null;
-        if (enemy.drops && enemy.drops.length > 0) {
-          for (const drop of enemy.drops) {
-            if (forceLoot || Math.random() < drop.rate) {
-              droppedItem = itemsData.find(it => it.id === drop.itemId);
-              if (droppedItem) break;
-            }
-          }
-        }
+        // --- 武勲の刻印ロジック (Rank/Level System) ---
+        const potentialMedals = (enemy.drops || []).map(d => itemsData.find(it => it.id === d.itemId)).filter(Boolean);
+        let anyoneResonated = false;
 
         setParty(p => p.map((m, idx) => {
           let updated = handleLevelUp({ ...m, exp: m.exp + Math.floor(enemy.exp * balanceData.rates.expShare) });
           
-          // アイテム適用 (生存しているランダムな一人が入手)
-          const liveIndices = p.map((char, i) => char.hp > 0 ? i : -1).filter(i => i !== -1);
-          const luckyIdx = liveIndices[Math.floor(Math.random() * liveIndices.length)];
-          
-          if (droppedItem && idx === luckyIdx) {
-             // 既に持っていないか確認 (勲章なので重複なしとする)
-             if (!updated.items) updated.items = [];
-             if (!updated.items.includes(droppedItem.id)) {
-               updated.items.push(droppedItem.id);
-               addMessage(`【武勲】${m.name}は『${droppedItem.name}』を授かった！`, 'level_up');
-               addMessage(`《${droppedItem.flavor}》`, 'event');
-               // ステータス反映
-               if (droppedItem.effect.atk) { updated.minDmg += droppedItem.effect.atk; updated.maxDmg += droppedItem.effect.atk; }
-               if (droppedItem.effect.ac) { updated.ac += droppedItem.effect.ac; }
-               // mgk は暫定的に術ダメージ全体へのゲインとして扱う（将来的に拡張）
-             }
+          if (m.hp > 0) {
+            potentialMedals.forEach(medal => {
+              // 基本30%で取得、あるいはデバッグ神速必中(forceLoot)
+              const resonanceRate = 0.3; 
+              // 全員外れた場合の救済ロジック（最後の一人で判定）
+              const isLastChance = (idx === p.length - 1 && !anyoneResonated);
+              
+              if (forceLoot || Math.random() < resonanceRate || isLastChance) {
+                anyoneResonated = true;
+                if (!updated.medals) updated.medals = {};
+                const currentRank = updated.medals[medal.id] || 0;
+                
+                if (currentRank < 10) {
+                  const nextRank = currentRank + 1;
+                  updated.medals[medal.id] = nextRank;
+                  addMessage(`【武勲】${m.name}は『${medal.name}』の霊力を深めた！(Rank ${nextRank})`, 'level_up');
+                  
+                  // 初回取得時は Item 配列にも追加し、基礎補正を適用（後方互換維持）
+                  if (currentRank === 0) {
+                    if (!updated.items) updated.items = [];
+                    updated.items.push(medal.id);
+                    addMessage(`《${medal.flavor}》`, 'event');
+                    if (medal.effect.atk) { updated.minDmg += medal.effect.atk; updated.maxDmg += medal.effect.atk; }
+                    if (medal.effect.ac) { updated.ac += medal.effect.ac; }
+                  } else {
+                    // Rank 2 以降の微増補正（将来的に status.js で動態計算させるが、一旦ここで基礎値加算）
+                    if (medal.effect.atk) { updated.minDmg += 1; updated.maxDmg += 1; }
+                    if (medal.effect.ac) { updated.ac += 1; }
+                  }
+                }
+              }
+            });
           }
           return updated;
         }));
         
-        // --- 武勲の検分（アイテム獲得独白） ---
-        if (droppedItem) {
+        // --- 武勲の検分（共鳴時の独白） ---
+        if (anyoneResonated) {
           const luckyOne = party.find(m => m.hp > 0) || party[0];
           const speakerKey = luckyOne.image.split('.')[0].replace(/-/g, '_');
           const quotes = scenarioData.events.lootQuotes[speakerKey];

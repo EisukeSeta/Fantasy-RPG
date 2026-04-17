@@ -1,5 +1,22 @@
 # 📜 平安魔道伝 羅生門編：開発記録 (PLANNING_LOG)
 
+## [v4.20.3] - 2026-04-16
+### ⛩️ 分霊の儀：モジュール化の極致 (Context Modularization)
+`GameContext` の肥大化を解消し、責務ごとに Context を分離。都の保守性を極大化。
+
+#### 🛠️ 実装内容
+1.  **[分霊の成就 (Provider Division)]**:
+    - `EffectProvider`: 視覚演出（揺れ・光・飛沫）を独立管理。
+    - `AudioProvider`: 音響（静寂・調べ）を独立管理。
+    - `EncounterProvider`: 図録（怪異との遭遇・調伏記録）を独立管理。
+    - `SaveProvider`: 記憶の術式（セーブ・ロードロジック）を独立管理。
+2.  **[中核の再編 (GameContext Refactoring)]**:
+    - `GameContext` を各専門 Context の入り口（Facade）として再定義。
+    - 内部で各 Provider を呼び出しつつ、外部へは従来通りの `value` を提供することで、既存コンポーネントへの破壊的変更を回避。
+3.  **[不絶の浄化 (Blackout Fix)]**:
+    - Provider の入れ子順序（GameProvider が依存 Context の外側にいた問題）を修正。正しき序列によりブラックアウトを解消。
+
+
 ## [v4.19.1] - 2026-04-16
 ### ⛩️ UI基盤の統一と叙情の融合 (Unified UI & Context)
 都のあらゆる画面が一つの意志（Context）で結ばれ、意匠の揺れを完全に排した「平安モダン」の完成。

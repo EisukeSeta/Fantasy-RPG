@@ -1,9 +1,9 @@
-// src/components/status/CharacterCard.jsx
 import React from 'react';
 import { CHAR_IMAGES, varGold } from '../../constants/gameData';
 import { getRequiredExp } from '../../logic/growth';
 import itemsData from '../../data/Items.json';
 import { useUIState } from '../../hooks/useUIState.jsx';
+import { calculateFinalStatus } from '../../logic/status';
 
 /**
  * 個別の隊員情報を表示するカード部品
@@ -22,16 +22,12 @@ export const CharacterCard = ({
   const { openView, setShowStatus } = useUIState();
   const isActive = gameState === 'BATTLE' && activeBattler === i;
 
-  // 勲章（パッシブ強化）の補正合計を算出
-  const bonuses = (m.items || []).reduce((acc, itemId) => {
-    const item = itemsData.find(it => it.id === itemId);
-    if (item && item.effect) {
-      if (item.effect.atk) acc.atk += item.effect.atk;
-      if (item.effect.ac) acc.ac += item.effect.ac;
-      if (item.effect.mgk) acc.mgk += item.effect.mgk;
-    }
-    return acc;
-  }, { atk: 0, ac: 0, mgk: 0 });
+  // 動的な最終ステータス算出 (基本値 + Rank補正)
+  const finalStatus = calculateFinalStatus(m, itemsData);
+  const bonuses = {
+    atk: finalStatus.minDmg - m.minDmg,
+    ac: finalStatus.ac - m.ac
+  };
 
   const handleMedalClick = () => {
     // アーカイブを開く前に、ステータス詳細（スマホ版）を閉じる
@@ -86,25 +82,48 @@ export const CharacterCard = ({
             }} />
           </div>
 
-          {/* 武勲（アイテム）の表示 */}
-          <div className="item-medals" style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
+          {/* 武勲（個別ランク付）の表示 */}
+          <div className="item-medals" style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
             {m.items && m.items.map(itemId => {
               const item = itemsData.find(it => it.id === itemId);
+              const rank = (m.medals && m.medals[itemId]) || 1;
               return item ? (
-                <span 
+                <div 
                   key={item.id} 
-                  title={item.name} 
+                  title={`${item.name} (Rank ${rank})`}
                   onClick={(e) => { e.stopPropagation(); handleMedalClick(); }}
                   style={{ 
-                    fontSize: '1.2rem', 
+                    position: 'relative',
                     cursor: 'pointer',
-                    filter: 'drop-shadow(0 0 4px rgba(184, 154, 66, 0.8))',
-                    transition: 'transform 0.2s'
+                    transition: 'transform 0.2s',
+                    display: 'flex',
+                    alignItems: 'center'
                   }}
-                  className="medal-icon"
+                  className="medal-container"
                 >
-                  {item.icon}
-                </span>
+                  <span style={{ 
+                    fontSize: '1.3rem', 
+                    filter: `drop-shadow(0 0 ${2 + rank * 2}px rgba(184, 154, 66, ${0.4 + rank * 0.05}))`
+                  }}>
+                    {item.icon}
+                  </span>
+                  {rank > 1 && (
+                    <span style={{ 
+                      fontSize: '0.6rem', 
+                      color: varGold, 
+                      fontWeight: 'bold',
+                      position: 'absolute',
+                      bottom: '-2px',
+                      right: '-4px',
+                      background: 'rgba(0,0,0,0.7)',
+                      borderRadius: '4px',
+                      padding: '0 2px',
+                      border: `1px solid ${varGold}`
+                    }}>
+                      {rank}
+                    </span>
+                  )}
+                </div>
               ) : null;
             })}
           </div>
@@ -145,8 +164,21 @@ export const CharacterCard = ({
       >
         {m.items && m.items.map(itemId => {
           const item = itemsData.find(it => it.id === itemId);
+          const rank = (m.medals && m.medals[itemId]) || 1;
           return item ? (
-            <span key={item.id} style={{ fontSize: '0.7rem' }}>{item.icon}</span>
+            <div key={item.id} style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.8rem' }}>{item.icon}</span>
+              {rank > 1 && (
+                <span style={{ 
+                  fontSize: '0.5rem', 
+                  color: varGold, 
+                  position: 'absolute', 
+                  bottom: '-3px', 
+                  right: '-3px',
+                  fontWeight: 'bold'
+                }}>{rank}</span>
+              )}
+            </div>
           ) : null;
         })}
       </div>

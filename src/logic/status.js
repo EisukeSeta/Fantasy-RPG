@@ -50,3 +50,38 @@ export const checkActionAbility = (actor) => {
 
   return { canAction: true };
 };
+
+/**
+ * 隊員の最終的な能力値を計算する。
+ * 基本能力値 + 武勲アイテムの基礎効果 + (Rankによる成長補正)
+ * @param {object} actor - 隊員
+ * @param {array} itemsData - 武勲アイテムのマスタデータ
+ * @returns {object} { minDmg, maxDmg, ac }
+ */
+export const calculateFinalStatus = (actor, itemsData) => {
+  let minDmg = actor.minDmg;
+  let maxDmg = actor.maxDmg;
+  let ac = actor.ac;
+
+  if (actor.items && actor.medals) {
+    actor.items.forEach(itemId => {
+      const item = itemsData.find(it => it.id === itemId);
+      if (item && item.effect) {
+        const rank = actor.medals[itemId] || 1;
+        
+        // 1. 基底補正 (Rank 1 の効果)
+        if (item.effect.atk) { minDmg += item.effect.atk; maxDmg += item.effect.atk; }
+        if (item.effect.ac) { ac += item.effect.ac; }
+
+        // 2. 霊格補正 (Rank 2 以降、1レベルにつき 打撃+1, 回避+1)
+        if (rank > 1) {
+          const rankBonus = rank - 1;
+          if (item.effect.atk) { minDmg += rankBonus; maxDmg += rankBonus; }
+          if (item.effect.ac) { ac += rankBonus; }
+        }
+      }
+    });
+  }
+
+  return { minDmg, maxDmg, ac };
+};
