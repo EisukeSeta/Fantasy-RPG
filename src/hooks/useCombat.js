@@ -26,7 +26,8 @@ export const useCombat = (onFirstDefeat, forceHit) => {
     combatInterjection, setCombatInterjection,
     triggerVisualEffect,
     setMessages,
-    defeatedEnemies, setDefeatedEnemies
+    defeatedEnemies, setDefeatedEnemies,
+    encounteredEnemies, setEncounteredEnemies
   } = useGame();
 
   const addMessage = useCallback((msg, type = 'normal') => {
@@ -78,6 +79,10 @@ export const useCombat = (onFirstDefeat, forceHit) => {
     };
 
     if (won) {
+        // 遭遇済フラグも確実に立てる（図鑑の名前表示に必要）
+        if (!encounteredEnemies.includes(enemy.id)) {
+          setEncounteredEnemies(prev => [...prev, enemy.id]);
+        }
         if (isNewDefeat) {
           setDefeatedEnemies(prev => [...prev, enemy.id]);
           addMessage(`……怪異【${enemy.name}】の正体が都の図録に刻まれた……`, 'event');
@@ -189,12 +194,15 @@ export const useCombat = (onFirstDefeat, forceHit) => {
         });
     }
     setActiveBattler(0); 
-    setBattleTurn(0); 
-  }, [enemy, addMessage, handleLevelUp, setGameState, setEnemy, setParty, setActiveDialog, setBossDefeated, setPlayerState, setMapData, setCombatInterjection, party, forceLoot, defeatedEnemies, setDefeatedEnemies, onFirstDefeat, finalizeBattle, setActiveBattler, setBattleTurn]);
+    setBattleTurn(0);
+    lastActionTurnRef.current = -1;     // 戦闘終了時に Ref をリセット（次の戦闘でのフリーズ防止）
+    lastProcessedTurnRef.current = -1;  // 戦闘終了時に Ref をリセット（次の戦闘でのフリーズ防止）
+  }, [enemy, addMessage, handleLevelUp, setGameState, setEnemy, setParty, setActiveDialog, setBossDefeated, setPlayerState, setMapData, setCombatInterjection, party, forceLoot, encounteredEnemies, defeatedEnemies, setEncounteredEnemies, setDefeatedEnemies, onFirstDefeat, finalizeBattle, setActiveBattler, setBattleTurn]);
 
   const handleFight = useCallback(() => {
     if (gameState !== 'BATTLE' || !enemy || showVictory) return;
     if (!isValidAction(lastActionTurnRef.current, battleTurn)) return;
+    lastActionTurnRef.current = battleTurn; // このターンの行動を記録（二重実行防止）
     
     const poisonRes = applyStatusEffects(party[activeBattler]);
     if (poisonRes.messages.length > 0) {
@@ -278,7 +286,7 @@ export const useCombat = (onFirstDefeat, forceHit) => {
                 member: target,
                 quotes: quotes,
                 currentPage: 0,
-                onClose: () => { if (isAutoBattle) setBattleTurn(prev => prev + 1); }
+                onClose: () => { setBattleTurn(prev => prev + 1); }
               });
             }
           }
@@ -297,6 +305,7 @@ export const useCombat = (onFirstDefeat, forceHit) => {
   const castSpell = useCallback((spell) => {
     if (gameState !== 'BATTLE' || !enemy || showVictory) return;
     if (!isValidAction(lastActionTurnRef.current, battleTurn)) return;
+    lastActionTurnRef.current = battleTurn; // このターンの行動を記録（二重実行防止）
 
     const poisonRes = applyStatusEffects(party[activeBattler]);
     if (poisonRes.messages.length > 0) {
@@ -357,11 +366,14 @@ export const useCombat = (onFirstDefeat, forceHit) => {
     if (nextE.hp <= 0) {
       endBattle(true);
     } else {
+      // 次の行動者を設定し、ターン進行は useEffect に委ねる（直接呼び出しによるデッドロックを防止）
       const nextIdx = nextP.findIndex((m, i) => i > activeBattler && m.hp > 0);
       if (nextIdx !== -1) {
         setActiveBattler(nextIdx);
         setBattleTurn(prev => prev + 1);
       } else {
+        // 全員行動済み → handleFight 経由で敵ターンへ（敵ターン中の連打を防止）
+        lastActionTurnRef.current = -1; // resetしてから handleFight に委ねる
         handleFight();
       }
     }
