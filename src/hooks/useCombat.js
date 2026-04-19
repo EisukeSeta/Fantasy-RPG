@@ -270,42 +270,53 @@ export const useCombat = (onFirstDefeat, forceHit) => {
             nextStatusEffects = [...nextStatusEffects, enemy.statusEffect];
             addMessage(`${target.name}は${enemy.statusEffect === 'POISON' ? '毒' : '麻痺'}に侵された！`, 'damage_party');
           }
-          setParty(p => p.map(m => m.name === target.name ? { 
-            ...m, 
-            hp: nextHP, 
-            status: nextHP === 0 ? '討死' : '平安',
-            statusEffects: nextHP === 0 ? [] : nextStatusEffects
-          } : m));
-          triggerVisualEffect(`party_${targetIdx}`, `-${eRes.damage}`, 'damage');
-          
-          if (nextHP === 0) {
-            let speakerKey = target.image.split('.')[0].replace(/-/g, '_');
-            const quotes = scenarioData.events.deathQuotes[speakerKey];
-            if (quotes) {
-              setCombatInterjection({
-                member: target,
-                quotes: quotes,
-                currentPage: 0,
-                onClose: () => { setBattleTurn(prev => prev + 1); }
-              });
+          setParty(p => {
+            const latestParty = p.map(m => m.name === target.name ? { 
+              ...m, 
+              hp: nextHP, 
+              status: nextHP === 0 ? '討死' : '平安',
+              statusEffects: nextHP === 0 ? [] : nextStatusEffects
+            } : m);
+            
+            // 演出の予約
+            if (nextHP === 0) {
+              let speakerKey = target.image.split('.')[0].replace(/-/g, '_');
+              const quotes = scenarioData.events.deathQuotes[speakerKey];
+              if (quotes) {
+                setCombatInterjection({
+                  member: target,
+                  quotes: quotes,
+                  currentPage: 0,
+                  onClose: () => { setBattleTurn(prev => prev + 1); }
+                });
+              } else {
+                setBattleTurn(prev => prev + 1);
+              }
+            } else {
+              setBattleTurn(prev => prev + 1);
             }
-          }
-          if (party.every(m => (m.name === target.name ? nextHP : m.hp) <= 0)) {
-            endBattle(false);
-          }
+
+            // 全滅判定（最新の latestParty を使用）
+            if (latestParty.every(m => m.hp <= 0)) {
+               endBattle(false);
+            }
+            
+            return latestParty;
+          });
+          triggerVisualEffect(`party_${targetIdx}`, `-${eRes.damage}`, 'damage');
         } else {
           addMessage(`${target.name}${scenarioData.battle.evade}`);
+          setBattleTurn(prev => prev + 1);
         }
-        setActiveBattler(party.findIndex(m => m.hp > 0));
-        setBattleTurn(prev => prev + 1);
+        // 次の行動者は、useEffect の battleTurn 更新によって自動的に再計算される
       }, GAME_SETTINGS.DELAYS.ENEMY_TURN);
     }
-  }, [gameState, party, activeBattler, enemy, addMessage, endBattle, triggerVisualEffect, setEnemy, setParty, isAutoBattle, setCombatInterjection, setActiveBattler, setBattleTurn, forceHit, showVictory, battleTurn]);
+  }, [gameState, party, activeBattler, enemy, addMessage, endBattle, triggerVisualEffect, setEnemy, setParty, setCombatInterjection, setActiveBattler, setBattleTurn, forceHit, showVictory, battleTurn]);
 
   const castSpell = useCallback((spell) => {
     if (gameState !== 'BATTLE' || !enemy || showVictory) return;
     if (!isValidAction(lastActionTurnRef.current, battleTurn)) return;
-    lastActionTurnRef.current = battleTurn; // このターンの行動を記録（二重実行防止）
+    lastActionTurnRef.current = battleTurn; 
 
     const poisonRes = applyStatusEffects(party[activeBattler]);
     if (poisonRes.messages.length > 0) {
@@ -366,14 +377,14 @@ export const useCombat = (onFirstDefeat, forceHit) => {
     if (nextE.hp <= 0) {
       endBattle(true);
     } else {
-      // 次の行動者を設定し、ターン進行は useEffect に委ねる（直接呼び出しによるデッドロックを防止）
+      // 適切な次の行動者を決定（生存者のみを対象）
       const nextIdx = nextP.findIndex((m, i) => i > activeBattler && m.hp > 0);
       if (nextIdx !== -1) {
         setActiveBattler(nextIdx);
         setBattleTurn(prev => prev + 1);
       } else {
-        // 全員行動済み → handleFight 経由で敵ターンへ（敵ターン中の連打を防止）
-        lastActionTurnRef.current = -1; // resetしてから handleFight に委ねる
+        // 全員行動済み → 絶縁を一時解除し敵ターンへ
+        lastActionTurnRef.current = -1;
         handleFight();
       }
     }
@@ -381,17 +392,22 @@ export const useCombat = (onFirstDefeat, forceHit) => {
 
   useEffect(() => {
     if (isAutoBattle && gameState === 'BATTLE' && enemy && !showVictory && !activeDialog && !combatInterjection) {
-      // 予約照合：すでにこのターンの処理を受け付けているなら再発火を阻止
       if (lastProcessedTurnRef.current === battleTurn) return;
       
       const a = party[activeBattler];
-      if (!a || a.hp <= 0) return;
+      if (!a || a.hp <= 0) {
+        // 現在の行動者が討死している場合は、速やかに次の生存者へ手番を譲る
+        const nextIdx = party.findIndex(m => m.hp > 0);
+        if (nextIdx !== -1) {
+          setActiveBattler(nextIdx);
+          setBattleTurn(prev => prev + 1);
+        }
+        return;
+      }
 
-      // 予約確定
       lastProcessedTurnRef.current = battleTurn;
 
       const t = setTimeout(() => {
-        // 実行直前の再臨：演出が入った場合はここで脱出
         if (gameState !== 'BATTLE' || showVictory || activeDialog || combatInterjection) return;
         
         const spells = (SPELLS[a.jobKey] || []).filter(s => s.lv <= a.lv && a.mp >= s.mp);
@@ -408,7 +424,7 @@ export const useCombat = (onFirstDefeat, forceHit) => {
       }, GAME_SETTINGS.DELAYS.AUTO_BATTLE);
       return () => clearTimeout(t);
     }
-  }, [isAutoBattle, gameState, enemy, activeBattler, battleTurn, showVictory, activeDialog, combatInterjection, handleFight, castSpell, party]);
+  }, [isAutoBattle, gameState, enemy, activeBattler, battleTurn, showVictory, activeDialog, combatInterjection, handleFight, castSpell]);
 
   return {
     activeBattler, setActiveBattler, battleTurn, setBattleTurn, isAutoBattle, setIsAutoBattle,
