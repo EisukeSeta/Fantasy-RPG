@@ -1,0 +1,57 @@
+{
+  "version": "1.0.0",
+  "description": "平安幻想RPGにおけるモジュール間接続（インターフェース）の絶対法。この法典にないプロパティの参照はすべて『論理バグ』とみなす。",
+  "contexts": {
+    "GameContext": {
+      "state_properties": [
+        "gameState",
+        "messages",
+        "playerState",
+        "party",
+        "mapData",
+        "bossDefeated",
+        "enemy",
+        "activeBattlerIndex",
+        "activeDialog",
+        "combatInterjection",
+        "isShake",
+        "visualEffects",
+        "flashColor",
+        "displayShake",
+        "isMuted",
+        "encounteredEnemies",
+        "defeatedEnemies"
+      ],
+      "setter_actions": [
+        "setGameState",
+        "setMessages",
+        "setPlayerState",
+        "setParty",
+        "setMapData",
+        "setBossDefeated",
+        "setEnemy",
+        "setActiveBattlerIndex",
+        "setActiveDialog",
+        "setCombatInterjection",
+        "setIsShake",
+        "setVisualEffects",
+        "setFlashColor",
+        "setDisplayShake",
+        "setEncounteredEnemies",
+        "setDefeatedEnemies"
+      ],
+      "complex_actions": [
+        "triggerVisualEffect",
+        "toggleMute",
+        "saveGame",
+        "loadGame",
+        "handleRestart",
+        "startEncounter"
+      ]
+    }
+  },
+  "rules": {
+    "naming_consistency": "モジュール内で Alias (リネーム) して使用することを原則禁止。activeBattlerIndex は activeBattlerIndex として使用せよ。",
+    "check_mandatory": "startEncounter などの主要アクションを呼び出す前は、必ずその存在をアサーション（Logger.impurity 等）せよ。"
+  }
+}

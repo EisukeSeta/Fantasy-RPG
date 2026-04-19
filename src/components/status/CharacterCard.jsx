@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { CHAR_IMAGES, varGold } from '../../constants/gameData';
 import { getRequiredExp } from '../../logic/growth';
 import itemsData from '../../data/Items.json';
@@ -15,12 +15,12 @@ export const CharacterCard = ({
   member: m, 
   index: i, 
   variant = 'sidebar', 
-  activeBattler, 
+  activeBattlerIndex, 
   gameState, 
   visualEffects
 }) => {
   const { openView, setShowStatus } = useUIState();
-  const isActive = gameState === 'BATTLE' && activeBattler === i;
+  const isActive = gameState === 'BATTLE' && activeBattlerIndex === i;
 
   // 動的な最終ステータス算出 (基本値 + Rank補正)
   const finalStatus = calculateFinalStatus(m, itemsData);

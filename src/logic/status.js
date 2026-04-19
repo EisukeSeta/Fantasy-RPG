@@ -11,8 +11,8 @@
 
 /**
  * ターン開始時に適用される継続効果（毒など）を処理する。
- * @param {object} actor - 術の対象者
- * @returns {object} { updatedActor, messages }
+ * @param {Object} actor 状態適用の対象となるキャラクター（Player または Enemy）
+ * @returns {Object} { updatedActor: 更新後のキャラクターデータ, messages: 発生事象の文字列配列 }
  */
 export const applyStatusEffects = (actor) => {
   const updatedActor = { ...actor };
@@ -20,7 +20,7 @@ export const applyStatusEffects = (actor) => {
 
   if (!updatedActor.statusEffects) return { updatedActor, messages };
 
-  // 1. 毒 (POISON) の理
+  // 1. 毒 (POISON) の理：最大HPの 5% のダメージ。討死まではさせない。
   if (updatedActor.statusEffects.includes('POISON')) {
     const dmg = Math.max(1, Math.floor(updatedActor.maxHp * 0.05));
     updatedActor.hp = Math.max(0, updatedActor.hp - dmg);
@@ -31,14 +31,14 @@ export const applyStatusEffects = (actor) => {
 };
 
 /**
- * 行動可能かどうかを判定する（麻痺など）。
- * @param {object} actor - 行動者
- * @returns {object} { canAction, message }
+ * キャラクターが行会（行動）可能かどうかを判定する（麻痺など）。
+ * @param {Object} actor 行動者
+ * @returns {Object} { canAction: boolean, message: string|undefined }
  */
 export const checkActionAbility = (actor) => {
   if (!actor.statusEffects) return { canAction: true };
 
-  // 1. 麻痺 (PARALYZED) の理
+  // 1. 麻痺 (PARALYZED) の理：33% の確率で行動が封じられる。
   if (actor.statusEffects.includes('PARALYZED')) {
     if (Math.random() < 0.33) {
       return { 
@@ -52,11 +52,11 @@ export const checkActionAbility = (actor) => {
 };
 
 /**
- * 隊員の最終的な能力値を計算する。
+ * 隊員の最終的な能力値を計算する（武勲・霊格補正込み）。
  * 基本能力値 + 武勲アイテムの基礎効果 + (Rankによる成長補正)
- * @param {object} actor - 隊員
- * @param {array} itemsData - 武勲アイテムのマスタデータ
- * @returns {object} { minDmg, maxDmg, ac }
+ * @param {Object} actor 隊員データ
+ * @param {Array} itemsData 武勲アイテムのマスタデータ
+ * @returns {Object} { minDmg, maxDmg, ac } 最終能力値
  */
 export const calculateFinalStatus = (actor, itemsData) => {
   let minDmg = actor.minDmg;
@@ -69,7 +69,7 @@ export const calculateFinalStatus = (actor, itemsData) => {
       if (item && item.effect) {
         const rank = actor.medals[itemId] || 1;
         
-        // 1. 基底補正 (Rank 1 の効果)
+        // 1. 基底補正 (Rank 1 以上の効果)
         if (item.effect.atk) { minDmg += item.effect.atk; maxDmg += item.effect.atk; }
         if (item.effect.ac) { ac += item.effect.ac; }
 

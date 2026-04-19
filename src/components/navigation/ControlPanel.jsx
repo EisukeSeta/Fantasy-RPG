@@ -8,7 +8,8 @@ import { SPELLS } from '../../data/magicData';
 export const ControlPanel = ({ 
   gameState, 
   party, 
-  activeBattler,
+  activeBattlerIndex,
+  combatPhase,
   isAutoBattle, 
   setIsAutoBattle, 
   handleFight, 
@@ -25,7 +26,8 @@ export const ControlPanel = ({
   scenarioData,
   saveGame
 }) => {
-  const currentHero = party[activeBattler];
+  const isActionLocked = gameState === 'BATTLE' && combatPhase !== 'READY';
+  const currentHero = party[activeBattlerIndex] || party[0];
 
   if (isForceMobile) {
     return (
@@ -41,8 +43,8 @@ export const ControlPanel = ({
         {/* 戦闘時のコマンド */}
         {gameState === 'BATTLE' && (
           <div className="mobile-battle-commands">
-            <button className="battle-cmd-btn primary" onClick={handleFight}>🗡️ 打ちかかる</button>
-            <button className="battle-cmd-btn" onClick={() => setShowSpells(!showSpells)} style={{ background: showSpells ? 'var(--primary-gold)' : '', color: showSpells ? '#000' : '' }}>📜 術式</button>
+            <button className="battle-cmd-btn primary" onClick={handleFight} disabled={isActionLocked}>🗡️ 打ちかかる</button>
+            <button className="battle-cmd-btn" onClick={() => setShowSpells(!showSpells)} disabled={isActionLocked} style={{ background: showSpells ? 'var(--primary-gold)' : '', color: showSpells ? '#000' : '' }}>📜 術式</button>
             <button className="battle-cmd-btn" onClick={() => setShowStatus(true)}>👥 隊員</button>
             <button className="battle-cmd-btn" onClick={() => setIsAutoBattle(!isAutoBattle)}>{isAutoBattle ? scenarioData.ui.shuraAuto : scenarioData.ui.manual}</button>
           </div>
@@ -71,7 +73,7 @@ export const ControlPanel = ({
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridAutoRows: '50px', gap: '5px', width: '200px' }}>
           {gameState === 'BATTLE' ? (
             <div style={{ gridColumn: 'span 3', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px' }}>
-              <button className="dialog-btn" onClick={handleFight}>⚔️ 打ちかかる</button>
+              <button className="dialog-btn" onClick={handleFight} disabled={isActionLocked}>⚔️ 打ちかかる</button>
               <button className={`dialog-btn ${isAutoBattle ? 'pulse-gold' : ''}`} onClick={() => setIsAutoBattle(!isAutoBattle)}>
                 {isAutoBattle ? scenarioData.ui.shuraAuto : scenarioData.ui.manual}
               </button>
@@ -98,7 +100,7 @@ export const ControlPanel = ({
         {gameState === 'BATTLE' && (
           <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '5px', maxHeight: '110px', overflowY: 'auto' }}>
             {(SPELLS[currentHero.jobKey] || []).filter(s => s.lv <= currentHero.lv).map((s, idx) => (
-              <button key={idx} className="spell-btn" style={{ fontSize: '0.75rem', padding: '8px 4px' }} onClick={() => castSpell(s)}>{s.name}({s.mp})</button>
+              <button key={idx} className="spell-btn" style={{ fontSize: '0.75rem', padding: '8px 4px' }} onClick={() => castSpell(s)} disabled={isActionLocked}>{s.name}({s.mp})</button>
             ))}
           </div>
         )}

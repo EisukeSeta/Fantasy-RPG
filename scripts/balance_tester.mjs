@@ -61,9 +61,9 @@ const THRESHOLD = {
 };
 
 // --- Player Stats & Job Logic ---
-const createInitialParty = () => JSON.parse(JSON.stringify(charactersData));
+export const createInitialParty = () => JSON.parse(JSON.stringify(charactersData));
 
-function handleLevelUp(member) {
+export function handleLevelUp(member) {
   let m = { ...member };
   while (m.lv < balanceData.experience.maxLevel && m.exp >= getRequiredExp(m.lv + 1)) {
     m.lv += 1;
@@ -73,7 +73,7 @@ function handleLevelUp(member) {
     m.mp = m.maxMp;
     
     // 職種別成長 (期待値)
-    if (m.jobKey === 'BUSHI') { m.minDmg += 2; m.maxDmg += 3; m.ac -= 0.5; }
+    if (m.jobKey === 'SAMURAI') { m.minDmg += 2; m.maxDmg += 3; m.ac -= 0.5; }
     else if (m.jobKey === 'ONMYOJI') { m.minDmg += 1; m.maxDmg += 2; m.ac -= 0.2; }
     else if (m.jobKey === 'NISOU') { m.minDmg += 1; m.maxDmg += 1; m.ac -= 0.3; }
   }
@@ -81,7 +81,7 @@ function handleLevelUp(member) {
 }
 
 // --- Combat Logic ---
-function simulateBattle(party, enemy) {
+export function simulateBattle(party, enemy) {
   let p = party.map(m => ({ ...m, statusEffects: m.statusEffects || [] }));
   let e = { ...enemy };
   let rounds = 0;
@@ -149,7 +149,7 @@ function simulateBattle(party, enemy) {
 }
 
 // --- Full Game Simulation ---
-function runOneGame() {
+export function runOneGame() {
   let party = createInitialParty();
   let totalBattles = 0;
   let totalWipeouts = 0;
@@ -200,51 +200,58 @@ function runOneGame() {
   return { won: bossDefeated, wipeouts: totalWipeouts, lv: party[0].lv, battles: totalBattles, time: totalHumanTime };
 }
 
-// --- Run Simulation Loop ---
-runBenchmark();
-console.log(`\n--- 平安魔道伝 真・自動バランステスト v3.4 (${SIM_RUNS} 試行 ${MOBILE_MODE ? '[モバイル]' : '[PC]'}) ---`);
-let stats = { won: 0, totalWipeouts: 0, totalLv: 0, totalBattles: 0, totalTime: 0 };
-
-for (let i = 0; i < SIM_RUNS; i++) {
-  const r = runOneGame();
-  if (r.won) stats.won++;
-  stats.totalWipeouts += r.wipeouts;
-  stats.totalLv += r.lv;
-  stats.totalBattles += r.battles;
-  stats.totalTime += r.time;
+// --- Main Execution ---
+async function main() {
+  runBenchmark();
+  console.log(`\n--- 平安魔道伝 真・自動バランステスト v3.4 (${SIM_RUNS} 試行 ${MOBILE_MODE ? '[モバイル]' : '[PC]'}) ---`);
+  let stats = { won: 0, totalWipeouts: 0, totalLv: 0, totalBattles: 0, totalTime: 0 };
+  
+  for (let i = 0; i < SIM_RUNS; i++) {
+    const r = runOneGame();
+    if (r.won) stats.won++;
+    stats.totalWipeouts += r.wipeouts;
+    stats.totalLv += r.lv;
+    stats.totalBattles += r.battles;
+    stats.totalTime += r.time;
+  }
+  
+  const winRate = (stats.won / SIM_RUNS * 100).toFixed(1);
+  const avgWipeouts = (stats.totalWipeouts / SIM_RUNS).toFixed(1);
+  const avgLv = (stats.totalLv / SIM_RUNS).toFixed(1);
+  const avgBattles = (stats.totalBattles / SIM_RUNS).toFixed(1);
+  const avgTime = (stats.totalTime / SIM_RUNS).toFixed(1);
+  
+  let verdict = '雅 (Normal)';
+  if (winRate < 50) verdict = '修羅 (Hard)';
+  if (winRate < 10) verdict = '奈落 (Brutal)';
+  if (winRate > 90 && avgWipeouts < 1) verdict = '緩 (Easy)';
+  
+  console.log(`\n[バランスKPI結果報告]`);
+  console.log(`● ボス討伐成功率: ${winRate}%`);
+  console.log(`● 平均転生(全滅)回数: ${avgWipeouts}回`);
+  console.log(`● ボス到達平均Lv: ${avgLv}`);
+  console.log(`● 総遭遇戦闘数: ${avgBattles}回`);
+  console.log(`● 推定平均プレイ時間: ${avgTime}分`);
+  console.log(`● 均衡判決: 【${verdict}】`);
+  console.log(`\n--------------------------------------------`);
+  
+  // --- Audit Final Judgment ---
+  let errors = [];
+  if (winRate < THRESHOLD.MIN_WIN_RATE) errors.push(`[不均衡] ボス討伐成功率が低すぎます (${winRate}% < ${THRESHOLD.MIN_WIN_RATE}%)`);
+  if (avgWipeouts > THRESHOLD.MAX_WIPEOUTS) errors.push(`[不均衡] 平均全滅回数が多すぎます (${avgWipeouts} > ${THRESHOLD.MAX_WIPEOUTS})`);
+  if (avgTime > THRESHOLD.MAX_PLAY_TIME) errors.push(`[不均衡] 推定プレイ時間が長すぎます (${avgTime}分 > ${THRESHOLD.MAX_PLAY_TIME}分)`);
+  
+  if (errors.length > 0) {
+    console.error(`\n❌ 都の自動検番により、不均衡が検地されました:`);
+    errors.forEach(err => console.error(`  ${err}`));
+    console.error(`\nデータ(JSON)の数値を調整し、平安の調和を保ってください。\n`);
+    process.exit(1); 
+  } else {
+    console.log(`\n✅ 都の自動検番: 均衡は保たれています。安泰なり。\n`);
+  }
 }
 
-const winRate = (stats.won / SIM_RUNS * 100).toFixed(1);
-const avgWipeouts = (stats.totalWipeouts / SIM_RUNS).toFixed(1);
-const avgLv = (stats.totalLv / SIM_RUNS).toFixed(1);
-const avgBattles = (stats.totalBattles / SIM_RUNS).toFixed(1);
-const avgTime = (stats.totalTime / SIM_RUNS).toFixed(1);
-
-let verdict = '雅 (Normal)';
-if (winRate < 50) verdict = '修羅 (Hard)';
-if (winRate < 10) verdict = '奈落 (Brutal)';
-if (winRate > 90 && avgWipeouts < 1) verdict = '緩 (Easy)';
-
-console.log(`\n[バランスKPI結果報告]`);
-console.log(`● ボス討伐成功率: ${winRate}%`);
-console.log(`● 平均転生(全滅)回数: ${avgWipeouts}回`);
-console.log(`● ボス到達平均Lv: ${avgLv}`);
-console.log(`● 総遭遇戦闘数: ${avgBattles}回`);
-console.log(`● 推定平均プレイ時間: ${avgTime}分`);
-console.log(`● 均衡判決: 【${verdict}】`);
-console.log(`\n--------------------------------------------`);
-
-// --- Audit Final Judgment ---
-let errors = [];
-if (winRate < THRESHOLD.MIN_WIN_RATE) errors.push(`[不均衡] ボス討伐成功率が低すぎます (${winRate}% < ${THRESHOLD.MIN_WIN_RATE}%)`);
-if (avgWipeouts > THRESHOLD.MAX_WIPEOUTS) errors.push(`[不均衡] 平均全滅回数が多すぎます (${avgWipeouts} > ${THRESHOLD.MAX_WIPEOUTS})`);
-if (avgTime > THRESHOLD.MAX_PLAY_TIME) errors.push(`[不均衡] 推定プレイ時間が長すぎます (${avgTime}分 > ${THRESHOLD.MAX_PLAY_TIME}分)`);
-
-if (errors.length > 0) {
-  console.error(`\n❌ 都の自動検番により、不均衡が検地されました:`);
-  errors.forEach(err => console.error(`  ${err}`));
-  console.error(`\nデータ(JSON)の数値を調整し、平安の調和を保ってください。\n`);
-  process.exit(1); 
-} else {
-  console.log(`\n✅ 都の自動検番: 均衡は保たれています。安泰なり。\n`);
+// Node.js で直接実行された場合のみ main を動かす
+if (process.argv[1]?.includes('balance_tester.mjs')) {
+  main();
 }

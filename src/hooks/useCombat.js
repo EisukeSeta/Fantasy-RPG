@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { calculateHitAndDamage, SPELLS, getEffectiveStats, isValidAction } from '../logic/combat';
+import { calculateHitAndDamage, SPELLS, getEffectiveStats } from '../logic/combat';
 import { getRequiredExp } from '../logic/growth';
 import SoundEngine from '../utils/SoundEngine';
 import { DIRECTIONS } from '../data/mapData';

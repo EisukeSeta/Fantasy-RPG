@@ -14,7 +14,7 @@ import { LabyrinthMap } from '../navigation/LabyrinthMap';
 const GameArea = ({
   gameState,
   party,
-  activeBattler,
+  activeBattlerIndex,
   visualEffects,
   isForceMobile,
   showStatus,
@@ -24,6 +24,7 @@ const GameArea = ({
   playerState,
   processMove,
   enemy,
+  combatPhase,
   showVictory,
   isAutoBattle,
   setIsAutoBattle,
@@ -50,7 +51,7 @@ const GameArea = ({
     <>
       <StatusPane 
         party={party}
-        activeBattler={activeBattler}
+        activeBattlerIndex={activeBattlerIndex}
         gameState={gameState}
         visualEffects={visualEffects}
         isForceMobile={isForceMobile}
@@ -85,7 +86,7 @@ const GameArea = ({
                   member={m}
                   index={i}
                   variant="mini"
-                  activeBattler={activeBattler}
+                  activeBattlerIndex={activeBattlerIndex}
                   gameState={gameState}
                   visualEffects={visualEffects}
                 />
@@ -109,8 +110,9 @@ const GameArea = ({
         {!isForceMobile && (
           <ControlPanel 
             gameState={gameState}
+            combatPhase={combatPhase}
             party={party}
-            activeBattler={activeBattler}
+            activeBattlerIndex={activeBattlerIndex}
             isAutoBattle={isAutoBattle}
             setIsAutoBattle={setIsAutoBattle}
             handleFight={handleFight}
@@ -134,8 +136,9 @@ const GameArea = ({
         <>
           <ControlPanel 
             gameState={gameState}
+            combatPhase={combatPhase}
             party={party}
-            activeBattler={activeBattler}
+            activeBattlerIndex={activeBattlerIndex}
             isAutoBattle={isAutoBattle}
             setIsAutoBattle={setIsAutoBattle}
             handleFight={handleFight}

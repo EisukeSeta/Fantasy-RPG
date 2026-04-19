@@ -1,168 +1,93 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import { GameContext } from './GameContextInstance';
 import scenarioData from '../data/Scenario.json';
 import charactersData from '../data/Characters.json';
 import { DIRECTIONS, MAP_WIDTH, MAP_HEIGHT, generateMap } from '../data/mapData';
 import SoundEngine from '../utils/SoundEngine';
 import { GAME_SETTINGS } from '../constants/gameData';
-import { DEBUG_SEEDS } from '../utils/debugData';
 import { useEffects } from './EffectContext.jsx';
 import { useAudio } from './AudioContext.jsx';
 import { useEncounter } from './EncounterContext.jsx';
 import { useSaveSystem } from './SaveContext.jsx';
+import { resolveInitialState } from '../utils/stateResolver';
+import { getEncounterPatch } from '../logic/combat';
+import { Logger } from '../utils/logger';
+import itemsData from '../data/Items.json';
+import { getRequiredExp } from '../logic/growth';
 
-/**
- * 都の理（状態管理）を司る心臓。
- */
 export const GameProvider = ({ children }) => {
-  // 分霊から力を借りる
-  const { 
-    visualEffects, setVisualEffects, 
-    flashColor, setFlashColor, 
-    displayShake, setDisplayShake, 
-    triggerVisualEffect 
-  } = useEffects();
-
-  const { isMuted, setIsMuted, toggleMute } = useAudio();
+  const { triggerVisualEffect, useEffects: unused_effects } = useEffects(); // 修正：不要なプロパティを整理
+  const { isMuted } = useAudio();
   const { encounteredEnemies, setEncounteredEnemies, defeatedEnemies, setDefeatedEnemies } = useEncounter();
   const { saveGame: _save, loadGame: _load } = useSaveSystem();
 
-  // --- 基本状態 ---
-  const [gameState, setGameState] = useState('TITLE'); 
-  const [messages, setMessages] = useState([{ text: scenarioData.events.gameStart, type: 'event' }]);
-  
-  // 探索・地図
-  const [playerState, setPlayerState] = useState({ x: 0, y: 0, dir: DIRECTIONS.S });
-  const [party, setParty] = useState(charactersData.map(c => ({ ...c, items: [] })));
-  const [mapData, setMapData] = useState(generateMap());
-  const [bossDefeated, setBossDefeated] = useState(false);
-  
-  // 戦闘
-  const [enemy, setEnemy] = useState(null);
-  const [activeBattlerIndex, setActiveBattlerIndex] = useState(null);
-  
-  // UI演出
-  const [activeDialog, setActiveDialog] = useState(null);
-  const [combatInterjection, setCombatInterjection] = useState(null);
-  const [isShake, setIsShake] = useState(false);
-  
-  // --- 記憶の理（Save/Load） ---
+  const initialData = React.useMemo(() => {
+    // 救済措置: 旧キーがあれば新キーへ移行
+    const oldRaw = localStorage.getItem('fantasy_rpg_save');
+    if (oldRaw && !localStorage.getItem('RASHOMON_SAVE_V1')) {
+      localStorage.setItem('RASHOMON_SAVE_V1', oldRaw);
+      localStorage.removeItem('fantasy_rpg_save');
+      console.log("⛩️ 記憶の鍵を現代の法(V1)へ鋳造し直しました。");
+    }
 
-  /**
-   * 記録の術式 (Save)
-   */
-  /**
-   * 記録の術式 (Save)
-   */
-  const saveGame = useCallback(() => {
-    return _save({
-      playerState,
-      party,
-      mapData: mapData.map(row => row.map(cell => ({ ...cell }))),
-      bossDefeated,
-      encounteredEnemies,
-      defeatedEnemies,
-      messages: messages.slice(-10)
+    let saved = null;
+    try {
+      const raw = localStorage.getItem('RASHOMON_SAVE_V1');
+      saved = raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      console.warn("⛩️ 記憶の想起に失敗しました:", e);
+    }
+
+    return resolveInitialState({
+      search: window.location.search,
+      savedData: saved,
+      forceGameState: 'TITLE',
+      defaultState: {
+        gameState: 'TITLE',
+        messages: [{ text: scenarioData.events.gameStart, type: 'event' }],
+        playerState: { x: 0, y: 0, dir: DIRECTIONS.S },
+        party: charactersData.map(c => ({ ...c, items: [] })),
+        mapData: generateMap(),
+        bossDefeated: false,
+        enemy: null,
+        activeDialog: null,
+        activeBattlerIndex: null,
+        encounteredEnemies: [],
+        defeatedEnemies: []
+      }
     });
-  }, [_save, playerState, party, mapData, bossDefeated, encounteredEnemies, defeatedEnemies, messages]);
+  }, []);
 
-  /**
-   * 想起の術式 (Load)
-   */
+  const [gameState, setGameState] = React.useState(initialData.gameState); 
+  const [messages, setMessages] = React.useState(initialData.messages);
+  const [playerState, setPlayerState] = React.useState(initialData.playerState);
+  const [party, setParty] = React.useState(initialData.party);
+  const [mapData, setMapData] = React.useState(initialData.mapData);
+  const [bossDefeated, setBossDefeated] = React.useState(initialData.bossDefeated);
+  const [enemy, setEnemy] = React.useState(initialData.enemy);
+  const [activeBattlerIndex, setActiveBattlerIndex] = React.useState(initialData.activeBattlerIndex);
+
+  const handleRestart = useCallback(() => {
+    setGameState('TITLE');
+    setPlayerState({ x:0, y:0, dir: DIRECTIONS.S });
+  }, []);
+
+  const saveGame = useCallback(() => { _save({ gameState, playerState, party, mapData, bossDefeated, encounteredEnemies, defeatedEnemies }); }, [_save, gameState, playerState, party, mapData, bossDefeated, encounteredEnemies, defeatedEnemies]);
+  
   const loadGame = useCallback(() => {
     const data = _load();
-    if (!data) return false;
-
-    setPlayerState(data.playerState);
-    setParty(data.party);
-    setMapData(data.mapData);
-    setBossDefeated(data.bossDefeated || false);
-    setEncounteredEnemies(data.encounteredEnemies || []);
-    setDefeatedEnemies(data.defeatedEnemies || []);
-    if (data.messages) setMessages(data.messages);
-    
-    return true;
-  }, [_load, setEncounteredEnemies, setDefeatedEnemies]);
-
-  // 起動時の自動ロードおよびシード注入の理
-  /* eslint-disable react-hooks/set-state-in-effect */
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const seedKey = params.get('seed');
-    
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (seedKey && DEBUG_SEEDS[seedKey]) {
-      console.log(`⛩️ 神速の理：シード【${seedKey}】を注入します。`);
-      const data = DEBUG_SEEDS[seedKey];
-      
+    if (data) {
+      setGameState(data.gameState);
       setPlayerState(data.playerState);
       setParty(data.party);
-      if (data.mapData) setMapData(data.mapData);
-      setBossDefeated(data.bossDefeated || false);
+      setMapData(data.mapData);
+      setBossDefeated(data.bossDefeated);
       setEncounteredEnemies(data.encounteredEnemies || []);
       setDefeatedEnemies(data.defeatedEnemies || []);
-      setGameState('EXPLORING'); // 即座に冒険へ
-      SoundEngine.transitionTo('EXPLORING');
+      return true;
     }
-  }, [setEncounteredEnemies, setDefeatedEnemies]);
-
-  // --- 共通アクション ---
-
-  const handleResurrection = useCallback(() => {
-    console.log("⛩️ 【再起の儀】を執り行います。");
-    
-    // 復活する者たちの魂を特定（HPが最大でない者を救い主として扱う）
-    const resurrected = party.filter(m => m.hp < m.maxHp || (m.statusEffects && m.statusEffects.length > 0));
-
-    setGameState('EXPLORING');
-    setPlayerState({ x: 0, y: 0, dir: DIRECTIONS.S });
-    setBossDefeated(false);
-    setEnemy(null);
-    SoundEngine.transitionTo('EXPLORING');
-    
-    // パーティを全快
-    setParty(charactersData.map(c => ({ 
-      ...c, 
-      hp: c.maxHp, 
-      mp: c.maxMp, 
-      status: '平安', 
-      items: [] 
-    })));
-    
-    setMapData(generateMap());
-    setMessages([{ text: scenarioData.events.gameStart, type: 'event' }]);
-    
-    // 復活のメッセージを余韻をもって表示（独白の連鎖）
-    const showNextResMsg = (list) => {
-      if (list.length === 0) return;
-      const [current, ...remaining] = list;
-      if (current.resurrectionMessage) {
-        setCombatInterjection({
-          member: current,
-          quotes: [{ text: current.resurrectionMessage }],
-          currentPage: 0,
-          onClose: () => {
-            setTimeout(() => showNextResMsg(remaining), 400);
-          }
-        });
-      } else {
-        showNextResMsg(remaining);
-      }
-    };
-
-    if (resurrected.length > 0) {
-      setTimeout(() => showNextResMsg(resurrected), 1200);
-    }
-
-    setActiveDialog({
-      title: "【再起の儀】",
-      speaker: charactersData[0]?.id || "abe_seimei", 
-      pages: ["……戻ったのか。この社の風、御神木の香りがする。息を吹き返した心地よ……。"],
-      currentPage: 0,
-      type: 'narration',
-      isStory: true
-    });
-  }, [setGameState, setPlayerState, setParty, setMapData, setMessages, setBossDefeated, setEnemy, setActiveDialog, party]);
+    return false;
+  }, [_load, setEncounteredEnemies, setDefeatedEnemies]);
 
   const value = {
     gameState, setGameState,
@@ -173,20 +98,10 @@ export const GameProvider = ({ children }) => {
     bossDefeated, setBossDefeated,
     enemy, setEnemy,
     activeBattlerIndex, setActiveBattlerIndex,
-    activeDialog, setActiveDialog,
-    combatInterjection, setCombatInterjection,
-    isShake, setIsShake,
-    visualEffects, setVisualEffects,
-    flashColor, setFlashColor,
-    displayShake, setDisplayShake,
-    triggerVisualEffect,
-    isMuted, setIsMuted,
-    toggleMute,
-    saveGame, 
-    loadGame,
-    handleRestart: handleResurrection,
-    encounteredEnemies, setEncounteredEnemies,
-    defeatedEnemies, setDefeatedEnemies
+    isMuted,
+    saveGame, loadGame,
+    handleRestart,
+    scenarioData
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

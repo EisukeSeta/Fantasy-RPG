@@ -1,4 +1,4 @@
-// src/components/status/StatusPane.jsx
+﻿// src/components/status/StatusPane.jsx
 import React from 'react';
 import { CharacterCard } from './CharacterCard';
 
@@ -9,7 +9,7 @@ export const StatusPane = ({
   party, 
   visualEffects, 
   gameState, 
-  activeBattler, 
+  activeBattlerIndex, 
   isForceMobile, 
   showStatus,
   setShowStatus,
@@ -37,7 +37,7 @@ export const StatusPane = ({
             member={m}
             index={i}
             variant="sidebar"
-            activeBattler={activeBattler}
+            activeBattlerIndex={activeBattlerIndex}
             gameState={gameState}
             visualEffects={visualEffects}
             setActiveDialog={setActiveDialog}
