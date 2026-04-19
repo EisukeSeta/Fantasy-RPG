@@ -36,10 +36,7 @@ export const SaveProvider = ({ children }) => {
       if (!stored) return null;
       const data = JSON.parse(stored);
       
-      // 記憶の消去（次はない）
-      localStorage.removeItem(SAVE_KEY);
-      
-      console.log("⛩️ 過去の記憶を呼び戻しました。この記録はこれにて消失します。");
+      console.log("⛩️ 過去の記憶を呼び戻しました。この記録は都に刻まれています。");
       return data;
     } catch (e) {
       console.error("❌ 想起に失敗しました：", e);
@@ -49,7 +46,8 @@ export const SaveProvider = ({ children }) => {
 
   const value = {
     saveGame,
-    loadGame
+    loadGame,
+    hasSaveData: !!localStorage.getItem(SAVE_KEY)
   };
 
   return <SaveContext.Provider value={value}>{children}</SaveContext.Provider>;

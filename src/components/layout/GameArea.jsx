@@ -150,6 +150,7 @@ const GameArea = ({
             setShowStatus={setShowStatus}
             setShowMap={setShowMap}
             scenarioData={scenarioData}
+            saveGame={saveGame}
           />
           <div className="mobile-log-area" style={{ borderTop: '1px solid #333', background: 'rgba(0,0,0,0.7)' }}>
             <MessageLog 

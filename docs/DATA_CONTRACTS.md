@@ -53,9 +53,11 @@
 
 ## 💾 記憶の繋留 (Save Data Object)
 **用途**: 外部記憶（localStorage）への保存・復元
+**唯一の鍵 (Storage Key)**: `RASHOMON_SAVE_V1` (旧 `fantasy_rpg_save` は廃止)
+
 | プロパティ | 型 | 説明 | 厳守 |
 | :--- | :--- | :--- | :---: |
-| `saveVersion` | string | 記録の版 (例: V1) | 必須 |
+| `saveVersion` | string | 記録の版。現在は "V1" 固定。 | 必須 |
 | `playerState` | object | 位置 {x, y, dir} | 必須 |
 | `gameState` | string | 旅の状況 (EXPLORING, BATTLE 等) | 必須 |
 | `party` | object[] | 上記「隊員データ」の配列 | 必須 |
@@ -63,6 +65,9 @@
 | `bossDefeated` | boolean | 首魁調伏の記録 | 必須 |
 | `encounteredEnemies` | number[] | 遭遇した怪異のID配列 | 必須 |
 | `defeatedEnemies` | number[] | 調伏した怪異のID配列 | 必須 |
+
+**【重要：永続性の誓約】**
+過去の「一期一会（ロード時にデータを削除する）」という法は廃止された。都の主が「旅を終える（ブラウザを閉じる）」、あるいは「迷宮で果てる（ゲームオーバー）」まで、この記憶は永続的に保持されなければならない。
 
 ---
 

@@ -1,6 +1,6 @@
 [
   {
-    "id": "Tsu",
+    "id": 1,
     "name": "渡辺 綱",
     "job": "武者",
     "jobKey": "SAMURAI",
@@ -23,7 +23,7 @@
     "resurrectionMessage": "都の守護、まだ終わらぬ……。主殿、お導きを。"
   },
   {
-    "id": "Sei",
+    "id": 2,
     "name": "安倍 晴明",
     "job": "陰陽師",
     "jobKey": "ONMYOJI",
@@ -46,7 +46,7 @@
     "resurrectionMessage": "理より外れるとは、不覚。再び式を操りましょう。"
   },
   {
-    "id": "Bik",
+    "id": 3,
     "name": "八百比丘尼",
     "job": "尼僧",
     "jobKey": "NISOU",

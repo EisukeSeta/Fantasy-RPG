@@ -55,7 +55,7 @@ export const GameProvider = ({ children }) => {
    * 記録の術式 (Save)
    */
   const saveGame = useCallback(() => {
-    return _save({
+    const result = _save({
       playerState,
       party,
       mapData: mapData.map(row => row.map(cell => ({ ...cell }))),
@@ -64,6 +64,7 @@ export const GameProvider = ({ children }) => {
       defeatedEnemies,
       messages: messages.slice(-10)
     });
+    return result;
   }, [_save, playerState, party, mapData, bossDefeated, encounteredEnemies, defeatedEnemies, messages]);
 
   /**
