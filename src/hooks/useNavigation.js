@@ -95,7 +95,7 @@ export const useNavigation = () => {
         if (!bossDefeated && nX === BOSS_POS.x && nY === BOSS_POS.y) {
           setIsShake(true); 
           setActiveDialog({
-            ...scenarioData.events.nueAura,
+            ...scenarioData.events.bossIntro,
             currentPage: 0,
             isStory: true,
             onConfirm: () => {
@@ -103,7 +103,7 @@ export const useNavigation = () => {
               const b = ENEMY_LIST.find(e => e.id === 10); 
               setEnemy({...b, hp: b.maxHp}); 
               setGameState('BATTLE'); 
-              addMessage(scenarioData.events.nueAppear, 'event'); 
+              addMessage(scenarioData.events.encounter.replace('%ENEMY%', b.name), 'event'); 
             }
           });
           return;

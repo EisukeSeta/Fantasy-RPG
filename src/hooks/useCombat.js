@@ -25,6 +25,7 @@ import { Logger } from '../utils/logger';
  * 戦闘ロジックを管理するカスタムフック
  */
 export const useCombat = (onFirstDefeat, forceHit) => {
+  const isDebug = new URLSearchParams(window.location.search).get('debug') === 'true';
   const {
     gameState, setGameState,
     party, setParty,
@@ -46,21 +47,33 @@ export const useCombat = (onFirstDefeat, forceHit) => {
 
   const executeCommands = useCallback((commands) => {
     commands.forEach(cmd => {
-      switch (cmd.type) {
-        case 'MESSAGE':
-          addMessage(cmd.value, cmd.messageType || 'normal');
-          break;
-        case 'VFX':
-          triggerVisualEffect(cmd.target, cmd.value, cmd.vfxType, cmd.variation || 'normal');
-          break;
-        case 'SOUND':
-          SoundEngine.play(cmd.value);
-          break;
-        default:
-          break;
+      try {
+        switch (cmd.type) {
+          case 'MESSAGE':
+            addMessage(cmd.value, cmd.messageType || 'normal');
+            break;
+          case 'VFX':
+            triggerVisualEffect(cmd.target, cmd.value, cmd.vfxType, cmd.variation || 'normal');
+            break;
+          case 'SOUND':
+            SoundEngine.play(cmd.value);
+            break;
+          default:
+            break;
+        }
+      } catch (e) {
+        Logger.warn('System', 'Command Execution Error', { error: e.message, command: cmd });
       }
     });
   }, [addMessage, triggerVisualEffect]);
+
+  // デバッグの天啓：写本の公開
+  useEffect(() => {
+    if (isDebug) {
+      window.downloadRashomonLogs = () => Logger.downloadLogs();
+      Logger.info('System', 'Debug Commands Registered: window.downloadRashomonLogs()');
+    }
+  }, []);
 
   const forceLoot = false; 
   const [activeBattler, setActiveBattler] = useState(0);
@@ -197,7 +210,7 @@ export const useCombat = (onFirstDefeat, forceHit) => {
         SoundEngine.transitionTo('GAMEOVER');
         setActiveDialog({ 
           title: "【終焉】", 
-          pages: [scenarioData.events.gameOver], 
+          pages: scenarioData.events.badEnding.pages, 
           currentPage: 0, 
           isStory: true,
           showChoices: true,
