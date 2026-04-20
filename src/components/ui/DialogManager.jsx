@@ -14,12 +14,11 @@ const DialogManager = ({
 }) => {
   
   /**
-   * 和歌・詠唱：至高の短冊描画 (Tanzaku Style)
+   * 和歌・詠唱：幽玄に浮遊する短冊 (Floating Tanzaku)
    */
   const renderTanzaku = (waka, isStory) => {
     if (!waka) return null;
     
-    // 正式書式の組み立て
     const sourceInfo = [
       waka.id ? `小倉百人一首 ${waka.id}番` : null,
       waka.collection ? `『${waka.collection}』` : null
@@ -28,18 +27,60 @@ const DialogManager = ({
     const signature = waka.author ? `${waka.author}${sourceInfo ? `（${sourceInfo}）` : ''}` : (waka.source || "読み人知らず");
 
     return (
-      <div className="tanzaku-box" style={{ 
-        margin: isStory ? '0 auto' : '10px auto',
-        transform: isStory ? 'scale(1.1)' : 'scale(0.85)',
+      <div className="tanzaku-floating-container" style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '20px',
+        maxWidth: '90%',
+        animation: 'fadeInUp 1s ease-out'
       }}>
-        <div className="tanzaku-text">
-          {waka.text}
+        {/* メインの短冊：縦書き */}
+        <div className="tanzaku-box" style={{ 
+          margin: '0 auto',
+          padding: isStory ? '50px 40px' : '30px 25px',
+          minHeight: isStory ? '400px' : 'auto',
+          maxHeight: '65vh',
+          transform: isStory ? 'scale(1.05)' : 'scale(1)',
+          display: 'flex',
+          flexDirection: 'row-reverse', // 縦書き時の右寄せ
+          alignItems: 'flex-start',
+          gap: '30px'
+        }}>
+          {/* 和歌本体：縦書き */}
+          <div className="tanzaku-text" style={{ 
+            writingMode: 'vertical-rl',
+            flexShrink: 0
+          }}>
+            {waka.text}
+          </div>
+          
+          {/* 作者名：縦書きで控えめに添える */}
+          <div className="tanzaku-author" style={{ 
+            writingMode: 'vertical-rl',
+            fontSize: isStory ? '1rem' : '0.8rem',
+            marginTop: 'auto',
+            paddingBottom: '20px',
+            opacity: 0.8
+          }}>
+            ― {signature}
+          </div>
         </div>
-        <div className="tanzaku-author">
-          ― {signature}
-        </div>
+
+        {/* 現代語訳：横書きで短冊の下に「余韻」として配置（趣を邪魔しない） */}
         {waka.translation && (
-          <div className="tanzaku-translation">
+          <div className="tanzaku-translation" style={{ 
+            writingMode: 'horizontal-tb',
+            textAlign: 'center',
+            fontSize: '0.9rem',
+            color: 'rgba(255,255,255,0.7)',
+            background: 'rgba(0,0,0,0.3)',
+            padding: '10px 20px',
+            borderRadius: '20px',
+            backdropFilter: 'blur(4px)',
+            maxWidth: '350px',
+            border: '1px solid rgba(184, 154, 66, 0.2)'
+          }}>
             （訳：{waka.translation}）
           </div>
         )}
@@ -51,6 +92,8 @@ const DialogManager = ({
   const renderStandardDialog = () => {
     if (!activeDialog) return null;
 
+    const isWakaPage = activeDialog.pages && activeDialog.pages[activeDialog.currentPage] && activeDialog.pages[activeDialog.currentPage].type === 'waka';
+
     return (
       <div className={`dialog-overlay ${gameState === 'BATTLE' ? 'battle-interjection' : ''} ${activeDialog.isStory ? 'story-mode-overlay' : ''}`} 
         style={{
@@ -59,6 +102,9 @@ const DialogManager = ({
           backgroundImage: activeDialog.bgImage ? `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.7)), radial-gradient(circle, transparent 20%, rgba(0,0,0,0.8) 100%), url(${activeDialog.bgImage})` : 'none',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
+          backdropFilter: isWakaPage ? 'blur(12px) brightness(40%)' : 'none', // 和歌の時は背景を幽玄にぼかす
+          backgroundColor: isWakaPage ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.6)',
+          transition: 'all 1s ease',
           zIndex: 50000,
           display: 'flex',
           flexDirection: activeDialog.isStory ? 'column' : 'row',
@@ -90,6 +136,8 @@ const DialogManager = ({
           }}>
             {(() => {
               const currentPage = activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : null;
+              if (currentPage && typeof currentPage === 'object' && currentPage.type === 'waka') return null; // 和歌の時は肖像を出さない（美学）
+
               let speakerKey = null;
               if (currentPage && typeof currentPage === 'object' && currentPage.speaker) {
                 speakerKey = currentPage.speaker;
@@ -117,10 +165,11 @@ const DialogManager = ({
               lineHeight: 2.0,
               letterSpacing: '0.4em',
               marginBottom: '10vh',
-              maxWidth: '90%',
+              maxWidth: '96%',
               whiteSpace: 'pre-wrap',
               display: 'flex',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              alignItems: 'center'
             }}>
               {(() => {
                 const currentPage = activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : '';
@@ -137,7 +186,7 @@ const DialogManager = ({
               </div>
             ) : (
               <div style={{ fontSize: '1.2rem', opacity: 0.5, letterSpacing: '0.6em', animation: 'pulse-story 3s infinite', fontFamily: 'Sawarabi Mincho, serif' }}>
-                {activeDialog.pages && activeDialog.pages[activeDialog.currentPage] && activeDialog.pages[activeDialog.currentPage].type === 'waka' ? '‥ 一首を味わう ‥' : '‥ 次第を追う ‥'}
+                {isWakaPage ? '‥ 一首を味わう ‥' : '‥ 次第を追う ‥'}
               </div>
             )}
           </div>
