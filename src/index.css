@@ -1675,12 +1675,12 @@ body {
 }
 
 .tanzaku-text {
-  font-size: clamp(1.1rem, 3.5vw, 1.8rem); /* 折り返し防止のためやや小ぶりに */
-  line-height: 1.6;
-  letter-spacing: 0.15em;
+  font-size: clamp(1.0rem, 3.2vw, 1.6rem); /* サイズを微減して一塊を維持 */
+  line-height: 1.8;
+  letter-spacing: 0.1em;
   font-weight: 500;
   text-shadow: 0.5px 0.5px 1px rgba(0,0,0,0.2);
-  white-space: nowrap; /* 5-7-5-7-7 を一行に */
+  white-space: pre-wrap;
   text-align: center;
 }
 
@@ -1698,13 +1698,14 @@ body {
 
 .tanzaku-translation {
   font-family: 'Sawarabi Mincho', serif;
-  font-size: 0.85rem;
-  color: #444;
-  line-height: 1.5;
-  opacity: 0.8;
+  font-size: 0.88rem;
+  color: #555;
+  line-height: 1.6;
+  opacity: 0.9;
   max-width: 90%;
   text-align: center;
-  font-style: italic;
+  font-style: normal;
+  letter-spacing: normal;
 }
 
 @keyframes tanzakuAppear {
