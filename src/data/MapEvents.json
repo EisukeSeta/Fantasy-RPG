@@ -1,8 +1,8 @@
 {
   "events": [
-    { "x": 1, "y": 1, "type": "shrine", "name": "御神木の社", "description": "【御神木の社】\n大樹から滴る霊水が隊員の傷を癒やし、生命と霊力が静かに満ちた。此処より都の浄化が始まる。", "isStart": true, "isHeal": true },
-    { "x": 0, "y": 0, "type": "well", "name": "黄泉の井戸", "description": "【黄泉の井戸】\n奈落へと通ずる深き穴。此処を這い上がりし魂のみが、再び都の地を踏むことを許される。", "isResurrect": true },
-    { "x": 5, "y": 5, "type": "shrine", "name": "癒やしの社", "description": "【癒やしの社】\n社の静寂が隊員の戦慄を鎮め、生命と霊力が再び漲り始めた。束の間の平安が訪れる。", "isHeal": true },
+    { "x": 1, "y": 1, "type": "shrine", "name": "御神木の社", "data": { "type": "text", "text": "【御神木の社】\n大樹から滴る霊水が隊員の傷を癒やし、生命と霊力が静かに満ちた。此処より都の浄化が始まる。" }, "isStart": true, "isHeal": true },
+    { "x": 0, "y": 0, "type": "well", "name": "黄泉の井戸", "data": { "type": "text", "text": "【黄泉の井戸】\n奈落へと通ずる深き穴。此処を這い上がりし魂のみが、再び都の地を踏むことを許される。" }, "isResurrect": true },
+    { "x": 5, "y": 5, "type": "shrine", "name": "癒やしの社", "data": { "type": "text", "text": "【癒やしの社】\n社の静寂が隊員の戦慄を鎮め、生命と霊力が再び漲り始めた。束の間の平安が訪れる。" }, "isHeal": true },
     { "x": 2, "y": 2, "type": "scroll", "name": "古ぼけた巻物", "waka": {
       "type": "waka",
       "text": "よもすがら　契りし言の葉　あだ波に　消えてはかなき　羅生門かな",
