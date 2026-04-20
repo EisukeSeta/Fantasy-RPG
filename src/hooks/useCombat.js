@@ -230,33 +230,39 @@ export const useCombat = (onFirstDefeat, forceHit) => {
           labelConfirm: "反魂の儀（復活）",
           labelCancel: "虚無に還る（終焉）",
           onConfirm: () => {
-            // 第二段階：反魂の詠唱（復活の和歌）
-            setActiveDialog({
-              ...scenarioData.resurrectionWaka,
-              currentPage: 0,
-              isStory: true,
-              onConfirm: () => {
-                setPlayerState({ x: 0, y: 0, dir: DIRECTIONS.S });
-                setParty(p => p.map(m => ({ ...m, hp: 1, mp: 1, exp: getRequiredExp(m.lv), status: '平安', statusEffects: [] })));
-                addMessage(scenarioData.ui.resurrection, 'heal'); 
-                setGameState('EXPLORING');
-                setActiveDialog(null);
-              }
-            });
+            // 一度無に帰し、刹那を置いてから再興を顕現させる
+            setActiveDialog(null);
+            setTimeout(() => {
+              setActiveDialog({
+                ...scenarioData.resurrectionWaka,
+                currentPage: 0,
+                isStory: true,
+                onConfirm: () => {
+                  setPlayerState({ x: 0, y: 0, dir: DIRECTIONS.S });
+                  setParty(p => p.map(m => ({ ...m, hp: 1, mp: 1, exp: getRequiredExp(m.lv), status: '平安', statusEffects: [] })));
+                  addMessage(scenarioData.ui.resurrection, 'heal'); 
+                  setGameState('EXPLORING');
+                  setActiveDialog(null);
+                }
+              });
+            }, 100);
           },
           onCancel: () => {
-            // 第二段階：終焉の詠唱（最後の一句）
-            setActiveDialog({
-              ...scenarioData.events.badEnding,
-              currentPage: 0,
-              isStory: true,
-              bgImage: TitleBg,
-              onConfirm: () => { 
-                setActiveDialog(null); 
-                setGameState('GAMEOVER'); 
-                SoundEngine.stop(); 
-              }
-            });
+            // 一度無に帰し、刹那を置いてから最後の一句を顕現させる
+            setActiveDialog(null);
+            setTimeout(() => {
+              setActiveDialog({
+                ...scenarioData.events.badEnding,
+                currentPage: 0,
+                isStory: true,
+                bgImage: TitleBg,
+                onConfirm: () => { 
+                  setActiveDialog(null); 
+                  setGameState('GAMEOVER'); 
+                  SoundEngine.stop(); 
+                }
+              });
+            }, 100);
           }
         });
     }
