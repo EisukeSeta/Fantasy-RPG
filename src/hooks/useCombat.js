@@ -234,9 +234,10 @@ export const useCombat = (onFirstDefeat, forceHit) => {
             setActiveDialog(null);
             setTimeout(() => {
               setActiveDialog({
-                ...scenarioData.resurrectionWaka,
+                title: scenarioData.resurrectionWaka.title,
+                pages: scenarioData.resurrectionWaka.pages,
                 currentPage: 0,
-                isStory: true,
+                isStory: true, // 物語モード（短冊）を強制
                 onConfirm: () => {
                   setPlayerState({ x: 0, y: 0, dir: DIRECTIONS.S });
                   setParty(p => p.map(m => ({ ...m, hp: 1, mp: 1, exp: getRequiredExp(m.lv), status: '平安', statusEffects: [] })));
@@ -252,7 +253,8 @@ export const useCombat = (onFirstDefeat, forceHit) => {
             setActiveDialog(null);
             setTimeout(() => {
               setActiveDialog({
-                ...scenarioData.events.badEnding,
+                title: scenarioData.events.badEnding.title,
+                pages: scenarioData.events.badEnding.pages,
                 currentPage: 0,
                 isStory: true,
                 bgImage: TitleBg,

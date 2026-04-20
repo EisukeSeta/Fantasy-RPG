@@ -64,7 +64,8 @@ const DialogManager = ({
   const renderStandardDialog = () => {
     if (!activeDialog) return null;
 
-    const isWakaPage = activeDialog.pages && activeDialog.pages[activeDialog.currentPage] && activeDialog.pages[activeDialog.currentPage].type === 'waka';
+    const currentPageData = activeDialog.pages && activeDialog.pages[activeDialog.currentPage];
+    const isWakaPage = currentPageData && (currentPageData.type === 'waka' || currentPageData.text?.includes('\n'));
 
     // 背景画像の選定（和歌の時は平安の闇を優先）
     const bgUrl = isWakaPage ? 'https://images.unsplash.com/photo-1542124103-62580572e90e?auto=format&fit=crop&q=80&w=2000' : activeDialog.bgImage;
@@ -137,21 +138,16 @@ const DialogManager = ({
               fontFamily: 'Sawarabi Mincho, serif', 
               fontSize: 'clamp(1.2rem, 5vw, 2.5rem)',
               lineHeight: 2.0,
-              letterSpacing: '0.4em',
-              marginBottom: '10vh',
-              maxWidth: '96%',
-              whiteSpace: 'pre-wrap',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center'
+              letterSpacing: 'min(15px, 2vw)',
+              position: 'relative'
             }}>
-              {(() => {
-                const currentPage = activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : '';
-                if (typeof currentPage === 'object' && currentPage.type === 'waka') {
-                  return renderTanzaku(currentPage, true);
-                }
-                return typeof currentPage === 'object' ? currentPage.text : currentPage;
-              })()}
+              {isWakaPage ? (
+                 renderTanzaku(currentPageData, true)
+              ) : (
+                typeof (activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : '') === 'object' 
+                  ? (activeDialog.pages ? activeDialog.pages[activeDialog.currentPage].text : '') 
+                  : (activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : '')
+              )}
             </div>
             {activeDialog.showChoices ? (
               <div className="dialog-footer" style={{ border: 'none', background: 'transparent', justifyContent: 'center', gap: '40px' }}>
@@ -214,7 +210,7 @@ const DialogManager = ({
                       setActiveDialog(null);
                     }
                   }}>
-                    {activeDialog.pages && activeDialog.pages[activeDialog.currentPage] && activeDialog.pages[activeDialog.currentPage].type === 'waka' ? '一首を味わう' : (activeDialog.pages && activeDialog.currentPage < activeDialog.pages.length - 1 ? '続く' : '承知')}
+                    {isWakaPage ? '一首を味わう' : (activeDialog.pages && activeDialog.currentPage < activeDialog.pages.length - 1 ? '続く' : '承知')}
                   </button>
                 </div>
               )}
