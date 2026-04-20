@@ -14,7 +14,7 @@ const DialogManager = ({
 }) => {
   
   /**
-   * 和歌・詠唱：幽玄に浮遊する短冊 (Floating Tanzaku)
+   * 和歌・詠唱：平安の闇に浮かぶ横書き短冊 (Horizontal Gem)
    */
   const renderTanzaku = (waka, isStory) => {
     if (!waka) return null;
@@ -32,58 +32,30 @@ const DialogManager = ({
         flexDirection: 'column',
         alignItems: 'center',
         gap: '20px',
-        maxWidth: '90%',
+        width: '95%',
         animation: 'fadeInUp 1s ease-out'
       }}>
-        {/* メインの短冊：縦書き */}
+        {/* 横書き矩形短冊 */}
         <div className="tanzaku-box" style={{ 
-          margin: '0 auto',
-          padding: isStory ? '50px 40px' : '30px 25px',
-          minHeight: isStory ? '400px' : 'auto',
-          maxHeight: '65vh',
-          transform: isStory ? 'scale(1.05)' : 'scale(1)',
-          display: 'flex',
-          flexDirection: 'row-reverse', // 縦書き時の右寄せ
-          alignItems: 'flex-start',
-          gap: '30px'
+          transform: isStory ? 'scale(1.1)' : 'scale(1)',
         }}>
-          {/* 和歌本体：縦書き */}
-          <div className="tanzaku-text" style={{ 
-            writingMode: 'vertical-rl',
-            flexShrink: 0
-          }}>
+          {/* 上段：和歌本体 */}
+          <div className="tanzaku-text">
             {waka.text}
           </div>
           
-          {/* 作者名：縦書きで控えめに添える */}
-          <div className="tanzaku-author" style={{ 
-            writingMode: 'vertical-rl',
-            fontSize: isStory ? '1rem' : '0.8rem',
-            marginTop: 'auto',
-            paddingBottom: '20px',
-            opacity: 0.8
-          }}>
+          {/* 中段：作者・出典 */}
+          <div className="tanzaku-author">
             ― {signature}
           </div>
-        </div>
 
-        {/* 現代語訳：横書きで短冊の下に「余韻」として配置（趣を邪魔しない） */}
-        {waka.translation && (
-          <div className="tanzaku-translation" style={{ 
-            writingMode: 'horizontal-tb',
-            textAlign: 'center',
-            fontSize: '0.9rem',
-            color: 'rgba(255,255,255,0.7)',
-            background: 'rgba(0,0,0,0.3)',
-            padding: '10px 20px',
-            borderRadius: '20px',
-            backdropFilter: 'blur(4px)',
-            maxWidth: '350px',
-            border: '1px solid rgba(184, 154, 66, 0.2)'
-          }}>
-            （訳：{waka.translation}）
-          </div>
-        )}
+          {/* 下段：現代語訳 */}
+          {waka.translation && (
+            <div className="tanzaku-translation">
+              （訳：{waka.translation}）
+            </div>
+          )}
+        </div>
       </div>
     );
   };
@@ -94,16 +66,18 @@ const DialogManager = ({
 
     const isWakaPage = activeDialog.pages && activeDialog.pages[activeDialog.currentPage] && activeDialog.pages[activeDialog.currentPage].type === 'waka';
 
+    // 背景画像の選定（和歌の時は平安の闇を優先）
+    const bgUrl = isWakaPage ? 'https://images.unsplash.com/photo-1542124103-62580572e90e?auto=format&fit=crop&q=80&w=2000' : activeDialog.bgImage;
+
     return (
       <div className={`dialog-overlay ${gameState === 'BATTLE' ? 'battle-interjection' : ''} ${activeDialog.isStory ? 'story-mode-overlay' : ''}`} 
         style={{
           position: 'fixed',
           inset: 0,
-          backgroundImage: activeDialog.bgImage ? `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.7)), radial-gradient(circle, transparent 20%, rgba(0,0,0,0.8) 100%), url(${activeDialog.bgImage})` : 'none',
+          backgroundImage: bgUrl ? `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.8)), url(${bgUrl})` : 'none',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          backdropFilter: isWakaPage ? 'blur(12px) brightness(40%)' : 'none', // 和歌の時は背景を幽玄にぼかす
-          backgroundColor: isWakaPage ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.6)',
+          backdropFilter: isWakaPage ? 'blur(5px) brightness(60%)' : 'none',
           transition: 'all 1s ease',
           zIndex: 50000,
           display: 'flex',
