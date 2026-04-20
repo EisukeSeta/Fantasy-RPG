@@ -14,59 +14,32 @@ const DialogManager = ({
 }) => {
   
   /**
-   * 和歌・詠唱の優雅なる描画
+   * 和歌・詠唱：至高の短冊描画 (Tanzaku Style)
    */
-  const renderWaka = (waka, isStory) => {
+  const renderTanzaku = (waka, isStory) => {
     if (!waka) return null;
+    
+    // 正式書式の組み立て
+    const sourceInfo = [
+      waka.id ? `小倉百人一首 ${waka.id}番` : null,
+      waka.collection ? `『${waka.collection}』` : null
+    ].filter(Boolean).join(' / ');
+
+    const signature = waka.author ? `${waka.author}${sourceInfo ? `（${sourceInfo}）` : ''}` : (waka.source || "読み人知らず");
+
     return (
-      <div className="waka-container" style={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center', 
-        gap: isStory ? '30px' : '10px',
-        padding: isStory ? '60px 40px' : '20px 0',
-        background: isStory ? 'rgba(240, 230, 200, 0.9)' : 'none', // 鳥の子色の和紙を思わせる背景
-        borderRadius: isStory ? '200px 5px 200px 5px' : '0',
-        boxShadow: isStory ? 'inset 0 0 50px rgba(0,0,0,0.1), 0 0 50px rgba(0,0,0,0.5)' : 'none',
-        border: isStory ? '1px solid rgba(184, 154, 66, 0.3)' : 'none',
-        maxWidth: isStory ? '800px' : '100%',
-        margin: '0 auto'
+      <div className="tanzaku-box" style={{ 
+        margin: isStory ? '0 auto' : '10px auto',
+        transform: isStory ? 'scale(1.1)' : 'scale(0.85)',
       }}>
-        <div className="waka-text" style={{ 
-          fontStyle: 'italic', 
-          fontSize: isStory ? 'clamp(1.4rem, 5vw, 2.5rem)' : '1.1rem',
-          color: '#1a1a1a', // 墨色
-          letterSpacing: '0.4em',
-          lineHeight: 1.8,
-          textShadow: '0.5px 0.5px 1px rgba(0,0,0,0.3)', // 墨の滲み
-          fontFamily: 'Sawarabi Mincho, serif'
-        }}>
-          「{waka.text}」
+        <div className="tanzaku-text">
+          {waka.text}
         </div>
-        <div className="waka-source" style={{ 
-          alignSelf: 'flex-end', 
-          fontSize: isStory ? '1.1rem' : '0.8rem', 
-          color: '#333', // 濃い灰色
-          opacity: 0.8,
-          fontStyle: 'normal',
-          letterSpacing: '0.2em',
-          marginTop: '10px'
-        }}>
-          ― {waka.source || "読み人知らず"}
+        <div className="tanzaku-author">
+          ― {signature}
         </div>
         {waka.translation && (
-          <div className="waka-translation" style={{ 
-            marginTop: '30px',
-            fontSize: isStory ? '1rem' : '0.8rem', 
-            color: '#444', 
-            opacity: 0.7,
-            lineHeight: 1.6,
-            letterSpacing: '0.1em',
-            maxWidth: '100%',
-            fontStyle: 'normal',
-            borderTop: '1px solid rgba(0,0,0,0.1)',
-            paddingTop: '10px'
-          }}>
+          <div className="tanzaku-translation">
             （訳：{waka.translation}）
           </div>
         )}
@@ -145,12 +118,14 @@ const DialogManager = ({
               letterSpacing: '0.4em',
               marginBottom: '10vh',
               maxWidth: '90%',
-              whiteSpace: 'pre-wrap'
+              whiteSpace: 'pre-wrap',
+              display: 'flex',
+              justifyContent: 'center'
             }}>
               {(() => {
                 const currentPage = activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : '';
                 if (typeof currentPage === 'object' && currentPage.type === 'waka') {
-                  return renderWaka(currentPage, true);
+                  return renderTanzaku(currentPage, true);
                 }
                 return typeof currentPage === 'object' ? currentPage.text : currentPage;
               })()}
@@ -196,7 +171,7 @@ const DialogManager = ({
                 {(() => {
                   const currentPage = activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : '';
                   if (typeof currentPage === 'object' && currentPage.type === 'waka') {
-                    return renderWaka(currentPage, false);
+                    return renderTanzaku(currentPage, false);
                   }
                   return <p>{typeof currentPage === 'object' ? currentPage.text : currentPage}</p>;
                 })()}

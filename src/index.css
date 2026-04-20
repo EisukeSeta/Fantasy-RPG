@@ -1647,3 +1647,62 @@ body {
 .danger-blink.status-poison-pulse, .danger-blink.status-paralyze-pulse {
   animation-duration: 0.5s;
 }
+
+/* --- ârè•ÅFíZç˚à”è† (Tanzaku Style) --- */
+.tanzaku-box {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-family: 'Yuji Syuku', serif;
+  background: rgba(255, 249, 229, 0.95); /* íπÇÃéqêF */
+  color: #1a1a1a;
+  padding: 40px 30px;
+  border-radius: 4px;
+  box-shadow: 
+    0 0 40px rgba(0,0,0,0.6),
+    inset 0 0 60px rgba(184, 154, 66, 0.1);
+  border: 1px solid rgba(184, 154, 66, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-height: 80vh;
+  position: relative;
+  overflow: visible;
+  animation: tanzakuAppear 1.5s ease-out;
+}
+
+.tanzaku-text {
+  font-size: clamp(1.4rem, 4vw, 2.4rem);
+  line-height: 2.2;
+  letter-spacing: 0.3em;
+  font-weight: 500;
+  text-shadow: 0.5px 0.5px 1px rgba(0,0,0,0.2);
+}
+
+.tanzaku-author {
+  margin-top: auto;
+  font-size: 1.1rem;
+  color: #333;
+  opacity: 0.9;
+  letter-spacing: 0.1em;
+  padding-bottom: 20px;
+}
+
+.tanzaku-translation {
+  writing-mode: horizontal-tb; /* ñÛÇÕâ°èëÇ´Ç≈ì«Ç›Ç‚Ç∑Ç≠ */
+  text-orientation: mixed;
+  font-family: 'Sawarabi Mincho', serif;
+  font-size: 0.95rem;
+  color: #444;
+  margin-top: 30px;
+  max-width: 300px;
+  line-height: 1.6;
+  opacity: 0.8;
+  border-top: 1px solid rgba(0,0,0,0.1);
+  padding-top: 15px;
+}
+
+@keyframes tanzakuAppear {
+  from { opacity: 0; transform: translateY(20px) scaleY(0.9); }
+  to { opacity: 1; transform: translateY(0) scaleY(1); }
+}
+
