@@ -155,9 +155,11 @@ const DialogManager = ({
                 <button className="dialog-btn" style={{ padding: '15px 40px', fontSize: '1.2rem' }} onClick={() => { if (activeDialog.onCancel) activeDialog.onCancel(); else setActiveDialog(null); }}> {activeDialog.labelCancel || "撤退"} </button>
               </div>
             ) : (
-              <div style={{ fontSize: '1.2rem', opacity: 0.5, letterSpacing: '0.6em', animation: 'pulse-story 3s infinite', fontFamily: 'Sawarabi Mincho, serif' }}>
-                {isWakaPage ? '‥ 一首を味わう ‥' : '‥ 次第を追う ‥'}
-              </div>
+              !isWakaPage && (
+                <div style={{ fontSize: '1.2rem', opacity: 0.5, letterSpacing: '0.6em', animation: 'pulse-story 3s infinite', fontFamily: 'Sawarabi Mincho, serif' }}>
+                  ‥ 次第を追う ‥
+                </div>
+              )
             )}
           </div>
         ) : (
