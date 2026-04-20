@@ -72,5 +72,23 @@ describe('セーブデータの構造整合性テスト', () => {
     const hydratedEncountered = oldData.encounteredEnemies || [];
     expect(Array.isArray(hydratedEncountered)).toBe(true);
     expect(hydratedEncountered.length).toBe(0);
+  it('バリデーション機能: 不純なデータを正しく弾くこと', () => {
+    const { validateSaveData } = require('./save'); // これから実装する理
+
+    // 1. 空のデータ
+    expect(validateSaveData({})).toBe(false);
+
+    // 2. 必須キー（party）の欠落
+    const noParty = { ...dummySaveData };
+    delete noParty.party;
+    expect(validateSaveData(noParty)).toBe(false);
+
+    // 3. 不当な型（partyが配列でない）
+    const badParty = { ...dummySaveData, party: "全員討死" };
+    expect(validateSaveData(badParty)).toBe(false);
+
+    // 4. 未知の版（saveVersionの不一致）
+    const oldVersion = { ...dummySaveData, saveVersion: 'V0' };
+    expect(validateSaveData(oldVersion)).toBe(false);
   });
 });

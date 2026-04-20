@@ -3,6 +3,9 @@
  * Web Audio API を使用して、ファイル不要で平安ダークファンタジーの音響を生成します。
  */
 
+const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+const isDebug = params.get('debug') === 'true';
+
 class HeianSoundEngine {
   constructor() {
     this.ctx = null;
@@ -12,7 +15,35 @@ class HeianSoundEngine {
     this.hichirikiGain = null;
     this.droneOsc = null; // 地鳴り用
     this.isStarted = false;
+    this.isMuted = isDebug; // ?debug=true なら初期状態で消音（智の沈黙）
     this.currentMode = 'EXPLORING'; // EXPLORING, BATTLE, DEAD
+  }
+
+  /**
+   * 統一された音響再生インターフェース
+   * @param {string} id 旋律または効果音の識別子
+   * @returns {boolean} 再生に成功（または予約）したか
+   */
+  play(id) {
+    if (this.isMuted) return true;
+    
+    const sounds = {
+      'MONSTER_DEATH': () => this.playMonsterDeath(),
+      // 他の将来的なSEもここに追加可能
+    };
+
+    if (sounds[id]) {
+      sounds[id]();
+      return true;
+    } else {
+      // 想定外の音響 ID が要求された場合
+      if (isDebug) {
+        const { Logger } = require('./logger'); 
+        Logger.impurity('Sound', `Missing sound definition: ${id}`, { id });
+        return false; // 失敗を報告
+      }
+      return true; // 本番では静かに無視して続行
+    }
   }
 
   /**
@@ -25,7 +56,7 @@ class HeianSoundEngine {
       if (!this.ctx) {
         this.ctx = new (window.AudioContext || window.webkitAudioContext)();
         this.masterGain = this.ctx.createGain();
-        this.masterGain.gain.value = 0.5; // 初期音量を 0.5 に固定して開始
+        this.masterGain.gain.value = this.isMuted ? 0 : 0.5; // 初期消音設定を反映
         this.masterGain.connect(this.ctx.destination);
         
         this.setupSho();

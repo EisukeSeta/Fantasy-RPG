@@ -31,15 +31,26 @@ export const SaveProvider = ({ children }) => {
    * 相起の術式 (Load)
    */
   const loadGame = useCallback(() => {
+    const { Logger } = require('../utils/logger');
+    const { validateSaveData, hydrateSaveData } = require('../logic/save');
+
     try {
       const stored = localStorage.getItem(SAVE_KEY);
       if (!stored) return null;
       const data = JSON.parse(stored);
       
-      console.log("⛩️ 過去の記憶を呼び戻しました。この記録は都に刻まれています。");
-      return data;
+      // 記憶の検断
+      if (!validateSaveData(data)) {
+        Logger.impurity('SaveSystem', '記憶が羅生門の呪いに侵されています。読み取りを中断しました。', { data });
+        return null;
+      }
+
+      Logger.info('SaveSystem', '過去の記憶を呼び戻しました。この記録は都に刻まれています。');
+      
+      // 記憶の補正（古いプロパティの補完等）
+      return hydrateSaveData(data);
     } catch (e) {
-      console.error("❌ 想起に失敗しました：", e);
+      Logger.warn('SaveSystem', '記憶の想起に失敗しました', { error: e.message });
       return null;
     }
   }, []);

@@ -56,7 +56,17 @@ export const useCombat = (onFirstDefeat, forceHit) => {
             triggerVisualEffect(cmd.target, cmd.value, cmd.vfxType, cmd.variation || 'normal');
             break;
           case 'SOUND':
-            SoundEngine.play(cmd.value);
+            const success = SoundEngine.play(cmd.value);
+            if (!success && isDebug) {
+              setActiveDialog({
+                title: "【理の欠損】",
+                pages: ["都の調べが、不吉な風に吹き消されました……。", "（音響 ID: " + cmd.value + " の定義が見当たりません。聖典の補修を乞う）"],
+                currentPage: 0,
+                isStory: true
+              });
+              // 進行を静かに止めるためにオートバトルをオフにする
+              setIsAutoBattle(false);
+            }
             break;
           default:
             break;

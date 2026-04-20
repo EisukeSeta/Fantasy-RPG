@@ -7,6 +7,8 @@ import { useGame } from './useGame';
 import scenarioData from '../data/Scenario.json';
 import mapEventsData from '../data/MapEvents.json';
 
+import { validateSaveData, hydrateSaveData } from '../logic/save';
+
 /**
  * 迷宮内の移動・探索ロジックを管理するカスタムフック
  */
