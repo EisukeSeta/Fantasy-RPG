@@ -78,3 +78,21 @@
 4. **記憶の浄化 (Breaking Changes)**: 
    - セーブデータ構造（上記 💾）を変更せざるを得ない場合は、`saveVersion` を繰り上げ（V1→V2）、**「過去の記憶との互換性を破棄」** する決断を下すこと。
    - 変更の際は必ず `src/logic/save.test.js` を更新し、新しき理を法として確立すること。
+
+---
+
+## 🎭 物語・対話契約 (Dialog Object)
+**用途**: `activeDialog` 状態 (`App.jsx`, `DialogManager.jsx`)
+**原則**: ロジック（JS）はダイアログの「遷移」と「副作用」を司り、聖典（JSON）はダイアログの「内容」を司る。
+
+| プロパティ | 型 | 説明 | 役割 |
+| :--- | :--- | :--- | :--- |
+| `title` | string | 各画面の上部に表示される題名 | Model / View |
+| `pages` | object[] | 各頁の内容。`type: 'text'|'waka'` を含むオブジェクト配列。 | Model / View |
+| `isStory` | boolean | 幽玄モード（ダーク背景・特大文字・短冊）を起動するフラグ。 | View |
+| `showChoices` | boolean | **最終頁（pages.length - 1）** において選択肢を提示する。 | View |
+| `onConfirm` | function | ダイアログ終結時、または第一選択肢が選ばれた際の理（副作用）。 | Controller |
+| `onCancel` | function | 第二選択肢が選ばれた際の理（副作用）。 | Controller |
+
+**【重要：Viewの独立性】**
+`DialogManager` は、渡された `pages` が `type: 'waka'` であれば短冊を、そうでなければテキストを出す「器」に徹し、自律的なテキスト解析や状態変更を行ってはならない。

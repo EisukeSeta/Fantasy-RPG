@@ -65,7 +65,8 @@ const DialogManager = ({
     if (!activeDialog) return null;
 
     const currentPageData = activeDialog.pages && activeDialog.pages[activeDialog.currentPage];
-    const isWakaPage = currentPageData && (currentPageData.type === 'waka' || currentPageData.text?.includes('\n'));
+    const isWakaPage = currentPageData && currentPageData.type === 'waka';
+    const isLastPage = activeDialog.pages && activeDialog.currentPage === activeDialog.pages.length - 1;
 
     // 背景画像の選定（和歌の時は平安の闇を優先）
     const bgUrl = isWakaPage ? 'https://images.unsplash.com/photo-1542124103-62580572e90e?auto=format&fit=crop&q=80&w=2000' : activeDialog.bgImage;
@@ -88,13 +89,15 @@ const DialogManager = ({
           padding: activeDialog.isStory ? '40px 20px' : '0'
         }}
         onClick={(e) => {
-          if (activeDialog.showChoices) return;
-          if (activeDialog.isStory || e.target.className.includes('dialog-overlay')) {
-            if (activeDialog.pages && activeDialog.currentPage < activeDialog.pages.length - 1) {
-              setActiveDialog({...activeDialog, currentPage: activeDialog.currentPage + 1});
-            } else {
-              if (activeDialog.onConfirm) activeDialog.onConfirm();
-              setActiveDialog(null);
+          if (e.target.className === 'dialog-overlay story-mode') {
+            // 背景クリック時は「次へ」の動作（選択肢がある最終頁の場合は無効）
+            if (!(activeDialog.showChoices && isLastPage)) {
+              if (activeDialog.pages && activeDialog.currentPage < activeDialog.pages.length - 1) {
+                setActiveDialog({ ...activeDialog, currentPage: activeDialog.currentPage + 1 });
+              } else {
+                if (activeDialog.onConfirm) activeDialog.onConfirm();
+                else setActiveDialog(null);
+              }
             }
           }
         }}
@@ -141,25 +144,33 @@ const DialogManager = ({
               letterSpacing: 'min(15px, 2vw)',
               position: 'relative'
             }}>
+              {/* 表示の分離：和歌（短冊）か通常のテキストか、一方のみを描画 */}
               {isWakaPage ? (
                  renderTanzaku(currentPageData, true)
               ) : (
-                typeof (activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : '') === 'object' 
-                  ? (activeDialog.pages ? activeDialog.pages[activeDialog.currentPage].text : '') 
-                  : (activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : '')
+                <div key={activeDialog.currentPage}>
+                  {typeof (activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : '') === 'object' 
+                    ? (activeDialog.pages ? activeDialog.pages[activeDialog.currentPage].text : '') 
+                    : (activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : '')}
+                </div>
               )}
             </div>
-            {activeDialog.showChoices ? (
+            {activeDialog.showChoices && isLastPage ? (
               <div className="dialog-footer" style={{ border: 'none', background: 'transparent', justifyContent: 'center', gap: '40px' }}>
                 <button className="dialog-btn" style={{ padding: '15px 40px', fontSize: '1.2rem' }} onClick={() => { if (activeDialog.onConfirm) activeDialog.onConfirm(); else setActiveDialog(null); }}> {activeDialog.labelConfirm || "御意"} </button>
                 <button className="dialog-btn" style={{ padding: '15px 40px', fontSize: '1.2rem' }} onClick={() => { if (activeDialog.onCancel) activeDialog.onCancel(); else setActiveDialog(null); }}> {activeDialog.labelCancel || "撤退"} </button>
               </div>
             ) : (
-              !isWakaPage && (
-                <div style={{ fontSize: '1.2rem', opacity: 0.5, letterSpacing: '0.6em', animation: 'pulse-story 3s infinite', fontFamily: 'Sawarabi Mincho, serif' }}>
-                  ‥ 次第を追う ‥
-                </div>
-              )
+              <div style={{ 
+                fontSize: '1.2rem', 
+                opacity: 0.5, 
+                letterSpacing: '0.6em', 
+                animation: 'pulse-story 3s infinite', 
+                fontFamily: 'Sawarabi Mincho, serif',
+                marginTop: isWakaPage ? '40px' : '0'
+              }}>
+                ‥ 次第を追う ‥
+              </div>
             )}
           </div>
         ) : (

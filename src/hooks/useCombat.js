@@ -167,33 +167,18 @@ export const useCombat = (onFirstDefeat, forceHit) => {
         }
         
         const potentialMedals = (curEnemy.drops || []).map(d => itemsData.find(it => it.id === d.itemId)).filter(Boolean);
-        let anyoneResonated = false;
-
+        
         setParty(p => p.map((m, idx) => {
           let updated = handleLevelUp({ ...m, exp: m.exp + Math.floor(curEnemy.exp * balanceData.rates.expShare) });
-          if (m.hp > 0) {
-            potentialMedals.forEach(medal => {
-              const resonanceRate = 0.3; 
-              const isLastChance = (idx === p.length - 1 && !anyoneResonated);
-              if (forceLoot || Math.random() < resonanceRate || isLastChance) {
-                anyoneResonated = true;
-                if (!updated.medals) updated.medals = {};
-                const currentRank = updated.medals[medal.id] || 0;
-                if (currentRank < 10) {
-                  const nextRank = currentRank + 1;
-                  updated.medals[medal.id] = nextRank;
-                  addMessage(`【武勲】${m.name}は『${medal.name}』の霊力を深めた！(Rank ${nextRank})`, 'level_up');
-                  if (currentRank === 0) {
-                    if (!updated.items) updated.items = [];
-                    updated.items.push(medal.id);
-                    addMessage(`《${medal.flavor}》`, 'event');
-                  }
-                }
-              }
-            });
-          }
           return updated;
         }));
+
+        Logger.info('Combat', 'Victory');
+        const anyoneResonated = partyRef.current.some(m => {
+          const res = m.statusEffects.some(e => e.id === '共鳴');
+          if (res) m.statusEffects = m.statusEffects.filter(e => e.id !== '共鳴');
+          return res;
+        });
         
         if (anyoneResonated) {
           const alive = partyRef.current.filter(m => m.hp > 0);
@@ -210,49 +195,42 @@ export const useCombat = (onFirstDefeat, forceHit) => {
                 setTimeout(showLoreIfNew, 500);
               }
             });
-            return curEnemy.isBoss;
+            return;
           }
         }
         setTimeout(showLoreIfNew, GAME_SETTINGS.DELAYS.VICTORY_NORMAL);
-        return curEnemy.isBoss;
     } else {
         Logger.warn('Combat', 'Party Defeated');
         setGameState('DEAD'); 
         SoundEngine.transitionTo('GAMEOVER');
         
-        // 第一段階：討死の宣告と決断の呼びかけ
+        // 【第一幕：弔いの叙事詩】
         setActiveDialog({ 
-          title: "【討死】", 
-          pages: ["……無念。三者の生命の燈火は、此処に霧散した。", "（「反魂」にて生を繋ぐか、「虚無」にて全てを終えるか。魂の行方を選びなさい）"], 
+          ...scenarioData.badEnding, 
           currentPage: 0, 
           isStory: true,
-          showChoices: true,
-          labelConfirm: "反魂の儀（復活）",
-          labelCancel: "虚無に還る（終焉）",
           onConfirm: () => {
-            // 遅延を廃止し、直接物語を遷移させる（制御の単純化）
+            // 【第二幕：魂の決断】
             setActiveDialog({
-              title: scenarioData.resurrectionWaka.title,
-              pages: scenarioData.resurrectionWaka.pages,
+              ...scenarioData.afterDeathChoices,
               currentPage: 0,
               isStory: true,
               onConfirm: () => {
-                setPlayerState({ x: 0, y: 0, dir: DIRECTIONS.S });
-                setParty(p => p.map(m => ({ ...m, hp: 1, mp: 1, exp: getRequiredExp(m.lv), status: '平安', statusEffects: [] })));
-                addMessage(scenarioData.ui.resurrection, 'heal'); 
-                setGameState('EXPLORING');
-                setActiveDialog(null);
-              }
-            });
-          },
-          onCancel: () => {
-            setActiveDialog({
-              title: scenarioData.events.badEnding.title,
-              pages: scenarioData.events.badEnding.pages,
-              currentPage: 0,
-              isStory: true,
-              bgImage: TitleBg,
-              onConfirm: () => { 
+                // 【第三幕：再興の祝詩】
+                setActiveDialog({
+                  ...scenarioData.resurrectionWaka,
+                  currentPage: 0,
+                  isStory: true,
+                  onConfirm: () => {
+                    setPlayerState({ x: 0, y: 0, dir: DIRECTIONS.S });
+                    setParty(p => p.map(m => ({ ...m, hp: 1, mp: 1, exp: getRequiredExp(m.lv), status: '平安', statusEffects: [] })));
+                    addMessage("黄泉の井戸より生命が反魂した……", 'heal'); 
+                    setGameState('EXPLORING');
+                    setActiveDialog(null);
+                  }
+                });
+              },
+              onCancel: () => {
                 setActiveDialog(null); 
                 setGameState('GAMEOVER'); 
                 SoundEngine.stop(); 
