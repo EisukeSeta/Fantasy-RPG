@@ -105,7 +105,7 @@ export const useNavigation = () => {
               const b = ENEMY_LIST.find(e => e.id === 10); 
               setEnemy({...b, hp: b.maxHp}); 
               setGameState('BATTLE'); 
-              addMessage(scenarioData.events.encounter.replace('%ENEMY%', b.name), 'event'); 
+              addMessage("「闇夜にぞ　鳴く声きけば……」 鵺（ぬえ）の咆哮が迷宮を震わせる！", 'event'); 
             }
           });
           return;
