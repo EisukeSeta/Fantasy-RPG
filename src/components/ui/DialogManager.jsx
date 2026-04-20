@@ -24,35 +24,48 @@ const DialogManager = ({
         flexDirection: 'column', 
         alignItems: 'center', 
         gap: isStory ? '30px' : '10px',
-        padding: isStory ? '0' : '10px 0'
+        padding: isStory ? '60px 40px' : '20px 0',
+        background: isStory ? 'rgba(240, 230, 200, 0.9)' : 'none', // 鳥の子色の和紙を思わせる背景
+        borderRadius: isStory ? '200px 5px 200px 5px' : '0',
+        boxShadow: isStory ? 'inset 0 0 50px rgba(0,0,0,0.1), 0 0 50px rgba(0,0,0,0.5)' : 'none',
+        border: isStory ? '1px solid rgba(184, 154, 66, 0.3)' : 'none',
+        maxWidth: isStory ? '800px' : '100%',
+        margin: '0 auto'
       }}>
         <div className="waka-text" style={{ 
           fontStyle: 'italic', 
-          fontSize: isStory ? 'clamp(1.4rem, 5vw, 2.8rem)' : '1.1rem',
-          color: isStory ? '#fff' : 'var(--primary-gold)',
-          letterSpacing: '0.5em',
-          lineHeight: 1.8
+          fontSize: isStory ? 'clamp(1.4rem, 5vw, 2.5rem)' : '1.1rem',
+          color: '#1a1a1a', // 墨色
+          letterSpacing: '0.4em',
+          lineHeight: 1.8,
+          textShadow: '0.5px 0.5px 1px rgba(0,0,0,0.3)', // 墨の滲み
+          fontFamily: 'Sawarabi Mincho, serif'
         }}>
           「{waka.text}」
         </div>
         <div className="waka-source" style={{ 
           alignSelf: 'flex-end', 
-          fontSize: isStory ? '1.2rem' : '0.8rem', 
-          opacity: 0.7,
+          fontSize: isStory ? '1.1rem' : '0.8rem', 
+          color: '#333', // 濃い灰色
+          opacity: 0.8,
           fontStyle: 'normal',
-          letterSpacing: '0.2em'
+          letterSpacing: '0.2em',
+          marginTop: '10px'
         }}>
           ― {waka.source || "読み人知らず"}
         </div>
         {waka.translation && (
           <div className="waka-translation" style={{ 
-            marginTop: '20px',
-            fontSize: isStory ? '1.1rem' : '0.85rem', 
-            opacity: 0.6,
+            marginTop: '30px',
+            fontSize: isStory ? '1rem' : '0.8rem', 
+            color: '#444', 
+            opacity: 0.7,
             lineHeight: 1.6,
             letterSpacing: '0.1em',
-            maxWidth: '80%',
-            fontStyle: 'normal'
+            maxWidth: '100%',
+            fontStyle: 'normal',
+            borderTop: '1px solid rgba(0,0,0,0.1)',
+            paddingTop: '10px'
           }}>
             （訳：{waka.translation}）
           </div>

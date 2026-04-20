@@ -138,7 +138,7 @@ export const useNavigation = () => {
           const isNarrative = ['shrine', 'well', 'scroll'].includes(event.type) || event.isStart;
           setActiveDialog({ 
             title: event.name, 
-            pages: [event.description], 
+            pages: event.waka ? [event.waka] : [event.description], 
             currentPage: 0,
             isStory: isNarrative
           });
