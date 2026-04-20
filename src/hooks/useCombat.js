@@ -8,6 +8,7 @@ import { calculateSpellEffect } from '../logic/spells';
 import itemsData from '../data/Items.json';
 import { useGame } from './useGame';
 import { applyStatusEffects, checkActionAbility } from '../logic/status';
+import TitleBg from '../images/闇夜の平安京.png';
 import scenarioData from '../data/Scenario.json';
 import balanceData from '../data/Balance.json';
 import { 
@@ -218,18 +219,20 @@ export const useCombat = (onFirstDefeat, forceHit) => {
         Logger.warn('Combat', 'Party Defeated');
         setGameState('DEAD'); 
         SoundEngine.transitionTo('GAMEOVER');
+        
+        // 第一段階：討死の宣告と決断の呼びかけ
         setActiveDialog({ 
-          title: "【終焉】", 
-          pages: scenarioData.events.badEnding.pages, 
+          title: "【討死】", 
+          pages: ["……無念。三者の生命の燈火は、此処に霧散した。", "（「反魂」にて生を繋ぐか、「虚無」にて全てを終えるか。魂の行方を選びなさい）"], 
           currentPage: 0, 
           isStory: true,
           showChoices: true,
-          labelConfirm: "御意（復活）",
-          labelCancel: "虚無に還る",
+          labelConfirm: "反魂の儀（復活）",
+          labelCancel: "虚無に還る（終焉）",
           onConfirm: () => {
+            // 第二段階：反魂の詠唱（復活の和歌）
             setActiveDialog({
-              title: "【反魂の儀】", 
-              pages: [scenarioData.ui.resurrection, "生命の燈火は微か……。再び、現世（うつしよ）へ。"], 
+              ...scenarioData.resurrectionWaka,
               currentPage: 0,
               isStory: true,
               onConfirm: () => {
@@ -242,11 +245,12 @@ export const useCombat = (onFirstDefeat, forceHit) => {
             });
           },
           onCancel: () => {
+            // 第二段階：終焉の詠唱（最後の一句）
             setActiveDialog({
               ...scenarioData.events.badEnding,
               currentPage: 0,
               isStory: true,
-              bgImage: "src/images/闇夜の平安京.png",
+              bgImage: TitleBg,
               onConfirm: () => { 
                 setActiveDialog(null); 
                 setGameState('GAMEOVER'); 
