@@ -10,6 +10,16 @@ import { useGame } from './useGame';
 import { applyStatusEffects, checkActionAbility } from '../logic/status';
 import scenarioData from '../data/Scenario.json';
 import balanceData from '../data/Balance.json';
+import { 
+  generatePhysicalAttackCommands, 
+  generateEnemyAttackCommands, 
+  generateStatusEffectCommands,
+  generateSpellAttackCommands,
+  generateSpellHealCommands,
+  generateSpellCureCommands,
+  generateSpellStatusCommands
+} from '../logic/combatResult';
+import { Logger } from '../utils/logger';
 
 /**
  * 戦闘ロジックを管理するカスタムフック
@@ -34,6 +44,24 @@ export const useCombat = (onFirstDefeat, forceHit) => {
     setMessages(prev => [...prev, { text: msg, type }].slice(-GAME_SETTINGS.LOG_CAPACITY));
   }, [setMessages]);
 
+  const executeCommands = useCallback((commands) => {
+    commands.forEach(cmd => {
+      switch (cmd.type) {
+        case 'MESSAGE':
+          addMessage(cmd.value, cmd.messageType || 'normal');
+          break;
+        case 'VFX':
+          triggerVisualEffect(cmd.target, cmd.value, cmd.vfxType, cmd.variation || 'normal');
+          break;
+        case 'SOUND':
+          SoundEngine.play(cmd.value);
+          break;
+        default:
+          break;
+      }
+    });
+  }, [addMessage, triggerVisualEffect]);
+
   const forceLoot = false; 
   const [activeBattler, setActiveBattler] = useState(0);
   const [battleTurn, setBattleTurn] = useState(0);
@@ -43,6 +71,12 @@ export const useCombat = (onFirstDefeat, forceHit) => {
   const [yugenEnemy, setYugenEnemy] = useState(null);
   const lastActionTurnRef = useRef(-1);
   const lastProcessedTurnRef = useRef(-1); // ターン処理予約用
+
+  // アルゴリズムの真髄：最新の状態を常に Ref で追跡し、クロージャ問題を撲滅する
+  const partyRef = useRef(party);
+  const enemyRef = useRef(enemy);
+  useEffect(() => { partyRef.current = party; }, [party]);
+  useEffect(() => { enemyRef.current = enemy; }, [enemy]);
 
   const handleLevelUp = useCallback((member) => {
     let m = { ...member };
@@ -58,6 +92,7 @@ export const useCombat = (onFirstDefeat, forceHit) => {
   }, [addMessage]);
 
   const finalizeBattle = useCallback(() => {
+    Logger.info('Combat', 'Finalizing battle state');
     setGameState('EXPLORING'); 
     setEnemy(null); 
     setShowVictory(false);
@@ -68,31 +103,34 @@ export const useCombat = (onFirstDefeat, forceHit) => {
   }, [setGameState, setEnemy, setCombatInterjection]);
 
   const endBattle = useCallback((won) => {
-    const isNewDefeat = enemy && enemy.id && !defeatedEnemies.includes(enemy.id);
+    const curEnemy = enemyRef.current;
+    if (!curEnemy) return;
+    
+    Logger.info('Combat', 'Battle Ending', { won, enemy: curEnemy.name });
+    const isNewDefeat = curEnemy.id && !defeatedEnemies.includes(curEnemy.id);
     
     const showLoreIfNew = () => {
       if (isNewDefeat) {
-        setYugenEnemy(enemy);
+        setYugenEnemy(curEnemy);
       } else {
         finalizeBattle();
       }
     };
 
     if (won) {
-        // 遭遇済フラグも確実に立てる（図鑑の名前表示に必要）
-        if (!encounteredEnemies.includes(enemy.id)) {
-          setEncounteredEnemies(prev => [...prev, enemy.id]);
+        if (!encounteredEnemies.includes(curEnemy.id)) {
+          setEncounteredEnemies(prev => [...prev, curEnemy.id]);
         }
         if (isNewDefeat) {
-          setDefeatedEnemies(prev => [...prev, enemy.id]);
-          addMessage(`……怪異【${enemy.name}】の正体が都の図録に刻まれた……`, 'event');
-          if (onFirstDefeat) onFirstDefeat(enemy);
+          setDefeatedEnemies(prev => [...prev, curEnemy.id]);
+          addMessage(`……怪異【${curEnemy.name}】の正体が都の図録に刻まれた……`, 'event');
+          if (onFirstDefeat) onFirstDefeat(curEnemy);
         }
 
         setShowVictory(true);
-        addMessage(`${enemy.name}${scenarioData.battle.defeat}`, 'level_up');
+        addMessage(`${curEnemy.name}${scenarioData.battle.defeat}`, 'level_up');
 
-        if (enemy.isBoss) { 
+        if (curEnemy.isBoss) { 
           setBossDefeated(true);
           setMapData(prev => {
             const next = [...prev.map(row => [...row])];
@@ -104,11 +142,11 @@ export const useCombat = (onFirstDefeat, forceHit) => {
           });
         }
         
-        const potentialMedals = (enemy.drops || []).map(d => itemsData.find(it => it.id === d.itemId)).filter(Boolean);
+        const potentialMedals = (curEnemy.drops || []).map(d => itemsData.find(it => it.id === d.itemId)).filter(Boolean);
         let anyoneResonated = false;
 
         setParty(p => p.map((m, idx) => {
-          let updated = handleLevelUp({ ...m, exp: m.exp + Math.floor(enemy.exp * balanceData.rates.expShare) });
+          let updated = handleLevelUp({ ...m, exp: m.exp + Math.floor(curEnemy.exp * balanceData.rates.expShare) });
           if (m.hp > 0) {
             potentialMedals.forEach(medal => {
               const resonanceRate = 0.3; 
@@ -134,7 +172,8 @@ export const useCombat = (onFirstDefeat, forceHit) => {
         }));
         
         if (anyoneResonated) {
-          const luckyOne = party.find(m => m.hp > 0) || party[0];
+          const alive = partyRef.current.filter(m => m.hp > 0);
+          const luckyOne = alive.length > 0 ? alive[0] : partyRef.current[0];
           const speakerKey = luckyOne.image.split('.')[0].replace(/-/g, '_');
           const quotes = scenarioData.events.lootQuotes[speakerKey];
           if (quotes) {
@@ -147,12 +186,13 @@ export const useCombat = (onFirstDefeat, forceHit) => {
                 setTimeout(showLoreIfNew, 500);
               }
             });
-            return enemy.isBoss;
+            return curEnemy.isBoss;
           }
         }
         setTimeout(showLoreIfNew, GAME_SETTINGS.DELAYS.VICTORY_NORMAL);
-        return enemy.isBoss;
+        return curEnemy.isBoss;
     } else {
+        Logger.warn('Combat', 'Party Defeated');
         setGameState('DEAD'); 
         SoundEngine.transitionTo('GAMEOVER');
         setActiveDialog({ 
@@ -195,90 +235,98 @@ export const useCombat = (onFirstDefeat, forceHit) => {
     }
     setActiveBattler(0); 
     setBattleTurn(0);
-    lastActionTurnRef.current = -1;     // 戦闘終了時に Ref をリセット（次の戦闘でのフリーズ防止）
-    lastProcessedTurnRef.current = -1;  // 戦闘終了時に Ref をリセット（次の戦闘でのフリーズ防止）
+    lastActionTurnRef.current = -1;
+    lastProcessedTurnRef.current = -1;
   }, [enemy, addMessage, handleLevelUp, setGameState, setEnemy, setParty, setActiveDialog, setBossDefeated, setPlayerState, setMapData, setCombatInterjection, party, forceLoot, encounteredEnemies, defeatedEnemies, setEncounteredEnemies, setDefeatedEnemies, onFirstDefeat, finalizeBattle, setActiveBattler, setBattleTurn]);
 
   const handleFight = useCallback(() => {
-    if (gameState !== 'BATTLE' || !enemy || showVictory) return;
+    const curEnemy = enemyRef.current;
+    if (gameState !== 'BATTLE' || !curEnemy || showVictory) return;
     if (!isValidAction(lastActionTurnRef.current, battleTurn)) return;
-    lastActionTurnRef.current = battleTurn; // このターンの行動を記録（二重実行防止）
+    lastActionTurnRef.current = battleTurn; 
     
-    const poisonRes = applyStatusEffects(party[activeBattler]);
+    const curParty = partyRef.current;
+    const poisonRes = applyStatusEffects(curParty[activeBattler]);
     if (poisonRes.messages.length > 0) {
       poisonRes.messages.forEach(msg => addMessage(msg, 'damage_party'));
       setParty(p => p.map((m, i) => i === activeBattler ? poisonRes.updatedActor : m));
-      triggerVisualEffect(`party_${activeBattler}`, `-${Math.abs(party[activeBattler].hp - poisonRes.updatedActor.hp)}`, 'damage');
+      triggerVisualEffect(`party_${activeBattler}`, `-${Math.abs(curParty[activeBattler].hp - poisonRes.updatedActor.hp)}`, 'damage');
     }
     
-    const currentActor = poisonRes.updatedActor;
-    if (currentActor.hp <= 0) {
+    const currentActorForCheck = poisonRes.updatedActor;
+    if (currentActorForCheck.hp <= 0) {
        setBattleTurn(prev => prev + 1);
        return;
     }
 
-    const ability = checkActionAbility(currentActor);
+    const ability = checkActionAbility(currentActorForCheck);
     if (!ability.canAction) {
       addMessage(ability.message, 'damage_party');
       setBattleTurn(prev => prev + 1);
       return;
     }
 
-    const attacker = getEffectiveStats(currentActor, itemsData);
-    const res = calculateHitAndDamage(attacker.ac, attacker.minDmg, attacker.maxDmg, enemy.ac);
+    const attacker = getEffectiveStats(currentActorForCheck, itemsData);
+    const res = calculateHitAndDamage(attacker.ac, attacker.minDmg, attacker.maxDmg, curEnemy.ac);
     if (forceHit) res.hit = true; 
     
-    let nEh = enemy.hp;
-    if (res.hit) { 
-      addMessage(`${attacker.name}${scenarioData.battle.attack} ${res.damage}${scenarioData.battle.damage}`); 
-      nEh -= res.damage; 
-      triggerVisualEffect('enemy', `-${res.damage}`, 'damage', res.critical ? 'heavy' : 'normal');
-    } else {
-      addMessage(`${attacker.name}${scenarioData.battle.miss}`);
-    }
+    Logger.info('Combat', 'Player Attack', { attacker: attacker.name, target: curEnemy.name, hit: res.hit, damage: res.damage });
+    const attackCmds = generatePhysicalAttackCommands(attacker, curEnemy, res, 'enemy');
+    executeCommands(attackCmds);
+    
+    let nEh = curEnemy.hp;
+    if (res.hit) nEh -= res.damage; 
     
     if (nEh <= 0) { 
       endBattle(true); 
       return; 
     }
-    setEnemy({...enemy, hp: nEh});
+    setEnemy({...curEnemy, hp: nEh});
     
-    const nextIdx = party.findIndex((m, i) => i > activeBattler && m.hp > 0);
+    const nextIdx = curParty.findIndex((m, i) => i > activeBattler && m.hp > 0);
     if (nextIdx !== -1) {
       setActiveBattler(nextIdx);
       setBattleTurn(prev => prev + 1);
     } else {
       setTimeout(() => {
-        const alive = party.filter(m => m.hp > 0);
+        const latestP = partyRef.current;
+        const alive = latestP.filter(m => m.hp > 0);
         if (alive.length === 0) return;
-        const abilityE = checkActionAbility(enemy);
+        
+        const latestE = enemyRef.current;
+        if (!latestE || latestE.hp <= 0) return;
+
+        const abilityE = checkActionAbility(latestE);
         if (!abilityE.canAction) {
             addMessage(abilityE.message);
             setBattleTurn(prev => prev + 1);
             return;
         }
+        
         const baseTarget = alive[Math.floor(Math.random() * alive.length)];
         const target = getEffectiveStats(baseTarget, itemsData);
-        const targetIdx = party.findIndex(m => m.name === target.name);
-        const eRes = calculateHitAndDamage(enemy.ac, enemy.minDmg, enemy.maxDmg, target.ac);
+        const targetIdx = latestP.findIndex(m => m.name === target.name);
+        const eRes = calculateHitAndDamage(latestE.ac, latestE.minDmg, latestE.maxDmg, target.ac);
         
+        Logger.info('Combat', 'Enemy Attack', { attacker: latestE.name, target: target.name, hit: eRes.hit, damage: eRes.damage });
+        const enemyCmds = generateEnemyAttackCommands(latestE, target, targetIdx, eRes);
+        executeCommands(enemyCmds);
+
         if (eRes.hit) {
-          addMessage(`${enemy.name}${scenarioData.battle.counter} ${target.name}${scenarioData.battle.wound.replace('%DMG%', eRes.damage)}`, 'damage_party');
           const nextHP = Math.max(0, target.hp - eRes.damage);
           let nextStatusEffects = target.statusEffects || [];
-          if (enemy.statusEffect && !nextStatusEffects.includes(enemy.statusEffect)) {
-            nextStatusEffects = [...nextStatusEffects, enemy.statusEffect];
-            addMessage(`${target.name}は${enemy.statusEffect === 'POISON' ? '毒' : '麻痺'}に侵された！`, 'damage_party');
+          if (latestE.statusEffect && !nextStatusEffects.includes(latestE.statusEffect)) {
+            nextStatusEffects = [...nextStatusEffects, latestE.statusEffect];
+            addMessage(`${target.name}は${latestE.statusEffect === 'POISON' ? '毒' : '麻痺'}に侵された！`, 'damage_party');
           }
           setParty(p => {
-            const latestParty = p.map(m => m.name === target.name ? { 
+            const latestPartyForUpdate = p.map(m => m.name === target.name ? { 
               ...m, 
               hp: nextHP, 
               status: nextHP === 0 ? '討死' : '平安',
               statusEffects: nextHP === 0 ? [] : nextStatusEffects
             } : m);
             
-            // 演出の予約
             if (nextHP === 0) {
               let speakerKey = target.image.split('.')[0].replace(/-/g, '_');
               const quotes = scenarioData.events.deathQuotes[speakerKey];
@@ -296,78 +344,82 @@ export const useCombat = (onFirstDefeat, forceHit) => {
               setBattleTurn(prev => prev + 1);
             }
 
-            // 全滅判定（最新の latestParty を使用）
-            if (latestParty.every(m => m.hp <= 0)) {
+            if (latestPartyForUpdate.every(m => m.hp <= 0)) {
                endBattle(false);
             }
-            
-            return latestParty;
+            return latestPartyForUpdate;
           });
           triggerVisualEffect(`party_${targetIdx}`, `-${eRes.damage}`, 'damage');
         } else {
           addMessage(`${target.name}${scenarioData.battle.evade}`);
           setBattleTurn(prev => prev + 1);
         }
-        // 次の行動者は、useEffect の battleTurn 更新によって自動的に再計算される
       }, GAME_SETTINGS.DELAYS.ENEMY_TURN);
     }
-  }, [gameState, party, activeBattler, enemy, addMessage, endBattle, triggerVisualEffect, setEnemy, setParty, setCombatInterjection, setActiveBattler, setBattleTurn, forceHit, showVictory, battleTurn]);
+  }, [gameState, activeBattler, addMessage, endBattle, triggerVisualEffect, setEnemy, setParty, setCombatInterjection, setActiveBattler, setBattleTurn, forceHit, showVictory, battleTurn]);
 
   const castSpell = useCallback((spell) => {
-    if (gameState !== 'BATTLE' || !enemy || showVictory) return;
+    const curEnemy = enemyRef.current;
+    if (gameState !== 'BATTLE' || !curEnemy || showVictory) return;
     if (!isValidAction(lastActionTurnRef.current, battleTurn)) return;
     lastActionTurnRef.current = battleTurn; 
 
-    const poisonRes = applyStatusEffects(party[activeBattler]);
+    const curParty = partyRef.current;
+    const poisonRes = applyStatusEffects(curParty[activeBattler]);
     if (poisonRes.messages.length > 0) {
       poisonRes.messages.forEach(msg => addMessage(msg, 'damage_party'));
       setParty(p => p.map((m, i) => i === activeBattler ? poisonRes.updatedActor : m));
-      triggerVisualEffect(`party_${activeBattler}`, `-${Math.abs(party[activeBattler].hp - poisonRes.updatedActor.hp)}`, 'damage');
+      triggerVisualEffect(`party_${activeBattler}`, `-${Math.abs(curParty[activeBattler].hp - poisonRes.updatedActor.hp)}`, 'damage');
     }
-    const currentActor = poisonRes.updatedActor;
-    if (currentActor.hp <= 0) { 
+    const currentActorForSpell = poisonRes.updatedActor;
+    if (currentActorForSpell.hp <= 0) { 
       setBattleTurn(prev => prev + 1); 
       return; 
     }
-    const ability = checkActionAbility(currentActor);
+    const ability = checkActionAbility(currentActorForSpell);
     if (!ability.canAction) {
       addMessage(ability.message, 'damage_party');
       setBattleTurn(prev => prev + 1);
       return;
     }
 
-    const attacker = getEffectiveStats(currentActor, itemsData);
+    const attacker = getEffectiveStats(currentActorForSpell, itemsData);
     if (attacker.mp < spell.mp) { 
       addMessage(scenarioData.battle.noMana); 
       return; 
     }
     
-    let nextP = [...party]; 
+    let nextP = [...curParty]; 
     nextP[activeBattler].mp -= spell.mp;
-    let nextE = { ...enemy };
-    triggerVisualEffect('enemy', spell.name, 'action');
+    let nextE = { ...curEnemy };
     const effectRes = calculateSpellEffect(spell, attacker);
     
+    Logger.info('Combat', 'Cast Spell', { caster: attacker.name, spell: spell.name, type: spell.type });
+
     if (spell.type === 'ATTACK') {
       const dmg = effectRes.value;
-      addMessage(`${spell.name}${scenarioData.battle.spellAttack.replace('%ENEMY%', enemy.name).replace('%DMG%', dmg)}`); 
+      const cmds = generateSpellAttackCommands(attacker, curEnemy, spell, dmg);
+      executeCommands(cmds);
       nextE.hp -= dmg;
-      triggerVisualEffect('enemy', `-${dmg}`, 'damage');
     } else if (spell.type === 'HEAL') {
       const target = nextP.filter(m => m.hp > 0).sort((a,b) => a.hp - b.hp)[0];
+      const targetIdx = nextP.findIndex(m => m.name === target.name);
       const heal = effectRes.value;
       target.hp = Math.min(target.maxHp, target.hp + heal);
-      addMessage(`${spell.name}${scenarioData.battle.spellHeal.replace('%TARGET%', target.name).replace('%HEAL%', heal)}`, 'heal');
-      triggerVisualEffect(`party_${nextP.findIndex(m => m.name === target.name)}`, `+${heal}`, 'heal');
+      const cmds = generateSpellHealCommands(attacker, target, targetIdx, spell, heal);
+      executeCommands(cmds);
     } else if (spell.type === 'CURE') {
       nextP = nextP.map(m => ({ ...m, statusEffects: [] }));
-      addMessage(`${spell.name}：真言の光がパーティ全員の穢れを浄化した！`, 'level_up');
-      triggerVisualEffect('party_all', '浄化', 'heal');
-    } else if (spell.type === 'STATUS' && effectRes.statusEffect) {
-      if (!nextE.statusEffects) nextE.statusEffects = [];
-      if (!nextE.statusEffects.includes(effectRes.statusEffect)) {
-          nextE.statusEffects.push(effectRes.statusEffect);
-          addMessage(`${enemy.name}を${effectRes.statusEffect === 'PARALYZED' ? '麻痺' : '毒'}に陥れた！`, 'level_up');
+      const cmds = generateSpellCureCommands(attacker, spell);
+      executeCommands(cmds);
+    } else if (spell.type === 'STATUS') {
+      const cmds = generateSpellStatusCommands(attacker, curEnemy, spell, effectRes.statusEffect);
+      executeCommands(cmds);
+      if (effectRes.statusEffect) {
+        if (!nextE.statusEffects) nextE.statusEffects = [];
+        if (!nextE.statusEffects.includes(effectRes.statusEffect)) {
+            nextE.statusEffects.push(effectRes.statusEffect);
+        }
       }
     }
     
@@ -377,27 +429,25 @@ export const useCombat = (onFirstDefeat, forceHit) => {
     if (nextE.hp <= 0) {
       endBattle(true);
     } else {
-      // 適切な次の行動者を決定（生存者のみを対象）
       const nextIdx = nextP.findIndex((m, i) => i > activeBattler && m.hp > 0);
       if (nextIdx !== -1) {
         setActiveBattler(nextIdx);
         setBattleTurn(prev => prev + 1);
       } else {
-        // 全員行動済み → 絶縁を一時解除し敵ターンへ
         lastActionTurnRef.current = -1;
         handleFight();
       }
     }
-  }, [party, activeBattler, enemy, addMessage, endBattle, gameState, handleFight, triggerVisualEffect, setParty, setEnemy, setShowSpells, battleTurn, showVictory]);
+  }, [activeBattler, addMessage, endBattle, gameState, handleFight, triggerVisualEffect, setParty, setEnemy, setShowSpells, battleTurn, showVictory]);
 
   useEffect(() => {
-    if (isAutoBattle && gameState === 'BATTLE' && enemy && !showVictory && !activeDialog && !combatInterjection) {
+    if (isAutoBattle && gameState === 'BATTLE' && enemyRef.current && !showVictory && !activeDialog && !combatInterjection) {
       if (lastProcessedTurnRef.current === battleTurn) return;
       
-      const a = party[activeBattler];
+      const currentParty = partyRef.current;
+      const a = currentParty[activeBattler];
       if (!a || a.hp <= 0) {
-        // 現在の行動者が討死している場合は、速やかに次の生存者へ手番を譲る
-        const nextIdx = party.findIndex(m => m.hp > 0);
+        const nextIdx = currentParty.findIndex(m => m.hp > 0);
         if (nextIdx !== -1) {
           setActiveBattler(nextIdx);
           setBattleTurn(prev => prev + 1);
@@ -410,21 +460,25 @@ export const useCombat = (onFirstDefeat, forceHit) => {
       const t = setTimeout(() => {
         if (gameState !== 'BATTLE' || showVictory || activeDialog || combatInterjection) return;
         
-        const spells = (SPELLS[a.jobKey] || []).filter(s => s.lv <= a.lv && a.mp >= s.mp);
-        const statusVictim = party.find(m => m.hp > 0 && m.statusEffects && m.statusEffects.length > 0);
+        const curActor = partyRef.current[activeBattler];
+        if (!curActor || curActor.hp <= 0) return;
+
+        const spells = (SPELLS[curActor.jobKey] || []).filter(s => s.lv <= curActor.lv && curActor.mp >= s.mp);
+        const statusVictim = partyRef.current.find(m => m.hp > 0 && m.statusEffects && m.statusEffects.length > 0);
         
-        if (a.jobKey === 'NISOU' && statusVictim) {
+        if (curActor.jobKey === 'NISOU' && statusVictim) {
            const cureSpell = spells.find(s => s.type === 'CURE');
            if (cureSpell) { castSpell(cureSpell); return; }
         }
         
-        const isStrong = enemy.isBoss || enemy.hp > 50;
+        const curEnemy = enemyRef.current;
+        const isStrong = curEnemy && (curEnemy.isBoss || curEnemy.hp > 50);
         if (isStrong && spells.length > 0) castSpell(spells[spells.length - 1]);
         else handleFight();
       }, GAME_SETTINGS.DELAYS.AUTO_BATTLE);
       return () => clearTimeout(t);
     }
-  }, [isAutoBattle, gameState, enemy, activeBattler, battleTurn, showVictory, activeDialog, combatInterjection, handleFight, castSpell]);
+  }, [isAutoBattle, gameState, activeBattler, battleTurn, showVictory, activeDialog, combatInterjection, handleFight, castSpell]);
 
   return {
     activeBattler, setActiveBattler, battleTurn, setBattleTurn, isAutoBattle, setIsAutoBattle,
