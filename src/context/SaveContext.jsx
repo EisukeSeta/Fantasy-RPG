@@ -1,5 +1,6 @@
-/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useCallback } from 'react';
+import { Logger } from '../utils/logger';
+import { validateSaveData, hydrateSaveData } from '../logic/save';
 
 const SaveContext = createContext();
 const SAVE_KEY = 'RASHOMON_SAVE_V1';
@@ -31,9 +32,6 @@ export const SaveProvider = ({ children }) => {
    * 相起の術式 (Load)
    */
   const loadGame = useCallback(() => {
-    const { Logger } = require('../utils/logger');
-    const { validateSaveData, hydrateSaveData } = require('../logic/save');
-
     try {
       const stored = localStorage.getItem(SAVE_KEY);
       if (!stored) return null;
@@ -41,7 +39,13 @@ export const SaveProvider = ({ children }) => {
       
       // 記憶の検断
       if (!validateSaveData(data)) {
-        Logger.impurity('SaveSystem', '記憶が羅生門の呪いに侵されています。読み取りを中断しました。', { data });
+        // 具体的な欠損理由を目視可能にする
+        const missing = [];
+        if (!data.party) missing.push('party');
+        if (!data.playerState) missing.push('playerState');
+        if (data.saveVersion && data.saveVersion !== 'V1') missing.push(`version_mismatch(${data.saveVersion})`);
+
+        Logger.impurity('SaveSystem', `記憶の形が崩れています（欠落: ${missing.join(', ')}）。読み取りを中止しました。`, { data });
         return null;
       }
 

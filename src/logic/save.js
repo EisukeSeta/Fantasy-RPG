@@ -12,20 +12,12 @@
 export const validateSaveData = (data) => {
   if (!data || typeof data !== 'object') return false;
 
-  // 1. 必須プロパティの存在確認
-  const requiredKeys = ['party', 'playerState', 'mapData', 'saveVersion'];
-  for (const key of requiredKeys) {
-    if (!(key in data)) return false;
-  }
+  // 1. 最小限の必須プロパティ（これがないと復旧不能なもの）
+  if (!data.party || !Array.isArray(data.party) || data.party.length === 0) return false;
+  if (!data.playerState || typeof data.playerState !== 'object') return false;
 
-  // 2. 基本的な型の検証
-  if (!Array.isArray(data.party)) return false;
-  if (data.party.length === 0) return false;
-  if (typeof data.playerState !== 'object') return false;
-  if (!Array.isArray(data.mapData)) return false;
-
-  // 3. バージョン整合性の検証 (現在は V1 のみを期待)
-  if (data.saveVersion !== 'V1') return false;
+  // 2. バージョン整合性の検証 (未知の未来バージョンは弾くが、過去分は後の補完に任せる)
+  if (data.saveVersion && data.saveVersion !== 'V1') return false;
 
   return true;
 };

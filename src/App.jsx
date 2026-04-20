@@ -176,11 +176,23 @@ function App() {
               <div style={{ marginTop: '60px', display: 'flex', flexDirection: 'column', gap: '15px', alignItems: 'center' }}>
                 {localStorage.getItem('RASHOMON_SAVE_V1') ? (
                   <>
-                    <button className="dialog-btn" onClick={() => { setAudioInitialized(true); SoundEngine.init(); SoundEngine.transitionTo('EXPLORING'); setActiveDialog({ ...scenarioData.opening, currentPage: 0, bgImage: TitleBg, isStory: true, onConfirm: () => { setGameState('EXPLORING'); } }); }} style={{ padding: '12px 40px', fontSize: '1.2rem', width: '260px', boxShadow: '0 0 15px rgba(184, 154, 66, 0.4)' }}>一から旅を始める</button>
-                    <button className="dialog-btn" onClick={() => { const success = loadGame(); if (success) { setAudioInitialized(true); SoundEngine.init(); SoundEngine.transitionTo('EXPLORING'); setGameState('EXPLORING'); addMessage("……途切れた意識の先、再び平安の闇が口を開く。", "event"); } }} style={{ padding: '12px 40px', fontSize: '1.2rem', width: '260px', backgroundColor: 'rgba(184, 154, 66, 0.1)', borderStyle: 'dashed' }}>過去の記憶を辿る</button>
+                    <button className="dialog-btn" onClick={() => { setAudioInitialized(true); SoundEngine.init(); SoundEngine.transitionTo('EXPLORING'); setActiveDialog({ ...scenarioData.opening, currentPage: 0, bgImage: TitleBg, isStory: true, onConfirm: () => { setGameState('EXPLORING'); } }); }} style={{ padding: '12px 40px', fontSize: '1.2rem', width: '260px', boxShadow: '0 0 15px rgba(184, 154, 66, 0.4)' }}>最初から旅を始める</button>
+                    <button className="dialog-btn" onClick={() => { 
+                      const success = loadGame(); 
+                      if (success) { 
+                        setAudioInitialized(true); SoundEngine.init(); SoundEngine.transitionTo('EXPLORING'); setGameState('EXPLORING'); addMessage("……途切れた意識の先、再び平安の闇が口を開く。", "event"); 
+                      } else {
+                        setActiveDialog({
+                          title: "【記憶の霧散】",
+                          pages: ["かつての旅路の記憶は、羅生門の霧に呑まれ、もはやその形を保てませぬ……。", "（データ形式が不正、あるいは破損しています。修復叶わぬ記憶は、此処に葬られました）"],
+                          currentPage: 0,
+                          isStory: true
+                        });
+                      }
+                    }} style={{ padding: '12px 40px', fontSize: '1.2rem', width: '260px', backgroundColor: 'rgba(184, 154, 66, 0.1)', borderStyle: 'dashed' }}>過去の記憶を辿る</button>
                   </>
                 ) : (
-                  <button className="dialog-btn" onClick={() => { setAudioInitialized(true); SoundEngine.init(); SoundEngine.transitionTo('EXPLORING'); setActiveDialog({ ...scenarioData.opening, currentPage: 0, bgImage: TitleBg, isStory: true, onConfirm: () => { setGameState('EXPLORING'); } }); }} style={{ padding: '15px 40px', fontSize: '1.4rem', width: '300px', boxShadow: '0 0 20px rgba(184, 154, 66, 0.5)' }}>旅を始める</button>
+                  <button className="dialog-btn" onClick={() => { setAudioInitialized(true); SoundEngine.init(); SoundEngine.transitionTo('EXPLORING'); setActiveDialog({ ...scenarioData.opening, currentPage: 0, bgImage: TitleBg, isStory: true, onConfirm: () => { setGameState('EXPLORING'); } }); }} style={{ padding: '15px 40px', fontSize: '1.4rem', width: '300px', boxShadow: '0 0 20px rgba(184, 154, 66, 0.5)' }}>最初から旅を始める</button>
                 )}
               </div>
               <div style={{ marginTop: '40px', color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem' }}>&copy; Antigravity RPG System - Rashomon v{packageJson.version}</div>
