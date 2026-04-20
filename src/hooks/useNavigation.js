@@ -136,11 +136,18 @@ export const useNavigation = () => {
         const event = mapEventsData.events.find(e => e.x === nX && e.y === nY);
         if (event) {
           const isNarrative = ['shrine', 'well', 'scroll'].includes(event.type) || event.isStart;
+          
+          // データの正規化：data.text または waka を pages 配列へ確実に変換
+          const eventPages = event.waka 
+            ? [event.waka] 
+            : (event.data && event.data.text ? [event.data.text] : ["……此処には、ただ平安の風が吹いている。"]);
+
           setActiveDialog({ 
             title: event.name, 
-            pages: event.waka ? [event.waka] : [event.description], 
+            pages: eventPages, 
             currentPage: 0,
-            isStory: isNarrative
+            isStory: isNarrative,
+            onConfirm: () => setActiveDialog(null) // 看板を閉じるための確実な幕引き
           });
           if (event.isHeal) { 
             // 癒やしと復活を待つ者たちの言霊を拾う（HPが最大でない者を対象とする）

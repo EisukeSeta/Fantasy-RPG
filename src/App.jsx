@@ -167,7 +167,7 @@ function App() {
       <div className={`game-container ${isForceMobile ? 'layout-mobile' : ''} ${isShake || displayShake === 'normal' ? 'shake-anim' : ''} ${displayShake === 'heavy' ? 'shake-heavy' : ''} ${partyInDanger ? 'danger-state' : ''}`}>
         {flashColor === 'red' && <div className="flash-red"></div>}
         
-        {gameState === 'TITLE' && (
+        {gameState === 'TITLE' && !activeDialog && (
           <div className="boss-intro-overlay" style={{ position: 'fixed', inset: 0, backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url(${TitleBg})`, backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 30000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div style={{ textAlign: 'center', animation: 'fadeIn 2s ease-out', padding: 'clamp(20px, 5vw, 60px)', background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', border: '1px solid rgba(184, 154, 66, 0.4)', boxShadow: '0 0 40px rgba(0,0,0,0.8)', width: '90%', maxWidth: '600px' }}>
               <h1 style={{ color: 'var(--primary-gold)', fontSize: 'clamp(2.5rem, 8vw, 4.5rem)', textShadow: '0 0 10px rgba(184, 154, 66, 0.8), 2px 2px 4px #000', fontFamily: 'Sawarabi Mincho, serif', margin: 0, letterSpacing: 'min(15px, 3vw)' }}>平安魔道伝</h1>
@@ -176,7 +176,7 @@ function App() {
               <div style={{ marginTop: '60px', display: 'flex', flexDirection: 'column', gap: '15px', alignItems: 'center' }}>
                 {localStorage.getItem('RASHOMON_SAVE_V1') ? (
                   <>
-                    <button className="dialog-btn" onClick={() => { setAudioInitialized(true); SoundEngine.init(); SoundEngine.transitionTo('EXPLORING'); setActiveDialog({ ...scenarioData.opening, currentPage: 0, bgImage: TitleBg, isStory: true, onConfirm: () => { setGameState('EXPLORING'); } }); }} style={{ padding: '12px 40px', fontSize: '1.2rem', width: '260px', boxShadow: '0 0 15px rgba(184, 154, 66, 0.4)' }}>最初から旅を始める</button>
+                    <button className="dialog-btn" onClick={() => { setAudioInitialized(true); SoundEngine.init(); SoundEngine.transitionTo('EXPLORING'); setActiveDialog({ ...scenarioData.opening, currentPage: 0, bgImage: TitleBg, isStory: true, onConfirm: () => { setGameState('EXPLORING'); setActiveDialog(null); } }); }} style={{ padding: '12px 40px', fontSize: '1.2rem', width: '260px', boxShadow: '0 0 15px rgba(184, 154, 66, 0.4)' }}>最初から旅を始める</button>
                     <button className="dialog-btn" onClick={() => { 
                       const success = loadGame(); 
                       if (success) { 
@@ -192,7 +192,7 @@ function App() {
                     }} style={{ padding: '12px 40px', fontSize: '1.2rem', width: '260px', backgroundColor: 'rgba(184, 154, 66, 0.1)', borderStyle: 'dashed' }}>過去の記憶を辿る</button>
                   </>
                 ) : (
-                  <button className="dialog-btn" onClick={() => { setAudioInitialized(true); SoundEngine.init(); SoundEngine.transitionTo('EXPLORING'); setActiveDialog({ ...scenarioData.opening, currentPage: 0, bgImage: TitleBg, isStory: true, onConfirm: () => { setGameState('EXPLORING'); } }); }} style={{ padding: '15px 40px', fontSize: '1.4rem', width: '300px', boxShadow: '0 0 20px rgba(184, 154, 66, 0.5)' }}>最初から旅を始める</button>
+                  <button className="dialog-btn" onClick={() => { setAudioInitialized(true); SoundEngine.init(); SoundEngine.transitionTo('EXPLORING'); setActiveDialog({ ...scenarioData.opening, currentPage: 0, bgImage: TitleBg, isStory: true, onConfirm: () => { setGameState('EXPLORING'); setActiveDialog(null); } }); }} style={{ padding: '15px 40px', fontSize: '1.4rem', width: '300px', boxShadow: '0 0 20px rgba(184, 154, 66, 0.5)' }}>最初から旅を始める</button>
                 )}
               </div>
               <div style={{ marginTop: '40px', color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem' }}>&copy; Antigravity RPG System - Rashomon v{packageJson.version}</div>
@@ -200,14 +200,14 @@ function App() {
           </div>
         )}
       
-      <GameArea 
-        gameState={gameState} party={party} activeBattler={activeBattler} visualEffects={visualEffects} isForceMobile={isForceMobile} 
-        showStatus={showStatus} setShowStatus={setShowStatus} setActiveDialog={setActiveDialog} mapData={mapData} playerState={playerState} 
-        processMove={processMove} enemy={enemy} showVictory={showVictory} isAutoBattle={isAutoBattle} setIsAutoBattle={setIsAutoBattle}
-        handleFight={handleFight} castSpell={castSpell} addMessage={addMessage} isMuted={isMuted} setIsMuted={setIsMuted}
-        showSpells={showSpells} setShowSpells={setShowSpells} showMap={showMap} setShowMap={setShowMap} scenarioData={scenarioData}
-        messages={messages} mapEventsData={mapEventsData} setShowGrimoire={setShowGrimoire} setShowArchives={setShowArchives} setShowShortcutHelp={setShowShortcutHelp} saveGame={saveGame}
-      />
+        <GameArea 
+          gameState={gameState} party={party} activeBattler={activeBattler} visualEffects={visualEffects} isForceMobile={isForceMobile} 
+          showStatus={showStatus} setShowStatus={setShowStatus} setActiveDialog={setActiveDialog} mapData={mapData} playerState={playerState} 
+          processMove={processMove} enemy={enemy} showVictory={showVictory} isAutoBattle={isAutoBattle} setIsAutoBattle={setIsAutoBattle}
+          handleFight={handleFight} castSpell={castSpell} addMessage={addMessage} isMuted={isMuted} setIsMuted={setIsMuted}
+          showSpells={showSpells} setShowSpells={setShowSpells} showMap={showMap} setShowMap={setShowMap} scenarioData={scenarioData}
+          messages={messages} mapEventsData={mapEventsData} setShowGrimoire={setShowGrimoire} setShowArchives={setShowArchives} setShowShortcutHelp={setShowShortcutHelp} saveGame={saveGame}
+        />
 
       <DialogManager gameState={gameState} activeDialog={activeDialog} setActiveDialog={setActiveDialog} combatInterjection={combatInterjection} setCombatInterjection={setCombatInterjection} />
 
