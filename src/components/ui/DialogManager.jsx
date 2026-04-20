@@ -13,6 +13,54 @@ const DialogManager = ({
   setCombatInterjection 
 }) => {
   
+  /**
+   * 和歌・詠唱の優雅なる描画
+   */
+  const renderWaka = (waka, isStory) => {
+    if (!waka) return null;
+    return (
+      <div className="waka-container" style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        gap: isStory ? '30px' : '10px',
+        padding: isStory ? '0' : '10px 0'
+      }}>
+        <div className="waka-text" style={{ 
+          fontStyle: 'italic', 
+          fontSize: isStory ? 'clamp(1.4rem, 5vw, 2.8rem)' : '1.1rem',
+          color: isStory ? '#fff' : 'var(--primary-gold)',
+          letterSpacing: '0.5em',
+          lineHeight: 1.8
+        }}>
+          「{waka.text}」
+        </div>
+        <div className="waka-source" style={{ 
+          alignSelf: 'flex-end', 
+          fontSize: isStory ? '1.2rem' : '0.8rem', 
+          opacity: 0.7,
+          fontStyle: 'normal',
+          letterSpacing: '0.2em'
+        }}>
+          ― {waka.source || "読み人知らず"}
+        </div>
+        {waka.translation && (
+          <div className="waka-translation" style={{ 
+            marginTop: '20px',
+            fontSize: isStory ? '1.1rem' : '0.85rem', 
+            opacity: 0.6,
+            lineHeight: 1.6,
+            letterSpacing: '0.1em',
+            maxWidth: '80%',
+            fontStyle: 'normal'
+          }}>
+            （訳：{waka.translation}）
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // 物語の対話処理：幽玄モードと通常対話
   const renderStandardDialog = () => {
     if (!activeDialog) return null;
@@ -88,6 +136,9 @@ const DialogManager = ({
             }}>
               {(() => {
                 const currentPage = activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : '';
+                if (typeof currentPage === 'object' && currentPage.type === 'waka') {
+                  return renderWaka(currentPage, true);
+                }
                 return typeof currentPage === 'object' ? currentPage.text : currentPage;
               })()}
             </div>
@@ -98,7 +149,7 @@ const DialogManager = ({
               </div>
             ) : (
               <div style={{ fontSize: '1.2rem', opacity: 0.5, letterSpacing: '0.6em', animation: 'pulse-story 3s infinite', fontFamily: 'Sawarabi Mincho, serif' }}>
-                ‥ 次第を追う ‥
+                {activeDialog.pages && activeDialog.pages[activeDialog.currentPage] && activeDialog.pages[activeDialog.currentPage].type === 'waka' ? '‥ 一首を味わう ‥' : '‥ 次第を追う ‥'}
               </div>
             )}
           </div>
@@ -128,12 +179,15 @@ const DialogManager = ({
                 }
                 return null;
               })()}
-              <p>
+              <div style={{ minHeight: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {(() => {
                   const currentPage = activeDialog.pages ? activeDialog.pages[activeDialog.currentPage] : '';
-                  return typeof currentPage === 'object' ? currentPage.text : currentPage;
+                  if (typeof currentPage === 'object' && currentPage.type === 'waka') {
+                    return renderWaka(currentPage, false);
+                  }
+                  return <p>{typeof currentPage === 'object' ? currentPage.text : currentPage}</p>;
                 })()}
-              </p>
+              </div>
               {activeDialog.showChoices ? (
                 <div className="dialog-footer">
                   <button className="btn-shura" onClick={() => { if (activeDialog.onConfirm) activeDialog.onConfirm(); else setActiveDialog(null); }}> {activeDialog.labelConfirm || "御意"} </button>
@@ -149,7 +203,7 @@ const DialogManager = ({
                       setActiveDialog(null);
                     }
                   }}>
-                    {activeDialog.pages && activeDialog.currentPage < activeDialog.pages.length - 1 ? '続く' : '承知'}
+                    {activeDialog.pages && activeDialog.pages[activeDialog.currentPage] && activeDialog.pages[activeDialog.currentPage].type === 'waka' ? '一首を味わう' : (activeDialog.pages && activeDialog.currentPage < activeDialog.pages.length - 1 ? '続く' : '承知')}
                   </button>
                 </div>
               )}
