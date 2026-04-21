@@ -147,44 +147,31 @@ function App() {
 
   const partyInDanger = party.some(m => m.hp > 0 && (m.hp <= m.maxHp * 0.2 || m.hp === 1));
 
+  useEffect(() => {
+    const hk = (e) => {
+      if (gameState !== 'EXPLORING' && gameState !== 'BATTLE') return;
+      if (activeDialog) return;
+
+      const key = e.key.toLowerCase();
+      
+      if (e.key === 'w' || e.key === 'ArrowUp') processMove('FORWARD');
+      else if (e.key === 's' || e.key === 'ArrowDown') processMove('BACKWARD');
+      else if (e.key === 'a' || e.key === 'ArrowLeft') processMove('TURN_LEFT');
+      else if (e.key === 'd' || e.key === 'ArrowRight') processMove('TURN_RIGHT');
+      else if (key === 'k') toggleView('GRIMOIRE');
+      else if (key === 'v') toggleView('ARCHIVES');
+      else if (key === 'h' || e.key === '?') toggleView('SHORTCUTS');
+      else if (key === 'c') toggleView('STATUS');
+      else if (key === 'm') toggleView('MAP');
+    };
+    window.addEventListener('keydown', hk); return () => window.removeEventListener('keydown', hk);
+  }, [gameState, activeDialog, processMove, toggleView]);
+
+  const partyInDanger = party.some(m => m.hp > 0 && (m.hp <= m.maxHp * 0.2 || m.hp === 1));
+
   return (
     <>
-      {gameState === 'GAMEOVER' && (
-        <div className="boss-intro-overlay" style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.95)', zIndex: 30000, flexDirection: 'column', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', margin: 0, padding: 0 }}>
-          <div style={{ textAlign: 'center', maxWidth: '80%', padding: '20px' }}>
-             <h1 style={{ color: '#600', fontSize: '4rem', fontFamily: 'Sawarabi Mincho, serif', textShadow: '0 0 10px #000', marginBottom: '10px' }}>終焉</h1>
-             <p style={{ color: '#ccc', fontSize: '1.2rem', lineHeight: '1.8', marginBottom: '40px' }}>
-                {(() => {
-                  const data = scenarioData.events.badEnding;
-                  if (typeof data === 'string') return data;
-                  if (data.pages && data.pages.length > 0) {
-                    const lastPage = data.pages[data.pages.length - 1];
-                    return typeof lastPage === 'object' ? lastPage.text : lastPage;
-                  }
-                  return '';
-                })()}
-             </p>
-             <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
-               <button className="dialog-btn" onClick={() => { handleRestart(); setActiveDialog({ title: "【再起の儀】", speaker: "abe_seimei", pages: ["……戻ったのか。この社の風、御神木の香りがする。息を吹き返した心地よ……。"], currentPage: 0, bgImage: TitleBg, isStory: true }); }}>物語を再び辿る</button>
-               <button className="dialog-btn" style={{ opacity: 0.6 }} onClick={() => setGameState('FINISHED')}>終了</button>
-             </div>
-          </div>
-        </div>
-      )}
-
-      {gameState === 'FINISHED' && (
-        <div className="boss-intro-overlay" style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh', background: '#000', zIndex: 40000, display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', margin: 0, padding: 0 }}>
-          <div style={{ textAlign: 'center', maxWidth: '80%' }}>
-             <p style={{ color: '#888', fontSize: '1.2rem', fontStyle: 'italic', lineHeight: '2' }}>
-                {(() => {
-                  const data = scenarioData.events.totalSilence;
-                  return typeof data === 'string' ? data : (data.pages?.[0]?.text || '');
-                })()}
-             </p>
-             <div style={{ marginTop: '100px', color: '#333', fontSize: '1rem', letterSpacing: '10px' }}>完</div>
-          </div>
-        </div>
-      )}
+      {/* 全滅および終了の演出は、DialogManager を通じて一貫して行われるため、此処の独自オーバーレイは不要 */}
 
       <div className={`game-container ${isForceMobile ? 'layout-mobile' : ''} ${isShake || displayShake === 'normal' ? 'shake-anim' : ''} ${displayShake === 'heavy' ? 'shake-heavy' : ''} ${partyInDanger ? 'danger-state' : ''}`}>
         {flashColor === 'red' && <div className="flash-red"></div>}

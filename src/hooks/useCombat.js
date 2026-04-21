@@ -204,38 +204,19 @@ export const useCombat = (onFirstDefeat, forceHit) => {
         setGameState('DEAD'); 
         SoundEngine.transitionTo('GAMEOVER');
         
-        // 【第一幕：弔いの叙事詩】
+        // 【死の理】独自オーバーレイを避け、DialogManager へ全ての物語を託す
         setActiveDialog({ 
-          ...scenarioData.badEnding, 
+          ...scenarioData.events.badEnding, 
           currentPage: 0, 
           isStory: true,
           onConfirm: () => {
-            // 【第二幕：魂の決断】
-            setActiveDialog({
-              ...scenarioData.afterDeathChoices,
-              currentPage: 0,
-              isStory: true,
-              onConfirm: () => {
-                // 【第三幕：再興の祝詩】
-                setActiveDialog({
-                  ...scenarioData.resurrectionWaka,
-                  currentPage: 0,
-                  isStory: true,
-                  onConfirm: () => {
-                    setPlayerState({ x: 0, y: 0, dir: DIRECTIONS.S });
-                    setParty(p => p.map(m => ({ ...m, hp: 1, mp: 1, exp: getRequiredExp(m.lv), status: '平安', statusEffects: [] })));
-                    addMessage("黄泉の井戸より生命が反魂した……", 'heal'); 
-                    setGameState('EXPLORING');
-                    setActiveDialog(null);
-                  }
-                });
-              },
-              onCancel: () => {
-                setActiveDialog(null); 
-                setGameState('GAMEOVER'); 
-                SoundEngine.stop(); 
-              }
-            });
+             // 和歌を含む全てのページが終わり、主殿が「次第を追う」ことを選んだ時のみ、都を再起動する
+             const { handleRestart } = useGame(); // 安全のため、このタイミングで再取得
+             if (handleRestart) {
+               handleRestart();
+             } else {
+               setGameState('TITLE'); // 万一の保険
+             }
           }
         });
     }
