@@ -104,14 +104,20 @@ function App() {
    * 遭遇判定は useNavigation へ回帰したため、此処では無限ループを避けるべく限定的に運用する。
    */
   useEffect(() => {
-            setGameState('EXPLORING');
-            setIsTriumphTriggered(true); // 凱旋フラグを立て、無限ループを封印
-            addMessage("⛩️ 鵺の咆哮は消え、平安の都に束の間の静寂が戻った。", "level_up");
-          }
-        });
-      }
+    // 勝利した直後、探索モードに戻った瞬間に一度だけ発動
+    if (bossDefeated && !isTriumphTriggered && gameState === 'EXPLORING') {
+      setActiveDialog({
+        ...scenarioData.events.nueDefeat,
+        currentPage: 0,
+        isStory: true,
+        onConfirm: () => {
+          setActiveDialog(null);
+          setIsTriumphTriggered(true);
+          addMessage("⛩️ 鵺の咆哮は消え、平安の都に束の間の静寂が戻った。", "level_up");
+        }
+      });
     }
-  }, [bossDefeated, playerState.x, playerState.y, isTriumphTriggered, addMessage, setGameState, setIsShake, scenarioData]);
+  }, [bossDefeated, isTriumphTriggered, gameState, addMessage, scenarioData]);
 
   useEffect(() => {
     const unlock = () => { initAudio(); window.removeEventListener('click', unlock); window.removeEventListener('touchstart', unlock); };
