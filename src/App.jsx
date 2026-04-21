@@ -111,7 +111,7 @@ function App() {
       if (!bossDefeated) {
         setIsShake(true);
         setActiveDialog({
-          ...scenarioData.events.bossIntro,
+          ...scenarioData.events.nueEncounter, // 物理名に是正
           currentPage: 0,
           isStory: true,
           onConfirm: () => {
@@ -127,7 +127,7 @@ function App() {
       // B. 【凱旋の理】ボスが討たれ、かつ凱旋がまだ語られていない場合
       else if (bossDefeated && !isTriumphTriggered) {
         setActiveDialog({
-          ...scenarioData.events.bossTriumph,
+          ...scenarioData.events.nueDefeat, // 物理名に是正
           currentPage: 0,
           isStory: true,
           onConfirm: () => {
