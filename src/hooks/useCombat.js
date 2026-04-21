@@ -142,6 +142,7 @@ export const useCombat = (onFirstDefeat, forceHit) => {
     };
 
     if (won) {
+        Logger.info('Combat', 'Victory', { enemy: curEnemy.name });
         if (!encounteredEnemies.includes(curEnemy.id)) {
           setEncounteredEnemies(prev => [...prev, curEnemy.id]);
         }
@@ -155,6 +156,7 @@ export const useCombat = (onFirstDefeat, forceHit) => {
         addMessage(`${curEnemy.name}${scenarioData.battle.defeat}`, 'level_up');
 
         if (curEnemy.isBoss) { 
+          Logger.info('Event', 'Boss Defeated');
           setBossDefeated(true);
           setMapData(prev => {
             const next = [...prev.map(row => [...row])];
@@ -173,7 +175,6 @@ export const useCombat = (onFirstDefeat, forceHit) => {
           return updated;
         }));
 
-        Logger.info('Combat', 'Victory');
         const anyoneResonated = partyRef.current.some(m => {
           const res = m.statusEffects.some(e => e.id === '共鳴');
           if (res) m.statusEffects = m.statusEffects.filter(e => e.id !== '共鳴');
@@ -200,7 +201,7 @@ export const useCombat = (onFirstDefeat, forceHit) => {
         }
         setTimeout(showLoreIfNew, GAME_SETTINGS.DELAYS.VICTORY_NORMAL);
     } else {
-        Logger.warn('Combat', 'Party Defeated');
+        Logger.warn('Combat', 'Party Defeated', { enemy: curEnemy.name });
         setGameState('DEAD'); 
         SoundEngine.transitionTo('GAMEOVER');
         
@@ -210,12 +211,15 @@ export const useCombat = (onFirstDefeat, forceHit) => {
           currentPage: 0, 
           isStory: true,
           onConfirm: () => {
+             Logger.info('System', 'Player selected Resurrection');
              // 和歌を含む全てのページが終わり、主殿が「次第を追う」ことを選んだ時のみ、都を再起動する
-             const { handleRestart } = useGame(); // 安全のため、このタイミングで再取得
-             if (handleRestart) {
-               handleRestart();
+             const { handleRestart: _restart } = useGame(); 
+             if (_restart) {
+               Logger.info('System', 'Triggering handleRestart');
+               _restart();
              } else {
-               setGameState('TITLE'); // 万一の保険
+               Logger.error('System', 'handleRestart function missing');
+               setGameState('TITLE'); 
              }
           }
         });

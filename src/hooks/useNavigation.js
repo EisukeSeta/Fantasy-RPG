@@ -70,9 +70,13 @@ export const useNavigation = () => {
     }
 
     if (nX !== playerState.x || nY !== playerState.y || nD !== playerState.dir) {
-      
+      // 物理的証拠：移動ログの出力
+      const { Logger } = await import('../utils/logger'); // 動的インポートで循環参照を避ける
+      Logger.trace('Navigation', 'Player moved', { x: nX, y: nY, dir: nD });
+
       // 階段（クリア）判定
       if (bossDefeated && nX === BOSS_POS.x && nY === BOSS_POS.y) {
+        Logger.info('Event', 'Reached Exit after victory');
         setActiveDialog({
           title: "【都への凱旋】",
           pages: [
@@ -84,6 +88,7 @@ export const useNavigation = () => {
           isStory: true,
           bgImage: "src/images/闇夜の平安京.png", // 凱旋のイメージとしてタイトル背景を再利用
           onConfirm: () => {
+             Logger.info('System', 'Game Clear Sequence Start');
              addMessage("⛩️ 羅生門編・第一章 完。都への道が開かれた。", "level_up");
              setGameState('TITLE'); // または専用のクリア画面へ
           }
@@ -93,12 +98,14 @@ export const useNavigation = () => {
 
       // ボス遭遇判定
       if (!bossDefeated && nX === BOSS_POS.x && nY === BOSS_POS.y) {
+        Logger.info('Encounter', 'Met Boss (Nue)');
         setIsShake(true);
         setActiveDialog({
           ...scenarioData.events.nueEncounter,
           currentPage: 0,
           isStory: true,
           onConfirm: () => {
+            Logger.info('Combat', 'Boss Fight Started');
             setIsShake(false);
             const b = ENEMY_LIST.find(e => e.id === 10);
             setEnemy({ ...b, hp: b.maxHp });
