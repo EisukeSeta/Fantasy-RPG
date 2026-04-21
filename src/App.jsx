@@ -74,6 +74,7 @@ function App() {
       if (msg.includes('昇格') || msg.includes('レベルアップ') || msg.includes('功徳')) type = 'level_up';
       if (msg.includes('這い出た') || msg.includes('震撼') || msg.includes('気配') || msg.includes('立ちはだかった')) type = 'event'; 
     }
+    Logger.info('Message', msg, { type });
     setMessages(prev => [...prev, { text: msg, type }].slice(-30));
   }, [setMessages]);
 
@@ -108,18 +109,18 @@ function App() {
     if (playerState.x === BOSS_POS.x && playerState.y === BOSS_POS.y && !activeDialog) {
       
       // デバッグログ：正常な座標検知を報告
-      if (isDebug) console.log('⛩️ [Watcher: Boss] Cell detected. { bossDefeated, isTriumphTriggered }:', { bossDefeated, isTriumphTriggered });
+      if (isDebug) Logger.info('Watcher: Boss', 'Cell detected', { bossDefeated, isTriumphTriggered });
 
       // A. 【遭遇の理】ボスがまだ生存している場合
       if (!bossDefeated) {
-        if (isDebug) console.log('⛩️ [Watcher: Boss] Triggering Encounter (Intro)...');
+        if (isDebug) Logger.info('Watcher: Boss', 'Triggering Encounter (Intro)...');
         setIsShake(true);
         setActiveDialog({
           ...scenarioData.events.bossIntro,
           currentPage: 0,
           isStory: true,
           onConfirm: () => {
-            if (isDebug) console.log('⛩️ [Watcher: Boss] Encounter Confirm. Entering BATTLE.');
+            if (isDebug) Logger.info('Watcher: Boss', 'Encounter Confirm. Entering BATTLE.');
             setIsShake(false);
             const b = ENEMY_LIST.find(e => e.id === 10);
             setEnemy({...b, hp: b.maxHp});
@@ -131,13 +132,13 @@ function App() {
       
       // B. 【凱旋の理】ボスが討たれ、かつ凱旋がまだ語られていない場合
       else if (bossDefeated && !isTriumphTriggered) {
-        if (isDebug) console.log('⛩️ [Watcher: Boss] Triggering Triumph (Scenario)...');
+        if (isDebug) Logger.info('Watcher: Boss', 'Triggering Triumph (Scenario)...');
         setActiveDialog({
           ...scenarioData.events.bossTriumph,
           currentPage: 0,
           isStory: true,
           onConfirm: () => {
-            if (isDebug) console.log('⛩️ [Watcher: Boss] Triumph Confirm. Returning to EXPLORING.');
+            if (isDebug) Logger.info('Watcher: Boss', 'Triumph Confirm. Returning to EXPLORING.');
             setActiveDialog(null);
             setGameState('EXPLORING');
             setIsTriumphTriggered(true); // 凱旋フラグを立て、無限ループを封印
