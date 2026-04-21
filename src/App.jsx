@@ -79,7 +79,6 @@ function App() {
 
   const { processMove } = useNavigation();
   
-  // useCombat から必要な状態とアクションを取得
   const {
     activeBattler,
     isAutoBattle,
@@ -98,32 +97,28 @@ function App() {
     if (!isAudioInitialized) { setAudioInitialized(true); addMessage('⛩️ 奏曲が初期化されました。', 'level_up'); }
   }, [gameState, volume, isMuted, isAudioInitialized, addMessage]);
 
-  /**
-   * 【凱旋のWatcher】
-   * 鵺討伐後の凱旋物語（nueDefeat）のみを監視・発動する。
-   * 遭遇判定は useNavigation へ回帰したため、此処では無限ループを避けるべく限定的に運用する。
-   */
   useEffect(() => {
-    // 勝利した直後、探索モードに戻った瞬間に一度だけ発動
-    if (bossDefeated && !isTriumphTriggered && gameState === 'EXPLORING') {
-      setActiveDialog({
-        ...scenarioData.events.nueDefeat,
-        currentPage: 0,
-        isStory: true,
-        onConfirm: () => {
-          setActiveDialog(null);
-          setIsTriumphTriggered(true);
-          addMessage("⛩️ 鵺の咆哮は消え、平安の都に束の間の静寂が戻った。", "level_up");
-        }
-      });
+    if (gameState === 'BATTLE' || gameState === 'EXPLORING') {
+      initAudio();
     }
-  }, [bossDefeated, isTriumphTriggered, gameState, addMessage, scenarioData]);
+  }, [gameState, initAudio]);
 
   useEffect(() => {
-    const unlock = () => { initAudio(); window.removeEventListener('click', unlock); window.removeEventListener('touchstart', unlock); };
-    window.addEventListener('click', unlock); window.addEventListener('touchstart', unlock);
-    return () => { window.removeEventListener('click', unlock); window.removeEventListener('touchstart', unlock); };
-  }, [initAudio]);
+    if (bossDefeated && !isTriumphTriggered && gameState === 'EXPLORING') {
+      setIsTriumphTriggered(true);
+      const triumphEvent = scenarioData.events.nueDefeat;
+      if (triumphEvent) {
+        setActiveDialog({
+          ...triumphEvent,
+          currentPage: 0,
+          isStory: true,
+          onConfirm: () => {
+            setActiveDialog(null);
+          }
+        });
+      }
+    }
+  }, [bossDefeated, isTriumphTriggered, gameState, setActiveDialog]);
 
   useEffect(() => {
     const hk = (e) => {
@@ -146,8 +141,6 @@ function App() {
   }, [gameState, activeDialog, processMove, toggleView]);
 
   const partyInDanger = party.some(m => m.hp > 0 && (m.hp <= m.maxHp * 0.2 || m.hp === 1));
-
-
 
   return (
     <>
@@ -208,7 +201,7 @@ function App() {
 
       {isDebug && (
         <>
-          <button className="debug-btn" onClick={() => setShowDebug(!showDebug)} style={{ position: 'fixed', bottom: '5px', left: '5px', zIndex: 10001, padding: '5px 8px', fontSize: '1rem', background: '#222', border: '1px solid var(--primary-gold)' }}>{showDebug ? '✖' : '🛠️'}</button>
+          <button className="debug-btn" onClick={() => setShowDebug(!showDebug)} style={{ position: 'fixed', bottom: '5px', left: '5px', zIndex: 10001, padding: '5px 8px', fontSize: '1rem', background: '#222', border: '1px solid var(--primary-gold)' }}>{showDebug ? '⛩️' : '🔘'}</button>
           {showDebug && (
             <div className="debug-panel" style={{ bottom: '40px', left: '5px' }}>
               <button className="debug-btn" onClick={() => setParty(p => p.map(m => ({ ...m, hp: m.maxHp, mp: m.maxMp, status: '平安' })))}>全員全快</button>
@@ -219,7 +212,7 @@ function App() {
               <button className="debug-btn" onClick={() => { const input = prompt("跳躍先の座標(x,y)を入力せよ", `${playerState.x},${playerState.y}`); if (input) { const [nx, ny] = input.split(',').map(Number); if (!isNaN(nx) && !isNaN(ny)) { setPlayerState({ x: nx, y: ny, dir: DIRECTIONS.S }); addMessage("(x:" + nx + ", y:" + ny + ") への神速の跳躍。", "event"); } } }} style={{ color: '#f1c40f' }}>神速跳躍</button>
               <button className="debug-btn" onClick={() => { setPlayerState({ x: 1, y: 1, dir: DIRECTIONS.S }); addMessage("社へ帰還。", "event"); }}>社へ帰還</button>
               <button className="debug-btn" onClick={() => { setMapData(p => p.map(r => r.map(c => ({...c, visited: true})))); addMessage("霧が晴れた。", "event"); }}>全地図開</button>
-              <button className="debug-btn" onClick={() => { const eid = prompt("怪異の番付(0-10)を入力せよ", "10"); const e = ENEMY_LIST[Number(eid)] || ENEMY_LIST[0]; setEnemy({ ...e, hp: e.maxHp }); setGameState('BATTLE'); addMessage("【" + e.name + "】を召喚。", "event"); }}>怪異召喚</button>
+              <button className="debug-btn" onClick={() => { const eid = prompt("怪異の番号(0-10)を入力せよ", "10"); const e = ENEMY_LIST[Number(eid)] || ENEMY_LIST[0]; setEnemy({ ...e, hp: e.maxHp }); setGameState('BATTLE'); addMessage("【" + e.name + "】を召喚。", "event"); }}>怪異召喚</button>
               <button className="debug-btn" onClick={() => { setBossDefeated(!bossDefeated); addMessage("因縁の変転：ボス討伐状態を " + (!bossDefeated) + " へ。", "event"); }}>ボスフラグ</button>
               <button className="debug-btn" onClick={() => { setForceLoot(!forceLoot); addMessage("武勲の理：ドロップ必中を " + (!forceLoot) + " へ。", "event"); }} style={{ color: forceLoot ? '#f1c40f' : '#666' }}>武勲必中: {forceLoot ? "ON" : "OFF"}</button>
               <button className="debug-btn" onClick={() => { setForceHit(!forceHit); addMessage("神速の理：攻撃必中を " + (!forceHit) + " へ。", "event"); }} style={{ color: forceHit ? '#f1c40f' : '#666' }}>神速必中: {forceHit ? "ON" : "OFF"}</button>
