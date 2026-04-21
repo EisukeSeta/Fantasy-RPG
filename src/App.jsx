@@ -62,6 +62,7 @@ function App() {
   const [showDebug, setShowDebug] = useState(isDebug);
   const [forceLoot, setForceLoot] = useState(false);
   const [forceHit, setForceHit] = useState(false);
+  const [isTriumphTriggered, setIsTriumphTriggered] = useState(false);
 
   const isForceMobile = (typeof window !== 'undefined' && (window.innerWidth <= 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent))) || new URLSearchParams(window.location.search).get('mobile') === '1';
 
@@ -96,6 +97,27 @@ function App() {
     SoundEngine.init(); SoundEngine.setVolume(isMuted ? 0 : volume); SoundEngine.transitionTo(gameState);
     if (!isAudioInitialized) { setAudioInitialized(true); addMessage('⛩️ 奏曲が初期化されました。', 'level_up'); }
   }, [gameState, volume, isMuted, isAudioInitialized, addMessage]);
+
+  /**
+   * 【凱旋のWatcher】
+   * ボス（鵺）の死を検知し、移動を待たずに即座に凱旋の語りを降臨させる。
+   */
+  useEffect(() => {
+    // 条件：ボスが討たれ、現在地がボス座標であり、且つまだ凱旋が語られていない
+    if (bossDefeated && !isTriumphTriggered && playerState.x === BOSS_POS.x && playerState.y === BOSS_POS.y && !activeDialog) {
+      setActiveDialog({
+        ...scenarioData.events.bossTriumph,
+        currentPage: 0,
+        isStory: true,
+        onConfirm: () => {
+          setActiveDialog(null);
+          setGameState('EXPLORING');
+          setIsTriumphTriggered(true); // 発動済みフラグを立て、無限ループを封印
+          addMessage("⛩️ 鵺の咆哮は消え、平安の都に束の間の静寂が戻った。", "level_up");
+        }
+      });
+    }
+  }, [bossDefeated, playerState.x, playerState.y, isTriumphTriggered, activeDialog, addMessage, setGameState]);
 
   useEffect(() => {
     const unlock = () => { initAudio(); window.removeEventListener('click', unlock); window.removeEventListener('touchstart', unlock); };

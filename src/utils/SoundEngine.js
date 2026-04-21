@@ -4,7 +4,6 @@
  */
 
 const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
-const isDebug = params.get('debug') === 'true';
 
 class HeianSoundEngine {
   constructor() {
@@ -15,7 +14,13 @@ class HeianSoundEngine {
     this.hichirikiGain = null;
     this.droneOsc = null; // 地鳴り用
     this.isStarted = false;
+    
+    // 初期化時に環境を再評価
+    const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+    const isDebug = params.get('debug') === 'true';
+    this.isDebug = isDebug;
     this.isMuted = isDebug; // ?debug=true なら初期状態で消音（智の沈黙）
+    
     this.currentMode = 'EXPLORING'; // EXPLORING, BATTLE, DEAD
   }
 
@@ -37,7 +42,7 @@ class HeianSoundEngine {
       return true;
     } else {
       // 想定外の音響 ID が要求された場合
-      if (isDebug) {
+      if (this.isDebug) {
         const { Logger } = require('./logger'); 
         Logger.impurity('Sound', `Missing sound definition: ${id}`, { id });
         return false; // 失敗を報告

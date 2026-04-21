@@ -93,23 +93,7 @@ export const useNavigation = () => {
           return;
         }
 
-        // ボス遭遇判定（鵺の咆哮と三将の呼応）
-        if (!bossDefeated && nX === BOSS_POS.x && nY === BOSS_POS.y) {
-          setIsShake(true); 
-          setActiveDialog({
-            ...scenarioData.events.bossIntro,
-            currentPage: 0,
-            isStory: true,
-            onConfirm: () => {
-              setIsShake(false);
-              const b = ENEMY_LIST.find(e => e.id === 10); 
-              setEnemy({...b, hp: b.maxHp}); 
-              setGameState('BATTLE'); 
-              addMessage("「闇夜にぞ　鳴く声きけば……」 鵺（ぬえ）の咆哮が迷宮を震わせる！", 'event'); 
-            }
-          });
-          return;
-        }
+        // ※ボス遭遇および凱旋判定は、App.jsx の集中監視（useEffect Watcher）へ委譲されたため、此処からは削除。
 
         // エンカウント判定
         if (Math.random() < GAME_SETTINGS.ENCOUNTER_RATE) {
