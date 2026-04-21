@@ -144,8 +144,6 @@ function App() {
 
   return (
     <>
-      {/* 全滅および終了の演出は、DialogManager を通じて一貫して行われるため、此処の独自オーバーレイは不要 */}
-
       <div className={`game-container ${isForceMobile ? 'layout-mobile' : ''} ${isShake || displayShake === 'normal' ? 'shake-anim' : ''} ${displayShake === 'heavy' ? 'shake-heavy' : ''} ${partyInDanger ? 'danger-state' : ''}`}>
         {flashColor === 'red' && <div className="flash-red"></div>}
         
