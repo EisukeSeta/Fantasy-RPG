@@ -1,52 +1,33 @@
-# 事前コードレビュー（改訂）：鵺遭遇と凱旋の「真・一本化」
+# 事前コードレビュー（再々改訂）：無限ループ（ブラックアウト）の浄化
 
-## 1. 改修の micro-diff（差分記録：修正版）
+## 1. 改修の micro-diff（修正版：無限ループ断絶）
 
-### 【改訂】App.jsx：監視眼（Watcher）に「遭遇」の理を追加
+### App.jsx：監視眼（Watcher）の依存配列から `activeDialog` を除去
 **[場所]**: `src/App.jsx`
 ```javascript
   useEffect(() => {
-    // 現在地がボス座標であることを第一条件とする
+    // 判定：現在地がボス座標であり、且つダイアログが表示されて *いない* 時だけ発動
     if (playerState.x === BOSS_POS.x && playerState.y === BOSS_POS.y && !activeDialog) {
       
-      // A. 【遭遇の理】ボスがまだ生存している場合
+      // A. 【遭遇の理】
       if (!bossDefeated) {
-        setIsShake(true);
-        setActiveDialog({
-          ...scenarioData.events.bossIntro,
-          currentPage: 0,
-          isStory: true,
-          onConfirm: () => {
-            setIsShake(false);
-            const b = ENEMY_LIST.find(e => e.id === 10);
-            setEnemy({...b, hp: b.maxHp});
-            setGameState('BATTLE');
-            addMessage("「闇夜にぞ　鳴く声きけば……」 鵺の咆哮が迷宮を震わせる！", 'event');
-          }
-        });
+        // ... (setActiveDialog を呼ぶ)
       }
       
-      // B. 【凱旋の理】ボスが討たれ、かつ凱旋がまだ語られていない場合
+      // B. 【凱旋の理】
       else if (bossDefeated && !isTriumphTriggered) {
-        setActiveDialog({
-          ...scenarioData.events.bossTriumph,
-          currentPage: 0,
-          isStory: true,
-          onConfirm: () => {
-            setActiveDialog(null);
-            setGameState('EXPLORING');
-            setIsTriumphTriggered(true); // 凱旋フラグを立てて封印
-            addMessage("⛩️ 鵺の咆哮は消え、平安の都に静寂が戻った。", "level_up");
-          }
-        });
+        // ... (setActiveDialog を呼ぶ)
       }
     }
-  }, [bossDefeated, playerState.x, playerState.y, isTriumphTriggered, activeDialog]);
+    // 【重要】依存配列から activeDialog を削除し、無限ループを封印する
+    // activeDialog を入れると「ダイアログを出す -> 変化を検知 -> また出す」の連鎖が起きる
+  }, [bossDefeated, playerState.x, playerState.y, isTriumphTriggered, addMessage, setGameState, setIsShake, scenarioData]); 
 ```
 
 ---
 
-## 2. 監察官の報告
+## 2. 監察官の見解：なぜ起きたか
 
-主殿。`useNavigation` から判定を消去した際に、この「遭遇（Intro）」の理を App 側へ遷座させ忘れたことが、今回の遭遇不能の原因でございます。
-本改訂案により、**「遭遇（!bossDefeated）」と「凱旋（bossDefeated）」が、一つの Watcher 内で対称的に管理される** こととなり、都のロジックは真に「一箇所で全てのボスイベントを司る」完璧な姿へ到達いたします。
+主殿。テスト（Vitest）環境では DOM の更新速度が緩やかであり、無限ループが顕在化する前にテストが終了しておりました。
+しかし、実機（ブラウザ）の React エンジンは、一秒間に数千回の更新を許容するため、この「依存関係の淀み」が瞬時に暴走し、ブラックアウトを引き起こしたのです。
+ブラウザエージェントに頼らずとも、コードの理が此処に真犯人を指し示しました。奉納。
