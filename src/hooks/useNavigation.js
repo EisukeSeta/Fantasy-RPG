@@ -70,39 +70,73 @@ export const useNavigation = () => {
     }
 
     if (nX !== playerState.x || nY !== playerState.y || nD !== playerState.dir) {
-      setPlayerState({ x: nX, y: nY, dir: nD });
       
-      if (nX !== playerState.x || nY !== playerState.y) {
-        // 階段（クリア）判定
-        if (bossDefeated && nX === BOSS_POS.x && nY === BOSS_POS.y) {
-          setActiveDialog({
-            title: "【都への凱旋】",
-            pages: [
-              "鵺の咆哮は消え、迷宮に静寂が戻った……。",
-              "古の階段が黄金の光を放ち、現世（うつしよ）への道を指し示している。",
-              "平安の都は、貴殿らの帰還を待っていることだろう。"
-            ],
-            currentPage: 0,
-            isStory: true,
-            bgImage: "src/images/闇夜の平安京.png", // 凱旋のイメージとしてタイトル背景を再利用
-            onConfirm: () => {
-               addMessage("⛩️ 羅生門編・第一章 完。都への道が開かれた。", "level_up");
-               setGameState('TITLE'); // または専用のクリア画面へ
-            }
-          });
-          return;
-        }
+      // 階段（クリア）判定
+      if (bossDefeated && nX === BOSS_POS.x && nY === BOSS_POS.y) {
+        setActiveDialog({
+          title: "【都への凱旋】",
+          pages: [
+            "鵺の咆哮は消え、迷宮に静寂が戻った……。",
+            "古の階段が黄金の光を放ち、現世（うつしよ）への道を指し示している。",
+            "平安の都は、貴殿らの帰還を待っていることだろう。"
+          ],
+          currentPage: 0,
+          isStory: true,
+          bgImage: "src/images/闇夜の平安京.png", // 凱旋のイメージとしてタイトル背景を再利用
+          onConfirm: () => {
+             addMessage("⛩️ 羅生門編・第一章 完。都への道が開かれた。", "level_up");
+             setGameState('TITLE'); // または専用のクリア画面へ
+          }
+        });
+        return;
+      }
 
-        // ※ボス遭遇および凱旋判定は、App.jsx の集中監視（useEffect Watcher）へ委譲されたため、此処からは削除。
+      // ボス遭遇判定
+      if (!bossDefeated && nX === BOSS_POS.x && nY === BOSS_POS.y) {
+        setIsShake(true);
+        setActiveDialog({
+          ...scenarioData.events.nueEncounter,
+          currentPage: 0,
+          isStory: true,
+          onConfirm: () => {
+            setIsShake(false);
+            const b = ENEMY_LIST.find(e => e.id === 10);
+            setEnemy({ ...b, hp: b.maxHp });
+            setGameState('BATTLE');
+            addMessage("「闇夜にぞ　鳴く声きけば……」 鵺（ぬえ）の咆哮が迷宮を震わせる！", 'event');
+          }
+        });
+        setPlayerState({ x: nX, y: nY, dir: nD });
+        return;
+      }
 
-        // エンカウント判定
-        if (Math.random() < GAME_SETTINGS.ENCOUNTER_RATE) {
-          const lSum = party.reduce((s, m) => s + m.lv, 0); 
-          const e = getRandomEnemy(lSum);
-          setEnemy({ ...e, hp: e.maxHp }); 
-          setGameState('BATTLE'); 
-          addMessage(scenarioData.events.encounter.replace('%ENEMY%', e.name), 'event');
+      setPlayerState({ x: nX, y: nY, dir: nD });
+
+      // エンカウント判定
+      if (Math.random() < GAME_SETTINGS.ENCOUNTER_RATE) {
+        const lSum = party.reduce((s, m) => s + m.lv, 0); 
+        const e = getRandomEnemy(lSum);
+        setEnemy({ ...e, hp: e.maxHp }); 
+        setGameState('BATTLE'); 
+        addMessage(scenarioData.events.encounter.replace('%ENEMY%', e.name), 'event');
+      }
+      
+      // 周辺8マス(壁含む)を視認化
+      setMapData(p => {
+        const n = [...p.map(row => [...row])];
+        for(let dy2=-1; dy2<=1; dy2++) for(let dx2=-1; dx2<=1; dx2++) {
+          const tx = nX + dx2, ty = nY + dy2;
+          if(tx>=0 && tx<MAP_WIDTH && ty>=0 && ty<MAP_HEIGHT) {
+            n[ty][tx].visited = true;
+          }
         }
+        return n;
+      });
+
+      // マップイベント判定
+      const event = mapEventsData.events.find(e => e.x === nX && e.y === nY);
+      if (event) {
+        const isNarrative = ['shrine', 'well', 'scroll'].includes(event.type) || event.isStart;
         
         // 周辺8マス(壁含む)を視認化
         setMapData(p => {
