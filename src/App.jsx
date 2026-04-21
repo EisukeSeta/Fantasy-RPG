@@ -139,7 +139,7 @@ function App() {
         });
       }
     }
-  }, [bossDefeated, playerState.x, playerState.y, isTriumphTriggered, activeDialog, addMessage, setGameState, setIsShake, scenarioData]);
+  }, [bossDefeated, playerState.x, playerState.y, isTriumphTriggered, addMessage, setGameState, setIsShake, scenarioData]);
 
   useEffect(() => {
     const unlock = () => { initAudio(); window.removeEventListener('click', unlock); window.removeEventListener('touchstart', unlock); };
