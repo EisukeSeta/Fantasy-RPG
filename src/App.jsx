@@ -99,25 +99,47 @@ function App() {
   }, [gameState, volume, isMuted, isAudioInitialized, addMessage]);
 
   /**
-   * 【凱旋のWatcher】
-   * ボス（鵺）の死を検知し、移動を待たずに即座に凱旋の語りを降臨させる。
+   * 【ボスイベントのWatcher】
+   * ボス座標における「遭遇（Intro）」と「凱旋（Triumph）」を、状態監視によって一律に司る。
+   * これにより、移動時および戦闘終了直後の双方で即座に物語が降臨する。
    */
   useEffect(() => {
-    // 条件：ボスが討たれ、現在地がボス座標であり、且つまだ凱旋が語られていない
-    if (bossDefeated && !isTriumphTriggered && playerState.x === BOSS_POS.x && playerState.y === BOSS_POS.y && !activeDialog) {
-      setActiveDialog({
-        ...scenarioData.events.bossTriumph,
-        currentPage: 0,
-        isStory: true,
-        onConfirm: () => {
-          setActiveDialog(null);
-          setGameState('EXPLORING');
-          setIsTriumphTriggered(true); // 発動済みフラグを立て、無限ループを封印
-          addMessage("⛩️ 鵺の咆哮は消え、平安の都に束の間の静寂が戻った。", "level_up");
-        }
-      });
+    // 条件：現在地がボス座標であり、且つ他のダイアログが未発であること
+    if (playerState.x === BOSS_POS.x && playerState.y === BOSS_POS.y && !activeDialog) {
+      
+      // A. 【遭遇の理】ボスがまだ生存している場合
+      if (!bossDefeated) {
+        setIsShake(true);
+        setActiveDialog({
+          ...scenarioData.events.bossIntro,
+          currentPage: 0,
+          isStory: true,
+          onConfirm: () => {
+            setIsShake(false);
+            const b = ENEMY_LIST.find(e => e.id === 10);
+            setEnemy({...b, hp: b.maxHp});
+            setGameState('BATTLE');
+            addMessage("「闇夜にぞ　鳴く声きけば……」 鵺（ぬえ）の咆哮が迷宮を震わせる！", 'event');
+          }
+        });
+      }
+      
+      // B. 【凱旋の理】ボスが討たれ、かつ凱旋がまだ語られていない場合
+      else if (bossDefeated && !isTriumphTriggered) {
+        setActiveDialog({
+          ...scenarioData.events.bossTriumph,
+          currentPage: 0,
+          isStory: true,
+          onConfirm: () => {
+            setActiveDialog(null);
+            setGameState('EXPLORING');
+            setIsTriumphTriggered(true); // 凱旋フラグを立て、無限ループを封印
+            addMessage("⛩️ 鵺の咆哮は消え、平安の都に束の間の静寂が戻った。", "level_up");
+          }
+        });
+      }
     }
-  }, [bossDefeated, playerState.x, playerState.y, isTriumphTriggered, activeDialog, addMessage, setGameState]);
+  }, [bossDefeated, playerState.x, playerState.y, isTriumphTriggered, activeDialog, addMessage, setGameState, setIsShake, scenarioData]);
 
   useEffect(() => {
     const unlock = () => { initAudio(); window.removeEventListener('click', unlock); window.removeEventListener('touchstart', unlock); };
