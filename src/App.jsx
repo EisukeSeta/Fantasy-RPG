@@ -147,27 +147,7 @@ function App() {
 
   const partyInDanger = party.some(m => m.hp > 0 && (m.hp <= m.maxHp * 0.2 || m.hp === 1));
 
-  useEffect(() => {
-    const hk = (e) => {
-      if (gameState !== 'EXPLORING' && gameState !== 'BATTLE') return;
-      if (activeDialog) return;
 
-      const key = e.key.toLowerCase();
-      
-      if (e.key === 'w' || e.key === 'ArrowUp') processMove('FORWARD');
-      else if (e.key === 's' || e.key === 'ArrowDown') processMove('BACKWARD');
-      else if (e.key === 'a' || e.key === 'ArrowLeft') processMove('TURN_LEFT');
-      else if (e.key === 'd' || e.key === 'ArrowRight') processMove('TURN_RIGHT');
-      else if (key === 'k') toggleView('GRIMOIRE');
-      else if (key === 'v') toggleView('ARCHIVES');
-      else if (key === 'h' || e.key === '?') toggleView('SHORTCUTS');
-      else if (key === 'c') toggleView('STATUS');
-      else if (key === 'm') toggleView('MAP');
-    };
-    window.addEventListener('keydown', hk); return () => window.removeEventListener('keydown', hk);
-  }, [gameState, activeDialog, processMove, toggleView]);
-
-  const partyInDanger = party.some(m => m.hp > 0 && (m.hp <= m.maxHp * 0.2 || m.hp === 1));
 
   return (
     <>
